@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080" role="img" aria-label="Divine blessing over a meditating person in nature">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FDF4DC"/>
+      <stop offset="0.45" stop-color="#EAF3EA"/>
+      <stop offset="1" stop-color="#D4E7D7"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFF3CE"/>
+      <stop offset="0.55" stop-color="#FCE9B0" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#FCE9B0" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="hand" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FBEAC2"/>
+      <stop offset="1" stop-color="#F3D99A"/>
+    </linearGradient>
+    <linearGradient id="hill1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8FC79E"/><stop offset="1" stop-color="#6FB184"/>
+    </linearGradient>
+    <linearGradient id="hill2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5FA87C"/><stop offset="1" stop-color="#47925F"/>
+    </linearGradient>
+    <linearGradient id="ray" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F7D98C" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#F7D98C" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="ground" cx="0.5" cy="0.2" r="0.9">
+      <stop offset="0" stop-color="#2E7D5B"/><stop offset="1" stop-color="#1C5A3E"/>
+    </radialGradient>
+  </defs>
+
+  <!-- sky -->
+  <rect width="1080" height="1080" fill="url(#sky)"/>
+
+  <!-- sun rays -->
+  <g transform="translate(540 250)" opacity="0.7">
+    <g fill="#F6D98E">
+      <polygon points="-18,-200 18,-200 34,120 -34,120" opacity="0.35"/>
+      <polygon points="-18,-200 18,-200 34,120 -34,120" opacity="0.35" transform="rotate(30)"/>
+      <polygon points="-18,-200 18,-200 34,120 -34,120" opacity="0.30" transform="rotate(-30)"/>
+      <polygon points="-18,-200 18,-200 34,120 -34,120" opacity="0.25" transform="rotate(60)"/>
+      <polygon points="-18,-200 18,-200 34,120 -34,120" opacity="0.25" transform="rotate(-60)"/>
+      <polygon points="-18,-200 18,-200 34,120 -34,120" opacity="0.20" transform="rotate(90)"/>
+      <polygon points="-18,-200 18,-200 34,120 -34,120" opacity="0.20" transform="rotate(-90)"/>
+    </g>
+  </g>
+
+  <!-- divine halo -->
+  <circle cx="540" cy="250" r="230" fill="url(#halo)"/>
+  <circle cx="540" cy="250" r="86" fill="#FFF6D8"/>
+  <circle cx="540" cy="250" r="86" fill="none" stroke="#F0C96B" stroke-width="3" opacity="0.7"/>
+
+  <!-- blessing hand (abhaya mudra - palm facing out) emerging from the light -->
+  <g transform="translate(540 300)">
+    <!-- soft glow behind hand -->
+    <ellipse cx="0" cy="20" rx="120" ry="150" fill="#FCEBBE" opacity="0.6"/>
+    <g fill="url(#hand)" stroke="#D9B878" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+      <!-- palm -->
+      <path d="M-62,40 Q-70,-30 -40,-55 Q-10,-70 40,-58 Q70,-48 68,10 Q66,70 40,110 Q10,140 -28,128 Q-58,114 -62,40 Z"/>
+      <!-- fingers -->
+      <rect x="-54" y="-118" width="26" height="86" rx="13"/>
+      <rect x="-22" y="-134" width="26" height="104" rx="13"/>
+      <rect x="10" y="-128" width="26" height="98" rx="13"/>
+      <rect x="40" y="-104" width="25" height="76" rx="12"/>
+      <!-- thumb -->
+      <path d="M-60,34 Q-96,22 -104,-6 Q-108,-24 -92,-30 Q-74,-34 -58,-10 Z"/>
+    </g>
+    <!-- gentle lines on palm -->
+    <path d="M-38,10 Q0,0 40,16" fill="none" stroke="#D9B878" stroke-width="3" opacity="0.5" stroke-linecap="round"/>
+    <path d="M-40,40 Q-6,34 36,52" fill="none" stroke="#D9B878" stroke-width="3" opacity="0.4" stroke-linecap="round"/>
+  </g>
+
+  <!-- blessing light streaming down -->
+  <g opacity="0.8">
+    <polygon points="500,430 580,430 560,720 520,720" fill="url(#ray)"/>
+    <polygon points="470,440 510,440 505,715 485,715" fill="url(#ray)" opacity="0.6"/>
+    <polygon points="575,440 615,440 598,715 580,715" fill="url(#ray)" opacity="0.6"/>
+  </g>
+
+  <!-- hills -->
+  <path d="M0,820 Q270,720 540,780 Q810,840 1080,760 L1080,1080 L0,1080 Z" fill="url(#hill1)"/>
+  <path d="M0,900 Q300,820 560,880 Q830,940 1080,870 L1080,1080 L0,1080 Z" fill="url(#hill2)"/>
+
+  <!-- trees -->
+  <g>
+    <rect x="150" y="770" width="16" height="70" rx="6" fill="#6B4A2B"/>
+    <circle cx="158" cy="748" r="48" fill="#3E8E63"/><circle cx="128" cy="770" r="34" fill="#4E9E72"/><circle cx="188" cy="770" r="34" fill="#4E9E72"/>
+    <rect x="918" y="760" width="18" height="84" rx="6" fill="#6B4A2B"/>
+    <circle cx="927" cy="738" r="54" fill="#3E8E63"/><circle cx="892" cy="764" r="38" fill="#4E9E72"/><circle cx="962" cy="764" r="38" fill="#4E9E72"/>
+  </g>
+
+  <!-- meditating person receiving blessing -->
+  <g transform="translate(540 870)" fill="url(#ground)">
+    <!-- folded legs base -->
+    <path d="M-150,70 Q-150,30 -90,26 L90,26 Q150,30 150,70 Q150,96 90,100 L-90,100 Q-150,96 -150,70 Z"/>
+    <!-- lap / thighs -->
+    <path d="M-120,40 Q0,-6 120,40 Q60,70 0,70 Q-60,70 -120,40 Z" opacity="0.9"/>
+    <!-- torso -->
+    <path d="M-60,30 Q-70,-70 -40,-118 Q0,-140 40,-118 Q70,-70 60,30 Q0,54 -60,30 Z"/>
+    <!-- namaste hands -->
+    <path d="M-10,-60 L10,-60 L18,-6 L0,10 L-18,-6 Z" fill="#17493330" opacity="0.5"/>
+    <path d="M-2,-64 L2,-64 L8,-6 L0,8 L-8,-6 Z" fill="#0f3a27"/>
+    <!-- head (bowed) -->
+    <circle cx="0" cy="-150" r="34"/>
+    <!-- subtle aura -->
+    <circle cx="0" cy="-150" r="52" fill="none" stroke="#F0C96B" stroke-width="3" opacity="0.5"/>
+  </g>
+
+  <!-- lotus & leaves foreground -->
+  <g transform="translate(400 980)" fill="#E8B6C8" opacity="0.95">
+    <ellipse cx="0" cy="0" rx="10" ry="22"/><ellipse cx="0" cy="0" rx="10" ry="22" transform="rotate(40)"/><ellipse cx="0" cy="0" rx="10" ry="22" transform="rotate(-40)"/><ellipse cx="0" cy="0" rx="10" ry="22" transform="rotate(80)"/><ellipse cx="0" cy="0" rx="10" ry="22" transform="rotate(-80)"/>
+    <circle cx="0" cy="0" r="7" fill="#F2D06A"/>
+  </g>
+  <g transform="translate(690 1000)" fill="#E8B6C8" opacity="0.9">
+    <ellipse cx="0" cy="0" rx="9" ry="20"/><ellipse cx="0" cy="0" rx="9" ry="20" transform="rotate(45)"/><ellipse cx="0" cy="0" rx="9" ry="20" transform="rotate(-45)"/><ellipse cx="0" cy="0" rx="9" ry="20" transform="rotate(90)"/>
+    <circle cx="0" cy="0" r="6" fill="#F2D06A"/>
+  </g>
+  <path d="M250,1010 q30,-26 64,-8 q-30,10 -64,8 Z" fill="#4E9E72"/>
+  <path d="M840,1016 q-30,-26 -64,-8 q30,10 64,8 Z" fill="#4E9E72"/>
+
+  <!-- floating blessing sparkles -->
+  <g fill="#F4D77E">
+    <circle cx="470" cy="560" r="4"/><circle cx="610" cy="600" r="5"/><circle cx="540" cy="520" r="3"/><circle cx="500" cy="660" r="4"/><circle cx="590" cy="670" r="3"/>
+  </g>
+</svg>

@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NaturalHeal Admin</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Mulish:wght@400;600;700;800&display=swap">
+<style>
+:root{--bg:#F2F5F0;--surface:#FFFFFF;--surface-2:#EAF0E8;--fg:#1E2823;--muted:#5C6B61;--line:#D9E2D6;--accent:#2E7D5B;--accent-soft:#DCEDE3;--accent-ink:#1C5A3E;--gold:#B07D22;--gold-soft:#F4E9CE;--danger:#B23A32;--shadow:0 1px 2px rgba(30,40,35,.05),0 8px 24px rgba(30,40,35,.06);--f-head:"Fraunces",Georgia,serif;--f-body:"Mulish",system-ui,sans-serif}
+@media(prefers-color-scheme:dark){:root{--bg:#10140F;--surface:#191E16;--surface-2:#222A1F;--fg:#E7EDE6;--muted:#9BA99F;--line:#2C3528;--accent:#58B98B;--accent-soft:#1E2D24;--accent-ink:#9FE0BE;--gold:#D7A94B;--gold-soft:#2A2415;--danger:#E6786F;color-scheme:dark}}
+*{box-sizing:border-box}html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body)}
+.hidden{display:none!important}
+/* login */
+.login-wrap{max-width:420px;margin:60px auto;padding:0 18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:20px}
+h1{font-family:var(--f-head);font-weight:600;margin:0}
+.sub{color:var(--muted);font-size:14px}
+label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}
+input{width:100%;font:inherit;font-size:15px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 12px}
+.btn{border:none;cursor:pointer;font-weight:800;font-size:14px;padding:11px 16px;border-radius:10px;background:var(--accent);color:#fff;font-family:var(--f-body)}
+.btn.sm{padding:7px 12px;font-size:13px}
+.btn.ghost{background:var(--surface-2);color:var(--fg);border:1px solid var(--line)}
+.btn.danger{background:var(--danger)}
+.err{color:var(--danger);font-weight:600;font-size:13px;margin-top:10px;min-height:1px}
+/* shell */
+.shell{display:flex;height:100%}
+.rail{width:66px;flex:none;background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:6px}
+.rail .logo{width:40px;height:40px;border-radius:12px;background:var(--accent);display:grid;place-items:center;margin-bottom:10px}
+.rail .logo svg{width:22px;height:22px}
+.navbtn{width:46px;height:46px;border-radius:12px;border:none;background:transparent;color:var(--muted);cursor:pointer;display:grid;place-items:center;position:relative}
+.navbtn svg{width:22px;height:22px}
+.navbtn:hover{background:var(--surface-2)}
+.navbtn.on{background:var(--accent-soft);color:var(--accent-ink)}
+.navbtn .tip{position:absolute;left:54px;top:50%;transform:translateY(-50%);background:var(--fg);color:var(--bg);font-size:11px;font-weight:700;padding:4px 8px;border-radius:7px;white-space:nowrap;opacity:0;pointer-events:none;transition:.12s;z-index:5}
+.navbtn:hover .tip{opacity:1}
+.rail .spacer{flex:1}
+.main{flex:1;overflow-y:auto;padding:24px}
+.main-h{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.main-h .ic{width:34px;height:34px;border-radius:9px;background:var(--accent-soft);color:var(--accent-ink);display:grid;place-items:center}
+.main-h .ic svg{width:19px;height:19px}
+.main-h h1{font-size:22px}
+.wrapx{max-width:920px}
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+.stat .k{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;display:flex;align-items:center;gap:6px}
+.stat .k svg{width:14px;height:14px}
+.stat .v{font-size:28px;font-weight:800;font-family:var(--f-head);margin-top:4px}
+.stat .v.sm{font-size:17px}
+/* table */
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line)}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.scroll{overflow-x:auto}
+.pill{font-size:11px;font-weight:800;padding:2px 9px;border-radius:999px;text-transform:uppercase}
+.pill.premium{background:var(--accent-soft);color:var(--accent-ink)}
+.pill.free{background:var(--surface-2);color:var(--muted)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.right{margin-left:auto}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:11px 18px;border-radius:12px;font-weight:700;font-size:14px;z-index:50}
+.bar{height:8px;background:var(--surface-2);border-radius:5px;overflow:hidden;min-width:60px}
+.bar > i{display:block;height:100%;background:var(--accent)}
+.field{margin-bottom:14px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){.two{grid-template-columns:1fr}.main{padding:16px}}
+select{width:100%;font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 10px}
+.modal-bg{position:fixed;inset:0;background:rgba(20,26,22,.5);z-index:60;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:var(--surface);width:100%;max-width:560px;border-radius:16px;padding:20px;max-height:85vh;overflow-y:auto}
+.modal h3{font-family:var(--f-head);font-size:19px;margin:0 0 12px}
+.mrow{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginView" class="login-wrap">
+  <div class="card">
+    <h1 style="font-size:20px">Admin login</h1>
+    <p class="sub">Admin email se login karein.</p>
+    <div class="field"><label>Email</label><input id="email" type="email"></div>
+    <div class="field"><label>Password</label><div style="position:relative"><input id="pass" type="password" style="padding-right:58px"><button type="button" id="peye" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);font-weight:700;font-size:13px;padding:4px">Show</button></div></div>
+    <div class="err" id="err"></div>
+    <button class="btn" id="loginBtn" style="width:100%">Login</button>
+    <p class="sub" style="text-align:center;margin-top:14px"><a href="/" style="color:var(--accent);font-weight:700;text-decoration:none">← App</a></p>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dash" class="shell hidden">
+  <div class="rail" id="rail">
+    <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/></svg></div>
+    <div id="navBtns"></div>
+    <div class="spacer"></div>
+    <button class="navbtn" id="logout" title="Logout"><span class="tip">Logout</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg></button>
+  </div>
+  <div class="main">
+    <div class="main-h"><div class="ic" id="secIc"></div><h1 id="secTitle"></h1></div>
+    <div class="wrapx" id="secBody"></div>
+  </div>
+</div>
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<script>
+const API="/api";
+let token=localStorage.getItem("nh_admin_token")||null;
+const $=id=>document.getElementById(id);
+function toast(m){const e=document.createElement("div");e.className="toast";e.textContent=m;$("toastRoot").appendChild(e);setTimeout(()=>e.remove(),2000);}
+async function api(p,o={}){const h={"Content-Type":"application/json"};if(token)h.Authorization="Bearer "+token;
+ const r=await fetch(API+p,{...o,headers:{...h,...(o.headers||{})}});const d=await r.json().catch(()=>({}));
+ if(!r.ok)throw new Error(d.error||"Error");return d;}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+
+/* icons */
+const IC={
+ overview:'<path d="M3 13h8V3H3zM13 21h8V11h-8zM13 3v6h8V3zM3 21h8v-6H3z"/>',
+ users:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+ pay:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>',
+ plans:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8ZM14 2v6h6M9 13h6M9 17h4"/>',
+ symptoms:'<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+ members:'<path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M16 3.13a4 4 0 0 1 0 7.75M22 21v-2a4 4 0 0 0-3-3.87"/>',
+ settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>',
+ community:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/>',
+ referral:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/>',
+ points:'<circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4"/>',
+};
+function svg(name){return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[name]}</svg>`;}
+const SECTIONS=[
+ {key:"overview",title:"Overview",icon:"overview"},
+ {key:"users",title:"Users",icon:"users"},
+ {key:"pay",title:"Payments",icon:"pay"},
+ {key:"plans",title:"Plans report",icon:"plans"},
+ {key:"symptoms",title:"Symptoms report",icon:"symptoms"},
+ {key:"members",title:"Family members",icon:"members"},
+ {key:"community",title:"Community (moderation)",icon:"community"},
+ {key:"referral",title:"Referral / Sharing",icon:"referral"},
+ {key:"points",title:"Healing Points",icon:"points"},
+ {key:"settings",title:"Settings (edit)",icon:"settings"},
+];
+
+/* login */
+$("loginBtn").onclick=async()=>{$("err").textContent="";
+ try{const d=await api("/auth/login",{method:"POST",body:JSON.stringify({email:$("email").value.trim(),password:$("pass").value})});
+  token=d.token;const me=await api("/me",{headers:{Authorization:"Bearer "+token}});
+  if(!me.user.is_admin){$("err").textContent="Ye account admin nahi hai.";token=null;return;}
+  localStorage.setItem("nh_admin_token",token);boot();
+ }catch(e){$("err").textContent=e.message;}};
+$("logout").onclick=()=>{token=null;localStorage.removeItem("nh_admin_token");location.reload();};
+$("peye").onclick=()=>{const i=$("pass");const sh=i.type==="password";i.type=sh?"text":"password";$("peye").textContent=sh?"Hide":"Show";};
+
+function boot(){
+ $("loginView").classList.add("hidden");$("dash").classList.remove("hidden");
+ $("navBtns").innerHTML=SECTIONS.map(s=>`<button class="navbtn" data-sec="${s.key}" title="${s.title}"><span class="tip">${s.title}</span>${svg(s.icon)}</button>`).join("");
+ $("navBtns").querySelectorAll(".navbtn").forEach(b=>b.onclick=()=>show(b.dataset.sec));
+ show("overview");
+}
+function show(key){
+ const s=SECTIONS.find(x=>x.key===key);
+ $("navBtns").querySelectorAll(".navbtn").forEach(b=>b.classList.toggle("on",b.dataset.sec===key));
+ $("secIc").innerHTML=svg(s.icon);$("secTitle").textContent=s.title;
+ $("secBody").innerHTML='<p class="sub">Loading…</p>';
+ ({overview:secOverview,users:secUsers,pay:secPay,plans:secPlans,symptoms:secSymptoms,members:secMembers,community:secCommunity,referral:secReferral,points:secPoints,settings:secSettings}[key])();
+}
+
+/* ===== sections ===== */
+async function secOverview(){
+ const s=await api("/admin/stats");
+ const rev=(s.revenue||[]).map(r=>`${r.currency||""} ${(r.total||0).toFixed(0)}`).join(" · ")||"—";
+ const card=(ic,k,v,sm)=>`<div class="stat"><div class="k">${svg(ic)}${k}</div><div class="v ${sm?'sm':''}">${v}</div></div>`;
+ $("secBody").innerHTML=`<div class="stats">
+  ${card("users","Total users",s.totalUsers)}
+  ${card("users","Premium",s.premium)}
+  ${card("users","Free",s.free)}
+  ${card("users","New this month",s.newThisMonth)}
+  ${card("plans","Plans generated",s.plans)}
+  ${card("symptoms","Symptom logs",s.symptoms)}
+  ${card("members","Members",s.members)}
+  ${card("pay","Revenue",esc(rev),true)}
+ </div>`;
+}
+async function secUsers(){
+ const d=await api("/admin/users");
+ $("secBody").innerHTML=`<div class="row" style="margin-bottom:12px"><input id="uq" placeholder="Search naam/email…" style="max-width:260px"></div><div class="scroll"><table><thead><tr><th>Name</th><th>Email</th><th>Region</th><th>Plan</th><th>Joined</th><th>Expires</th><th>Action</th></tr></thead><tbody id="ur"></tbody></table></div>`;
+ const draw=(users)=>{$("ur").innerHTML=users.map(u=>{const prem=u.plan==="premium"&&u.plan_status==="active";
+  return `<tr><td>${esc(u.name)}${u.is_admin?' <span class="pill premium">admin</span>':''}</td><td>${esc(u.email)}</td><td>${esc(u.region||"")}</td><td><span class="pill ${prem?"premium":"free"}">${prem?"premium":"free"}</span></td><td>${esc((u.created_at||"").slice(0,10))||"—"}</td><td>${esc((u.plan_expires||"").slice(0,10))||"—"}</td><td><div class="row">${prem?`<button class="btn ghost sm" data-off="${u.id}">Remove premium</button>`:`<button class="btn sm" data-on="${u.id}">Give premium</button>`}<button class="btn ghost sm" data-mem="${u.id}" data-mn="${esc(u.name)}">Members</button>${u.is_admin?"":`<button class="btn danger sm" data-del="${u.id}">Delete</button>`}</div></td></tr>`;}).join("")||`<tr><td colspan="7" class="sub">Koi user nahi</td></tr>`;
+  $("ur").querySelectorAll("[data-on]").forEach(b=>b.onclick=()=>setPrem(b.dataset.on,true));
+  $("ur").querySelectorAll("[data-off]").forEach(b=>b.onclick=()=>setPrem(b.dataset.off,false));
+  $("ur").querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>delUser(b.dataset.del));
+  $("ur").querySelectorAll("[data-mem]").forEach(b=>b.onclick=()=>openUserMembers(b.dataset.mem,b.dataset.mn));};
+ draw(d.users);
+ let tmr;$("uq").oninput=e=>{clearTimeout(tmr);tmr=setTimeout(async()=>{const r=await api("/admin/users?q="+encodeURIComponent(e.target.value));draw(r.users);},300);};
+}
+async function setPrem(id,on){await api("/admin/users/"+id+"/premium",{method:"POST",body:JSON.stringify({on,days:31})});toast(on?"Premium diya ✓":"Premium hataya");secUsers();}
+async function delUser(id){if(!confirm("Pakka is user ko delete karna hai? Uska saara data (plans, symptoms, members) mit jaayega."))return;try{await api("/admin/users/"+id,{method:"DELETE"});toast("User delete ho gaya");secUsers();}catch(e){toast(e.message);}}
+function openModal(html){$("modalRoot").innerHTML=`<div class="modal-bg" id="mbg"><div class="modal">${html}</div></div>`;$("mbg").onclick=e=>{if(e.target.id==="mbg")closeModal();};}
+function closeModal(){$("modalRoot").innerHTML="";}
+function genSel(v){const o=[["","—"],["male","Purush"],["female","Mahila"],["other","Anya"]];return o.map(([val,lbl])=>`<option value="${val}" ${v===val?"selected":""}>${lbl}</option>`).join("");}
+async function openUserMembers(id,name){
+ try{const d=await api("/admin/users/"+id+"/members");
+  const rows=d.members.map(m=>`<div class="mrow" data-mid="${m.id}">
+    <div class="two"><div><label>Naam</label><input class="mN" value="${esc(m.name)}" ${m.relation==="self"?"":""}></div><div><label>Rishta</label><input class="mR" value="${esc(m.relation||"")}" ${m.relation==="self"?"disabled":""}></div></div>
+    <div class="two" style="margin-top:8px"><div><label>Ling</label><select class="mG">${genSel(m.gender||"")}</select></div><div><label>Umar</label><input class="mA" type="number" value="${m.age||""}"></div></div>
+    <div class="row" style="margin-top:10px"><button class="btn sm" data-save="${m.id}">Save</button>${m.relation==="self"?'<span class="pill premium">self</span>':`<button class="btn danger sm" data-mdel="${m.id}">Delete</button>`}</div>
+   </div>`).join("")||'<p class="sub">Koi member nahi.</p>';
+  openModal(`<h3>${esc(name)} ke members</h3>${rows}<button class="btn ghost" id="mClose" style="width:100%;margin-top:6px">Band karein</button>`);
+  $("mClose").onclick=closeModal;
+  $("modalRoot").querySelectorAll("[data-save]").forEach(b=>b.onclick=async()=>{const r=b.closest(".mrow");
+   try{await api("/admin/members/"+b.dataset.save,{method:"PUT",body:JSON.stringify({name:r.querySelector(".mN").value,relation:r.querySelector(".mR").value,gender:r.querySelector(".mG").value,age:+r.querySelector(".mA").value||null})});toast("Save ho gaya ✓");}catch(e){toast(e.message);}});
+  $("modalRoot").querySelectorAll("[data-mdel]").forEach(b=>b.onclick=async()=>{if(!confirm("Is member ko delete karein?"))return;try{await api("/admin/members/"+b.dataset.mdel,{method:"DELETE"});openUserMembers(id,name);}catch(e){toast(e.message);}});
+ }catch(e){toast(e.message);}
+}
+async function secPay(){
+ const d=await api("/admin/payments");
+ $("secBody").innerHTML=`<div class="scroll"><table><thead><tr><th>User</th><th>Amount</th><th>Provider</th><th>Status</th><th>Date</th></tr></thead><tbody>${d.payments.map(p=>`<tr><td>${esc(p.name)}<br><span class="sub" style="font-size:12px">${esc(p.email)}</span></td><td>${esc(p.currency||"")} ${p.amount!=null?p.amount:""}</td><td>${esc(p.provider||"")}</td><td>${esc(p.status||"")}</td><td>${esc((p.created_at||"").replace("T"," ").slice(0,16))}</td></tr>`).join("")||`<tr><td colspan="5" class="sub">Abhi koi payment nahi</td></tr>`}</tbody></table></div>`;
+}
+async function secPlans(){
+ const d=await api("/admin/report/plans");
+ const bysrc=Object.entries(d.bySource||{}).map(([k,v])=>`<span class="pill free" style="margin-right:6px">${esc(k)}: ${v}</span>`).join("");
+ $("secBody").innerHTML=`<div class="stats" style="margin-bottom:16px"><div class="stat"><div class="k">${svg("plans")}Total plans</div><div class="v">${d.total}</div></div><div class="stat"><div class="k">${svg("plans")}By source</div><div class="v sm" style="margin-top:8px">${bysrc||"—"}</div></div></div>
+  <div class="scroll"><table><thead><tr><th>User</th><th>Title</th><th>Source</th><th>Date</th></tr></thead><tbody>${d.recent.map(p=>`<tr><td>${esc(p.name||"")}<br><span class="sub" style="font-size:12px">${esc(p.email||"")}</span></td><td>${esc((p.title||"").slice(0,50))}</td><td>${esc(p.source||"")}</td><td>${esc((p.created_at||"").replace("T"," ").slice(0,16))}</td></tr>`).join("")||`<tr><td colspan="4" class="sub">Abhi koi plan nahi</td></tr>`}</tbody></table></div>`;
+}
+async function secSymptoms(){
+ const d=await api("/admin/report/symptoms");
+ const max=Math.max(1,...d.top.map(t=>t.count));
+ $("secBody").innerHTML=`<div class="stats" style="margin-bottom:16px"><div class="stat"><div class="k">${svg("symptoms")}Total logs</div><div class="v">${d.total}</div></div></div>
+  <div class="scroll"><table><thead><tr><th>Symptom</th><th>Count</th><th></th><th>Avg severity</th></tr></thead><tbody>${d.top.map(t=>`<tr><td>${esc(t.symptom)}</td><td>${t.count}</td><td style="width:120px"><div class="bar"><i style="width:${(t.count/max)*100}%"></i></div></td><td>${t.avgSev}/5</td></tr>`).join("")||`<tr><td colspan="4" class="sub">Abhi koi log nahi</td></tr>`}</tbody></table></div>`;
+}
+async function secMembers(){
+ const d=await api("/admin/report/members");
+ const byrel=Object.entries(d.byRel||{}).map(([k,v])=>`<span class="pill free" style="margin-right:6px">${esc(k)}: ${v}</span>`).join("");
+ $("secBody").innerHTML=`<div class="stats"><div class="stat"><div class="k">${svg("members")}Total members</div><div class="v">${d.total}</div></div><div class="stat"><div class="k">${svg("members")}Family (non-self)</div><div class="v">${d.family}</div></div><div class="stat"><div class="k">${svg("members")}By relation</div><div class="v sm" style="margin-top:8px">${byrel||"—"}</div></div></div>`;
+}
+let commFilter="all";
+async function secCommunity(){
+ const d=await api("/admin/community/posts?status="+commFilter);
+ const c=d.counts||{approved:0,hidden:0,total:0};
+ $("secBody").innerHTML=`
+  <div class="stats" style="margin-bottom:16px">
+    <div class="stat"><div class="k">${svg("community")}Approved (live)</div><div class="v">${c.approved}</div></div>
+    <div class="stat"><div class="k">${svg("community")}Hidden / review</div><div class="v">${c.hidden}</div></div>
+    <div class="stat"><div class="k">${svg("community")}Total posts</div><div class="v">${c.total}</div></div>
+  </div>
+  <div class="row" style="margin-bottom:12px"><select id="cf" style="max-width:220px"><option value="all">Sab</option><option value="hidden">Hidden / review</option><option value="approved">Approved</option></select></div>
+  <div class="scroll"><table><thead><tr><th>Status</th><th>Title / story</th><th>Author</th><th>Flag</th><th>Reports</th><th>Date</th><th>Action</th></tr></thead><tbody id="cr"></tbody></table></div>`;
+ $("cf").value=commFilter;
+ $("cf").onchange=()=>{commFilter=$("cf").value;secCommunity();};
+ $("cr").innerHTML=d.posts.map(p=>`<tr>
+   <td><span class="pill ${p.status==="approved"?"premium":"free"}">${esc(p.status)}</span></td>
+   <td><b>${esc(p.title)}</b><br><span class="sub" style="font-size:12px">${esc((p.body||"").slice(0,90))}</span></td>
+   <td>${esc(p.author||"")}<br><span class="sub" style="font-size:11px">${esc(p.user_email||"")}</span></td>
+   <td>${p.flag?`<span class="pill free">${esc(p.flag)}</span>`:"—"}</td>
+   <td>${p.report_count||0}</td>
+   <td>${esc((p.created_at||"").slice(0,10))}</td>
+   <td><div class="row">${p.status==="approved"?`<button class="btn ghost sm" data-hide="${p.id}">Hide</button>`:`<button class="btn sm" data-appr="${p.id}">Approve</button>`}<button class="btn danger sm" data-cdel="${p.id}">Delete</button></div></td>
+ </tr>`).join("")||`<tr><td colspan="7" class="sub">Koi post nahi</td></tr>`;
+ $("cr").querySelectorAll("[data-appr]").forEach(b=>b.onclick=()=>setPostStatus(b.dataset.appr,"approved"));
+ $("cr").querySelectorAll("[data-hide]").forEach(b=>b.onclick=()=>setPostStatus(b.dataset.hide,"hidden"));
+ $("cr").querySelectorAll("[data-cdel]").forEach(b=>b.onclick=()=>delPost(b.dataset.cdel));
+}
+async function setPostStatus(id,status){try{await api("/admin/community/posts/"+id,{method:"PUT",body:JSON.stringify({status})});toast(status==="approved"?"Approve ho gaya ✓":"Hide kar diya");secCommunity();}catch(e){toast(e.message);}}
+async function delPost(id){if(!confirm("Ye post hamesha ke liye delete karein?"))return;try{await api("/admin/community/posts/"+id,{method:"DELETE"});toast("Delete ho gaya");secCommunity();}catch(e){toast(e.message);}}
+async function secReferral(){
+ const d=await api("/admin/report/referral");
+ const bt=Object.entries(d.byType||{}).map(([k,v])=>`<span class="pill free" style="margin-right:6px">${esc(k)}: ${v}</span>`).join("")||"—";
+ $("secBody").innerHTML=`<div class="stats" style="margin-bottom:16px">
+   <div class="stat"><div class="k">${svg("referral")}Referred signups</div><div class="v">${d.totalReferredSignups}</div></div>
+   <div class="stat"><div class="k">${svg("referral")}Active referrers</div><div class="v">${d.activeReferrers}</div></div>
+   <div class="stat"><div class="k">${svg("community")}Total shares</div><div class="v">${d.totalShares}</div></div>
+   <div class="stat"><div class="k">${svg("community")}Shares by type</div><div class="v sm" style="margin-top:8px">${bt}</div></div>
+ </div>
+ <h3 style="font-family:var(--f-head);font-weight:600;font-size:17px;margin:0 0 10px">Top referrers</h3>
+ <div class="scroll"><table><thead><tr><th>#</th><th>Name</th><th>Email</th><th>Code</th><th>Laaye (count)</th></tr></thead><tbody>${(d.topReferrers||[]).map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.name)}</td><td>${esc(r.email)}</td><td><span class="pill free">${esc(r.code||"—")}</span></td><td><b>${r.count}</b></td></tr>`).join("")||`<tr><td colspan="5" class="sub">Abhi kisi ne referral se user nahi laaya</td></tr>`}</tbody></table></div>`;
+}
+let redFilter="pending";
+async function secPoints(){
+ const o=await api("/admin/points");
+ const rd=await api("/admin/redemptions?status="+redFilter);
+ const card=(ic,k,v)=>`<div class="stat"><div class="k">${svg(ic)}${k}</div><div class="v">${v}</div></div>`;
+ $("secBody").innerHTML=`<div class="stats" style="margin-bottom:16px">
+   ${card("points","Points in wallets",o.inWallet)}
+   ${card("points","Total earned",o.earned)}
+   ${card("points","Total redeemed",o.redeemed)}
+   ${card("points","Product coupons pending",o.pendingProduct)}
+ </div>
+ <h3 style="font-family:var(--f-head);font-weight:600;font-size:17px;margin:0 0 10px">Redemptions</h3>
+ <div class="row" style="margin-bottom:10px"><select id="rf" style="max-width:200px"><option value="pending">Pending</option><option value="all">Sab</option><option value="done">Done</option></select></div>
+ <div class="scroll"><table><thead><tr><th>User</th><th>Type</th><th>Points</th><th>Detail</th><th>Status</th><th>Action</th></tr></thead><tbody id="rr"></tbody></table></div>
+ <h3 style="font-family:var(--f-head);font-weight:600;font-size:17px;margin:22px 0 10px">Top earners</h3>
+ <div class="scroll"><table><thead><tr><th>#</th><th>Name</th><th>Email</th><th>Points</th><th>Action</th></tr></thead><tbody id="tr"></tbody></table></div>`;
+ $("rf").value=redFilter;$("rf").onchange=()=>{redFilter=$("rf").value;secPoints();};
+ $("rr").innerHTML=(rd.redemptions||[]).map(r=>`<tr>
+   <td>${esc(r.name||"")}<br><span class="sub" style="font-size:11px">${esc(r.email||"")}</span></td>
+   <td>${r.kind==="premium"?"⭐ Premium":"🎟️ Product"}</td><td>${r.points}</td>
+   <td>${r.kind==="product"?`${esc(r.code||"")} · ₹${r.rupees||0}`:`${r.months||1} mo`}</td>
+   <td><span class="pill ${r.status==="pending"?"free":"premium"}">${esc(r.status)}</span></td>
+   <td>${(r.kind==="product"&&r.status==="pending")?`<div class="row"><button class="btn sm" data-appr="${r.id}">Approve</button><button class="btn ghost sm" data-rej="${r.id}">Reject</button></div>`:"—"}</td>
+ </tr>`).join("")||`<tr><td colspan="6" class="sub">Koi redemption nahi</td></tr>`;
+ $("rr").querySelectorAll("[data-appr]").forEach(b=>b.onclick=()=>setRedemption(b.dataset.appr,"approved"));
+ $("rr").querySelectorAll("[data-rej]").forEach(b=>b.onclick=()=>setRedemption(b.dataset.rej,"rejected"));
+ $("tr").innerHTML=(o.top||[]).map((u,i)=>`<tr><td>${i+1}</td><td>${esc(u.name)}${u.frozen?' <span class="pill" style="background:var(--danger);color:#fff">frozen</span>':''}</td><td>${esc(u.email)}</td><td><b>${u.points}</b></td><td><div class="row"><button class="btn ghost sm" data-adj="${u.id}" data-nm="${esc(u.name)}">Adjust</button><button class="btn ghost sm" data-frz="${u.id}" data-on="${u.frozen?0:1}">${u.frozen?"Unfreeze":"Freeze"}</button><button class="btn ghost sm" data-led="${u.id}" data-nm2="${esc(u.name)}">Ledger</button></div></td></tr>`).join("")||`<tr><td colspan="5" class="sub">Abhi koi points nahi</td></tr>`;
+ $("tr").querySelectorAll("[data-adj]").forEach(b=>b.onclick=()=>adjustPoints(b.dataset.adj,b.dataset.nm));
+ $("tr").querySelectorAll("[data-frz]").forEach(b=>b.onclick=()=>freezePoints(b.dataset.frz,b.dataset.on==="1"));
+ $("tr").querySelectorAll("[data-led]").forEach(b=>b.onclick=()=>showLedger(b.dataset.led,b.dataset.nm2));
+}
+async function setRedemption(id,status){if(status==="rejected"&&!confirm("Reject karein? Points user ko wapas mil jayenge."))return;try{await api("/admin/redemptions/"+id,{method:"POST",body:JSON.stringify({status})});toast(status==="approved"?"Approved ✓":"Rejected, points refund");secPoints();}catch(e){toast(e.message);}}
+async function adjustPoints(id,name){const v=prompt("Points +/- ("+name+"):\n(jaise 50 ya -20)");if(v===null)return;const pts=parseInt(v,10);if(!pts){toast("Number daalein");return;}const note=prompt("Kaaran (optional):")||"admin adjust";try{const r=await api("/admin/points/user/"+id+"/adjust",{method:"POST",body:JSON.stringify({points:pts,note})});toast("Naya balance: "+r.balance);secPoints();}catch(e){toast(e.message);}}
+async function freezePoints(id,on){try{await api("/admin/points/user/"+id+"/freeze",{method:"POST",body:JSON.stringify({on})});toast(on?"Freeze kar diya":"Unfreeze kar diya");secPoints();}catch(e){toast(e.message);}}
+async function showLedger(id,name){try{const d=await api("/admin/points/user/"+id);const rows=d.ledger.map(l=>`<div class="mrow" style="display:flex;justify-content:space-between"><span>${esc(l.type)} ${l.note?`· <span class="sub">${esc(l.note)}</span>`:""}<br><span class="sub" style="font-size:11px">${esc((l.created_at||"").replace("T"," ").slice(0,16))}</span></span><b style="color:${l.points<0?'var(--danger)':'var(--accent)'}">${l.points>0?'+':''}${l.points}</b></div>`).join("")||'<p class="sub">Koi entry nahi</p>';openModal(`<h3>${esc(name)} — points ledger (balance ${d.user.points})</h3>${rows}<button class="btn ghost" id="lClose" style="width:100%;margin-top:6px">Band karein</button>`);$("lClose").onclick=closeModal;}catch(e){toast(e.message);}}
+async function secSettings(){
+ const d=await api("/admin/settings");const s=d.settings;const p=s.points||{};
+ $("secBody").innerHTML=`<div class="card" style="max-width:560px">
+  <div class="field"><label>App ka naam</label><input id="sName" value="${esc(s.app_name)}"></div>
+  <div class="two"><div class="field"><label>Price (₹ / mahina)</label><input id="sInr" type="number" value="${s.price_inr}"></div><div class="field"><label>Price ($ / month)</label><input id="sUsd" type="number" value="${s.price_usd}"></div></div>
+  <div class="field"><label>Free plan limit (kitne plan save)</label><input id="sLimit" type="number" value="${s.free_plan_limit}"></div>
+  <div class="field"><label>App ka public URL (sharing link ke liye)</label><input id="sUrl" value="${esc(s.app_url||"")}" placeholder="https://yourapp.com"><p class="sub" style="margin:4px 0 0;font-size:12px">Jab app online ho, yahan uska address daalein — share links isi se banenge. Khali chhodne par abhi wale address se.</p></div>
+  <h3 style="font-family:var(--f-head);font-weight:600;font-size:16px;margin:18px 0 8px">Share / Invite content</h3>
+  <p class="sub" style="margin:0 0 10px">Ye line sab share-cards aur invite message me jaati hai.</p>
+  <div class="field"><label>Share tagline (Hindi)</label><input id="sTagHi" value="${esc(s.share_tagline_hi||"")}"></div>
+  <div class="field"><label>Share tagline (English)</label><input id="sTagEn" value="${esc(s.share_tagline_en||"")}"></div>
+  <div class="field"><label>Invite video link (optional)</label><input id="sVid" value="${esc(s.invite_video||"")}" placeholder="https://youtu.be/..."><p class="sub" style="margin:4px 0 0;font-size:12px">YouTube/koi video link — invite message ke saath jaayega. (Video yahi banti nahi, link daalein.)</p></div>
+  <div class="field"><label>Premium blurb (Hindi)</label><input id="sBhi" value="${esc(s.premium_blurb_hi)}"></div>
+  <div class="field"><label>Premium blurb (English)</label><input id="sBen" value="${esc(s.premium_blurb_en)}"></div>
+  <h3 style="font-family:var(--f-head);font-weight:600;font-size:16px;margin:18px 0 8px">Healing Points — rules</h3>
+  <p class="sub" style="margin:0 0 10px">Har activity ke points aur redeem rate yahan badlein.</p>
+  ${ptField("Referral (dost active)","referral",p.referral)}
+  <div class="two">${ptField("Pehla plan","plan",p.plan)}${ptField("Profile poori","profile",p.profile)}</div>
+  <div class="two">${ptField("Community kahani","post",p.post)}${ptField("Daily log","log",p.log)}</div>
+  <div class="two">${ptField("Share","share",p.share)}${ptField("Like","like",p.like)}</div>
+  <div class="two">${ptField("Member add","member",p.member)}${ptField("Member max (kitni baar)","member_max_awards",p.member_max_awards)}</div>
+  <div class="two">${ptField("Share daily cap","share_daily_cap",p.share_daily_cap)}${ptField("Like daily cap","like_daily_cap",p.like_daily_cap)}</div>
+  <h4 style="font-size:14px;margin:12px 0 6px">Redeem rates</h4>
+  <div class="field"><label>1 point = ₹ (rate)</label><input id="pt_rupee_per_point" type="number" step="any" value="${p.rupee_per_point!=null?p.rupee_per_point:0.01}"><p class="sub" style="margin:4px 0 0;font-size:12px">0.01 = 100 points ₹1 · 0.1 = 10 points ₹1 · 1 = 1 point ₹1</p></div>
+  ${ptField("Product/coupon min points","product_min_points",p.product_min_points)}
+  <div class="field"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="sCoupon" ${s.coupon_enabled?"checked":""} style="width:auto">Product coupon redeem ON karein</label><p class="sub" style="margin:4px 0 0;font-size:12px">Abhi band hai. Jab special offer dena ho tab ON karein — tab users apne points ka ₹ coupon le sakenge.</p></div>
+  <div class="err" id="sErr"></div>
+  <button class="btn" id="sSave" style="width:100%">Save changes</button>
+  <p class="sub" style="margin-top:10px">Save karte hi ye changes app mein live ho jaate hain.</p>
+ </div>`;
+ $("sSave").onclick=async()=>{try{
+   const pk=["referral","plan","profile","post","log","share","like","member","member_max_awards","share_daily_cap","like_daily_cap","redeem_premium_month","rupee_per_point","product_min_points"];
+   const points={};pk.forEach(k=>{const el=$("pt_"+k);if(el)points[k]=el.value;});
+   await api("/admin/settings",{method:"PUT",body:JSON.stringify({app_name:$("sName").value,price_inr:$("sInr").value,price_usd:$("sUsd").value,free_plan_limit:$("sLimit").value,premium_blurb_hi:$("sBhi").value,premium_blurb_en:$("sBen").value,app_url:$("sUrl").value,share_tagline_hi:$("sTagHi").value,share_tagline_en:$("sTagEn").value,invite_video:$("sVid").value,points,coupon_enabled:$("sCoupon").checked})});
+   toast("Settings save ho gayi ✓");
+  }catch(e){$("sErr").textContent=e.message;}};
+}
+function ptField(label,key,val){return `<div class="field"><label>${label}</label><input id="pt_${key}" type="number" step="any" value="${val!=null?val:0}"></div>`;}
+
+/* boot */
+if(token){api("/me").then(me=>{if(me.user.is_admin)boot();else{token=null;localStorage.removeItem("nh_admin_token");}}).catch(()=>{token=null;localStorage.removeItem("nh_admin_token");});}
+</script>
+</body>
+</html>

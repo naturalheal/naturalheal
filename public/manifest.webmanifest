@@ -1,0 +1,15 @@
+{
+  "name": "NaturalHeal AI",
+  "short_name": "NaturalHeal",
+  "description": "Ghar baithe natural ayurvedic health plans — free.",
+  "start_url": "/?src=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F2F5F0",
+  "theme_color": "#2E7D5B",
+  "orientation": "portrait",
+  "lang": "hi",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
