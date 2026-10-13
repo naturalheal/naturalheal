@@ -39,6 +39,7 @@ img,svg,video,canvas{max-width:100%}
 .lang{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
 .lang button{border:none;background:transparent;color:var(--muted);font:inherit;font-weight:800;font-size:13px;padding:7px 11px;cursor:pointer}
 .lang button.on{background:var(--accent);color:#fff}
+.langsel{font:inherit;font-weight:800;font-size:13px;color:var(--accent-ink);background:var(--accent-soft);border:1px solid var(--line);border-radius:10px;padding:8px 9px;cursor:pointer;max-width:120px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:22px}
 .card+.card{margin-top:16px}
 .card h2{font-family:var(--f-head);font-weight:600;font-size:20px;margin:0 0 4px}
@@ -145,8 +146,9 @@ body.big{zoom:1.18}
 .post .pacts button{background:none;border:none;color:var(--muted);cursor:pointer;font:inherit;font-weight:700;display:inline-flex;align-items:center;gap:4px}
 .post .pacts button.on{color:var(--accent)}
 /* bottom tabs */
-.tabbar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:flex;z-index:40;padding:8px 0 calc(10px + env(safe-area-inset-bottom));box-shadow:0 -2px 12px rgba(30,40,35,.06)}
-.tabbtn{flex:1;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);font:inherit;font-size:11px;font-weight:700}
+.tabbar{position:fixed;left:0;right:0;bottom:0;width:100%;box-sizing:border-box;background:var(--surface);border-top:1px solid var(--line);display:flex;z-index:40;padding:8px 0 calc(10px + env(safe-area-inset-bottom));box-shadow:0 -2px 12px rgba(30,40,35,.06)}
+.tabbtn{flex:1 1 0;min-width:0;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);font:inherit;font-size:10.5px;font-weight:700;padding:0 2px}
+.tabbtn>span:last-child{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tabbtn .ti{font-size:20px;opacity:.55}
 .tabbtn.on{color:var(--accent)}
 .tabbtn.on .ti{opacity:1}
@@ -252,6 +254,11 @@ ul.items li b{color:var(--accent-ink)}
 .r-body{flex:1;padding-top:3px}
 .r-time{font-weight:800;color:var(--accent-ink);font-size:13px}
 .r-act{font-size:15px;font-weight:600;margin-top:1px}
+.r-opt-btn{margin-top:5px;background:var(--surface);border:1px solid var(--accent);color:var(--accent-ink);border-radius:999px;padding:4px 11px;font:inherit;font-weight:800;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.r-opts{margin-top:9px;display:flex;flex-direction:column;gap:8px}
+.r-opt{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:9px 12px}
+.r-opt b{font-size:14px}
+.r-opt .ro-how{font-size:12.5px;color:var(--muted);margin-top:2px}
 .redflag{background:#fdeceb;border:1px solid var(--danger);border-radius:12px;padding:13px 15px;margin-top:14px}
 @media(prefers-color-scheme:dark){.redflag{background:#2a1512}}
 .redflag b{color:var(--danger)}
@@ -276,7 +283,7 @@ ul.items li b{color:var(--accent-ink)}
     <div class="controls">
       <select id="memberSel" class="hidden"></select>
       <button id="bigBtn" title="Bade akshar" aria-label="Bade akshar">Aa</button>
-      <div class="lang"><button id="lHi" class="on">हिंदी</button><button id="lEn">EN</button></div>
+      <select id="langSel" class="langsel" aria-label="Bhasha / Language"></select>
       <button class="link hidden" id="logoutBtn" style="font-size:13px"></button>
     </div>
   </div>
@@ -395,7 +402,11 @@ ul.items li b{color:var(--accent-ink)}
 
 <script>
 const API="/api";
-let lang=localStorage.getItem("nh_lang")||"hi";
+let lang=localStorage.getItem("nh_lang")||"hin";
+/* Bhasha list — native script label + voice locale (BCP-47) */
+const LANGS=[["hin","हिन्दी","hi-IN"],["en","English","en-IN"],["hi","Hinglish","hi-IN"],["bn","বাংলা","bn-IN"],["mr","मराठी","mr-IN"],["gu","ગુજરાતી","gu-IN"],["ta","தமிழ்","ta-IN"],["te","తెలుగు","te-IN"],["kn","ಕನ್ನಡ","kn-IN"],["pa","ਪੰਜਾਬੀ","pa-IN"],["ml","മലയാളം","ml-IN"]];
+const LOCALE={};LANGS.forEach(l=>LOCALE[l[0]]=l[2]);
+function langLocale(){return LOCALE[lang]||"hi-IN";}
 let token=localStorage.getItem("nh_token")||null;
 let me=null, authMode="login", feats=null, pricing=null, member=null, membersList=[];
 const $=id=>document.getElementById(id);
@@ -411,15 +422,21 @@ function loadVoices(){try{_voices=window.speechSynthesis.getVoices()||[];}catch(
 if(TTS){loadVoices();try{window.speechSynthesis.onvoiceschanged=loadVoices;}catch(e){}}
 function pickVoice(){
  if(!_voices.length)loadVoices();
- const want=lang==="hi"?"hi":"en";
- // sabse acchi: hi-IN / en-IN; Google/Microsoft natural voices ko prefer karo
- const score=(v)=>{let s=0;const l=(v.lang||"").toLowerCase(),n=(v.name||"").toLowerCase();
-   if(want==="hi"){if(l.startsWith("hi"))s+=10;}else{if(l==="en-in")s+=10;else if(l.startsWith("en"))s+=6;}
-   if(/google/.test(n))s+=4;if(/natural|neural|online/.test(n))s+=3;if(/female|woman|swara|heera|kalpana/.test(n))s+=1;return s;};
+ const loc=langLocale().toLowerCase();        // jaise hi-in, ta-in
+ const base=loc.split("-")[0];                 // hi, ta...
+ // Score: theek us bhasha ki Indian voice > usi bhasha ki koi voice > hi-IN (Indian lahza) > en-IN
+ const score=(v)=>{let s=0;const l=(v.lang||"").toLowerCase().replace("_","-"),n=(v.name||"").toLowerCase();
+   if(l===loc)s+=14;else if(l.split("-")[0]===base)s+=9;
+   else if(base!=="en"&&l==="hi-in")s+=4;      // regional voice na ho to hi-IN bhi Indian lagta hai
+   else if(l==="en-in")s+=2;
+   if(v.localService)s+=2;                      // device ki apni Indian voice behtar/consistent
+   if(/google/.test(n))s+=3;if(/natural|neural|online|enhanced|wavenet/.test(n))s+=2;
+   if(/swara|heera|kalpana|lekha|aditi|raveena|hemant/.test(n))s+=1;
+   return s;};
  let best=null,bs=-1;_voices.forEach(v=>{const s=score(v);if(s>bs){bs=s;best=v;}});
  return bs>0?best:null;
 }
-function speak(text){if(!TTS||!text)return;try{window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(String(text).slice(0,4000));const v=pickVoice();if(v){u.voice=v;u.lang=v.lang;}else{u.lang=lang==="hi"?"hi-IN":"en-IN";}u.rate=.9;u.pitch=1.02;u.onend=()=>{speaking=false;};window.speechSynthesis.speak(u);speaking=true;}catch(e){}}
+function speak(text){if(!TTS||!text)return;try{window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(String(text).slice(0,4000));const v=pickVoice();u.lang=langLocale();if(v){u.voice=v;u.lang=v.lang||langLocale();}u.rate=.92;u.pitch=1.0;u.onend=()=>{speaking=false;};window.speechSynthesis.speak(u);speaking=true;}catch(e){}}
 function stopSpeak(){try{window.speechSynthesis.cancel();speaking=false;}catch(e){}}
 function toggleSpeak(text){if(speaking){stopSpeak();}else{speak(text);}}
 /* bade akshar mode */
@@ -657,11 +674,181 @@ const T={
   reportSimpleHint:"Your report in simple words — green means fine, red means pay attention:",
   kTitle:"Kitchen Remedy Finder",kSub:"Get a remedy from what's already in your home",kWhat:"What's the problem?",kHave:"What do you have? (tap)",kFind:"Find remedy",kFinding:"Finding…",kPickC:"Pick a problem first",kPickI:"Pick at least one item",kScanTitle:"Or from a photo — use your camera 📷",kScanHint:"Snap your fridge or groceries — the AI spots useful items and gives a remedy.",kScan:"Scan items",kScanning:"Looking…",kFound:"Found in photo",kCamTitle:"Find with camera 📷",kCamHint:"Open camera, point at your items, then snap — the AI spots useful items and gives a remedy.",kCamOpen:"Open camera",kCapture:"Snap & find",kOrList:"Or pick from a list",kBenefit:"Benefit",shareBtn:"Share",shCopied:"Link copied ✓",invTitle:"Invite friends, share health 🎁",invSub:"Send your link — friends get the app free, and once the rewards system is live you'll earn too.",invCopy:"Copy link",invWa:"Send on WhatsApp",invShare:"Share",invJoined:"joined via your link",qrBtn:"Show QR",qrTitle:"My QR code",qrSub:"Show friends or put on a poster — scan opens the app.",qrHeadline:"Your health, in your hands 🌿",qrScan2:"Scan to get the free app",installBtn:"Install app",installiOS:"Install: tap 'Share' → 'Add to Home Screen'",close:"Close",streakShare:"Share your streak",usingCount:"people are using this app",testiTitle:"Stories from people 💚",testiMore:"Read more stories",ptTitle:"Healing Points",ptOpen:"View / Redeem",ptBalance:"your points",ptRedeem:"Spend points",ptPremium:"Get Premium",ptProduct:"Product coupon",ptProductHint:"Min {min} points · 1 point = ₹{rpp}",ptGet:"Get",ptMonth:"month",ptPremiumHint:"1 month = ₹{price} · FREE with {pts} points",ptFree:"Get FREE",ptEarnTitle:"How to earn points",ptLedger:"Your history",ptNone:"No points yet — start earning!",ptFrozen:"⚠ Your points are on hold. Contact admin.",ptMyCoupons:"My coupons",ptPremOk:"Premium activated 🌿",ptCouponTitle:"Coupon created!",ptCouponSub:"₹{r} off — use this code at purchase. (Admin will confirm)",
   cTitle:"Community Healing Circles",cSub:"Share your natural healing story, learn from others",cDisc:"⚠ These are people's own experiences, not medical advice. Always ask your doctor.",cShare:"Write your story",cTitlePh:"Short title (e.g. How my acidity got better)",cBodyPh:"What you did, how long it took to help…",cTagPh:"Tag (e.g. acidity, thyroid) — optional",cAnon:"Hide my name (Anonymous)",cPost:"Post",cEmpty:"No stories yet — be the first to share!",cReport:"Report",cReportAsk:"Report this post as wrong/negative?",cReported:"Reported, thank you",cDelAsk:"Delete your post?",cFill:"Fill in both title and story",cPosted:"Posted ✓",cPending:"Post is under review, will show once approved",
+ },
+ hin:{
+  authLogin:"लॉगिन करें",authReg:"नया अकाउंट बनाएं",subLogin:"अपना प्लान देखने के लिए लॉगिन करें।",subReg:"अकाउंट बनाएं ताकि आपके प्लान सेव रहें।",
+  name:"नाम",email:"ईमेल",pass:"पासवर्ड",region:"जगह",goLogin:"लॉगिन",goReg:"अकाउंट बनाओ",
+  switchToReg:"अकाउंट नहीं है?",switchToRegBtn:"रजिस्टर करें",switchToLogin:"पहले से अकाउंट है?",switchToLoginBtn:"लॉगिन करें",
+  logout:"लॉगआउट",hello:(n)=>`नमस्ते, ${n}`,
+  pfTitle:"आपकी हेल्थ प्रोफाइल",pfSub:"भरकर प्लान बनाएं — ये सेव भी हो जाता है।",
+  age:"उम्र (साल)",gender:"लिंग",gSel:"चुनें…",gMale:"पुरुष",gFemale:"महिला",gOther:"अन्य",
+  height:"लंबाई (cm)",weight:"वज़न (kg)",life:"रहन-सहन",lSel:"चुनें…",lSed:"ज़्यादा बैठने वाला",lMod:"थोड़ा एक्टिव",lAct:"काफी एक्टिव",
+  concern:"समस्याएं (एक या ज़्यादा)",wake:"सुबह उठने का समय",allergy:"एलर्जी (optional)",
+  report:"लैब रिपोर्ट (optional)",reportHint:"अपनी रिपोर्ट अपलोड करें, या नीचे वैल्यू खुद डालें।",
+  reportFileHint:"PDF या रिपोर्ट की फोटो डालें — AI इससे वैल्यू पढ़कर प्लान बनाएगा। (Premium)",
+  reportOr:"— या वैल्यू खुद भरें —",addReport:"+ रिपोर्ट वैल्यू जोड़ो",markerPh:"जैसे Hemoglobin",valuePh:"जैसे 10.2 g/dL",
+  notes:"और कुछ बताना चाहें? (optional)",gen:"AI से प्लान बनाओ",saveProf:"प्रोफाइल सेव करो",
+  profSaved:"प्रोफाइल सेव हो गया ✓",generating:"प्लान बन रहा है…",
+  hist:"मेरे पुराने प्लान",histSub:"सेव किए हुए प्लान यहां दिखते हैं।",noHist:"अभी कोई प्लान नहीं।",
+  errEmail:"ईमेल और पासवर्ड डालें",errName:"नाम, ईमेल, पासवर्ड डालें",errAgeHW:"उम्र, लंबाई और वज़न सही भरें",errConcern:"कम से कम एक समस्या चुनें",
+  badgeAi:"AI पर्सनलाइज़्ड प्लान",badgeFb:"ऑफलाइन प्लान",sAge:"उम्र",sBmi:"BMI",sRegion:"जगह",sDosha:"दोष",
+  hDosha:"आयुर्वेदिक दोष",hReport:"रिपोर्ट के नतीजे",hSupp:"सप्लिमेंट",hRem:"घरेलू उपाय",hDiet:"आहार",hYoga:"योग / प्राणायाम",hDay:"दिन का रूटीन",hTip:"लाइफस्टाइल टिप्स",
+  prefer:"ज़्यादा लें",avoid:"बचें",seeDoc:"डॉक्टर को दिखाएं:",del:"डिलीट",opened:"प्लान खुल गया",deleted:"प्लान डिलीट हुआ",
+  planFree:"फ्री प्लान",planPremium:"प्रीमियम ✓",upgrade:"प्रीमियम लें",premiumWhy:"प्रीमियम में मिलता है: AI से गहरा प्लान + लैब रिपोर्ट एनालिसिस + अनलिमिटेड प्लान।",
+  choosePay:"पेमेंट का तरीका चुनें:",payRzp:"Razorpay (India) से",payStripe:"कार्ड (Global) से",perMonth:"/महीना",
+  limitHit:"फ्री लिमिट पूरी हो गई — प्रीमियम लें या पुराना प्लान डिलीट करें।",aiLocked:"AI प्लान प्रीमियम फीचर है। अभी आपको बेसिक प्लान मिला है।",cancel:"बंद करो",redirecting:"पेमेंट पेज खुल रहा है…",
+  tabHome:"होम",tabPlan:"प्लान",tabTrack:"ट्रैकर",dScore:"wellness",dStreak:"दिन स्ट्रीक",dPlans:"प्लान",dLogs:"लॉग",
+  dActive:"एक्टिव प्लान",dNoPlan:"अभी कोई प्लान नहीं — प्लान टैब से एक बनाएं।",dNewPlan:"नया AI प्लान",dLogSym:"सिम्टम लॉग",
+  dRoutine:"आज का रूटीन",dTrend:"सिम्टम ट्रेंड (7 दिन)",dInsightT:"AI इनसाइट",
+  trkTitle:"सिम्टम ट्रैकर",trkSub:"रोज़ लॉग करें — AI आपके प्लान को बेहतर बनाता है।",
+  trkWhich:"कौनसा सिम्टम?",trkSev:"कितना तेज़?",trkNote:"नोट (optional)",trkNotePh:"जैसे: खाने के बाद…",trkSave:"लॉग सेव करो",trkSaved:"सेव हो गया ✓",trkRecent:"हाल के लॉग",trkNone:"अभी कोई लॉग नहीं।",trkPick:"पहले सिम्टम चुनें",
+  sevLabels:["हल्का","ठीक","मध्यम","ज़्यादा","बहुत ज़्यादा"],
+  mAdd:"+ फैमिली मेंबर जोड़ो",mAddName:"नाम",mAddRel:"रिश्ता (जैसे बेटा, मां)",mAddBtn:"मेंबर जोड़ो",mMine:"मेरा",
+  seasonT:"मौसम की टिप (ऋतुचर्या)",progressT:"प्रोग्रेस",adjustBtn:"प्लान अपडेट करें",
+  whyBtn:"ये क्यों?",close:"बंद करें",thinking:"सोच रहा हूं…",whyPremium:"और गहरा पर्सनलाइज़्ड कारण प्रीमियम में मिलता है।",
+  chatOpen:"AI से पूछें",chatPh:"प्लान या सेहत के बारे में पूछें…",chatSend:"भेजो",chatHi:"नमस्ते! अपने प्लान या सेहत के बारे में कुछ भी पूछें। 🌿",
+  voiceNo:"इस ब्राउज़र में वॉइस सपोर्ट नहीं।",
+  remT:"रिमाइंडर",remEnable:"रिमाइंडर चालू करें",remOn:"रिमाइंडर चालू ✓",remNo:"इस ब्राउज़र में नोटिफिकेशन सपोर्ट नहीं।",remHint:"रूटीन के समय पर नोटिफिकेशन मिलेगा (ऐप खुला हो तब)।",
+  pwShow:"देखें",pwHide:"छुपाएं",mManage:"फैमिली मेंबर",mEdit:"मेंबर एडिट करें",mDelAsk:"इस मेंबर को डिलीट करें?",updated:"अपडेट हो गया ✓",listen:"सुनो",planEdit:"डिटेल बदलो",
+  tabKitchen:"रसोई",tabComm:"संगम",stNormal:"ठीक है ✓",stBorder:"थोड़ा ऊपर-नीचे",stLow:"कम है",stHigh:"ज़्यादा है",
+  reportSimpleHint:"आपकी रिपोर्ट आसान भाषा में — हरा मतलब ठीक, लाल मतलब ध्यान दें:",
+  kTitle:"घर की रसोई से इलाज",kSub:"जो चीज़ें घर में हैं उनसे नुस्खा पाएं",kWhat:"क्या तकलीफ है?",kHave:"आपके पास क्या है? (टैप करें)",kFind:"नुस्खा ढूंढो",kFinding:"ढूंढ रहे हैं…",kPickC:"पहले तकलीफ चुनें",kPickI:"कम से कम एक चीज़ चुनें",kScanTitle:"या फोटो से — कैमरा खींचें 📷",kScanHint:"अपने फ्रिज या सामान की फोटो लें — AI काम की चीज़ें खुद पहचान कर नुस्खा देगा।",kScan:"सामान स्कैन करें",kScanning:"देख रहे हैं…",kFound:"फोटो में ये मिला",kCamTitle:"कैमरा से ढूंढो 📷",kCamHint:"कैमरा खोलो, अपने सामान पर ले जाओ, फिर फोटो लो — AI काम की चीज़ खुद पहचान कर नुस्खा देगा।",kCamOpen:"कैमरा खोलो",kCapture:"फोटो लो & ढूंढो",kOrList:"या लिस्ट से चुनो",kBenefit:"फायदा",shareBtn:"शेयर",shCopied:"लिंक कॉपी हो गया ✓",invTitle:"दोस्तों को बुलाओ, सेहत बांटो 🎁",invSub:"अपना लिंक भेजो — दोस्त फ्री ऐप पाए, और शेयरिंग सिस्टम आने पर आपको इनाम भी मिलेगा।",invCopy:"लिंक कॉपी करें",invWa:"WhatsApp पर भेजें",invShare:"शेयर करें",invJoined:"लोग आपके लिंक से जुड़े",qrBtn:"QR दिखाओ",qrTitle:"मेरा QR कोड",qrSub:"दोस्तों को दिखाओ या पोस्टर पर लगाओ — स्कैन करते ही ऐप खुलेगी।",qrHeadline:"अपनी सेहत, अपने हाथ में 🌿",qrScan2:"स्कैन करो, फ्री ऐप पाओ",installBtn:"ऐप इंस्टॉल करें",installiOS:"इंस्टॉल: नीचे 'Share' → 'Add to Home Screen' दबाएं",streakShare:"अपनी स्ट्रीक शेयर करें",usingCount:"लोग इस ऐप को इस्तेमाल कर रहे हैं",testiTitle:"लोगों की कहानियां 💚",testiMore:"और कहानियां पढ़ें",ptTitle:"हीलिंग पॉइंट्स",ptOpen:"देखो / रिडीम",ptBalance:"आपके पॉइंट्स",ptRedeem:"पॉइंट्स खर्च करें",ptPremium:"प्रीमियम लें",ptProduct:"प्रोडक्ट कूपन",ptProductHint:"कम से कम {min} पॉइंट्स · 1 पॉइंट = ₹{rpp}",ptGet:"लें",ptMonth:"महीना",ptPremiumHint:"1 महीना = ₹{price} · {pts} पॉइंट्स में बिल्कुल फ्री",ptFree:"फ्री लें",ptEarnTitle:"पॉइंट्स कैसे कमाएं",ptLedger:"आपका हिसाब",ptNone:"अभी कोई पॉइंट्स नहीं — कमाना शुरू करें!",ptFrozen:"⚠ आपके पॉइंट्स होल्ड पर हैं। एडमिन से संपर्क करें।",ptMyCoupons:"मेरे कूपन",ptPremOk:"प्रीमियम चालू हो गया 🌿",ptCouponTitle:"कूपन बन गया!",ptCouponSub:"₹{r} की छूट — खरीदते वक्त ये कोड इस्तेमाल करें। (एडमिन कन्फर्म करेगा)",
+  cTitle:"कम्युनिटी हीलिंग सर्कल",cSub:"अपनी नेचुरल हीलिंग कहानी शेयर करें, दूसरों से सीखें",cDisc:"⚠ ये लोगों के अपने अनुभव हैं, मेडिकल सलाह नहीं। अपने डॉक्टर से ज़रूर पूछें।",cShare:"अपनी कहानी लिखें",cTitlePh:"छोटा टाइटल (जैसे: मेरी एसिडिटी कैसे ठीक हुई)",cBodyPh:"आपने क्या किया, कितने दिन में फायदा हुआ…",cTagPh:"टैग (जैसे: acidity, thyroid) — optional",cAnon:"नाम छुपाएं (Anonymous)",cPost:"पोस्ट करें",cEmpty:"अभी कोई कहानी नहीं — पहली कहानी आप लिखें!",cReport:"रिपोर्ट",cReportAsk:"इस पोस्ट को गलत/नेगेटिव रिपोर्ट करें?",cReported:"रिपोर्ट भेज दी, धन्यवाद",cDelAsk:"अपनी ये पोस्ट डिलीट करें?",cFill:"टाइटल और कहानी दोनों भरें",cPosted:"पोस्ट हो गया ✓",cPending:"पोस्ट रिव्यू में है, अप्रूव होने पर दिखेगी",
+  cc:{acidity:"एसिडिटी / गैस",stress:"तनाव",sleep:"नींद न आना",fatigue:"थकान",cold:"सर्दी-खांसी",joint:"जोड़ों का दर्द",constipation:"कब्ज़",headache:"सिर दर्द",bp:"हाई BP",weight:"वज़न",skin:"त्वचा",hair:"बाल झड़ना",immunity:"इम्युनिटी",diabetes:"शुगर",periods:"पीरियड्स",thyroid:"थायराइड",backpain:"कमर दर्द",eyes:"आंखें",cholesterol:"कोलेस्ट्रॉल",anemia:"खून की कमी"},
+ },
+ bn:{
+  tabHome:"হোম",tabPlan:"প্ল্যান",tabTrack:"ট্র্যাকার",tabKitchen:"রান্নাঘর",tabComm:"কমিউনিটি",
+  authLogin:"লগইন করুন",authReg:"নতুন অ্যাকাউন্ট তৈরি করুন",goLogin:"লগইন",goReg:"অ্যাকাউন্ট তৈরি করুন",
+  name:"নাম",email:"ইমেল",pass:"পাসওয়ার্ড",region:"স্থান",logout:"লগআউট",hello:(n)=>`নমস্কার, ${n}`,
+  pfTitle:"আপনার হেলথ প্রোফাইল",pfSub:"পূরণ করে প্ল্যান তৈরি করুন — এটি সেভও হয়।",
+  age:"বয়স (বছর)",gender:"লিঙ্গ",gMale:"পুরুষ",gFemale:"মহিলা",gOther:"অন্যান্য",height:"উচ্চতা (cm)",weight:"ওজন (kg)",
+  concern:"সমস্যা (এক বা একাধিক)",gen:"AI দিয়ে প্ল্যান তৈরি করুন",saveProf:"প্রোফাইল সেভ করুন",
+  hDosha:"আয়ুর্বেদিক দোষ",hSupp:"সাপ্লিমেন্ট",hRem:"ঘরোয়া উপায়",hDiet:"ডায়েট",hYoga:"যোগ / প্রাণায়াম",hDay:"দৈনিক রুটিন",hTip:"লাইফস্টাইল টিপস",prefer:"বেশি খান",avoid:"এড়িয়ে চলুন",
+  planFree:"ফ্রি প্ল্যান",planPremium:"প্রিমিয়াম ✓",upgrade:"প্রিমিয়াম নিন",premiumWhy:"প্রিমিয়ামে পাবেন: AI-এর গভীর প্ল্যান + রিপোর্ট বিশ্লেষণ + আনলিমিটেড প্ল্যান।",
+  dActive:"অ্যাক্টিভ প্ল্যান",dNoPlan:"এখনো কোনো প্ল্যান নেই — প্ল্যান ট্যাব থেকে তৈরি করুন।",dNewPlan:"নতুন AI প্ল্যান",dLogSym:"সিম্পটম লগ",dRoutine:"আজকের রুটিন",dTrend:"সিম্পটম ট্রেন্ড (৭ দিন)",
+  trkTitle:"সিম্পটম ট্র্যাকার",trkWhich:"কোন সিম্পটম?",trkSev:"কতটা তীব্র?",trkSave:"লগ সেভ করুন",trkRecent:"সাম্প্রতিক লগ",
+  kTitle:"ঘরের রান্নাঘর থেকে চিকিৎসা",kWhat:"কী সমস্যা?",kHave:"আপনার কাছে কী আছে? (ট্যাপ করুন)",kFind:"উপায় খুঁজুন",kCamOpen:"ক্যামেরা খুলুন",kCapture:"ছবি তুলুন ও খুঁজুন",kOrList:"অথবা তালিকা থেকে বাছুন",kBenefit:"উপকার",
+  cTitle:"কমিউনিটি হিলিং সার্কেল",cShare:"আপনার গল্প লিখুন",cPost:"পোস্ট করুন",
+  listen:"শুনুন",shareBtn:"শেয়ার",close:"বন্ধ করুন",whyBtn:"কেন এটা?",ptTitle:"হিলিং পয়েন্টস",ptFree:"ফ্রি নিন",remEnable:"রিমাইন্ডার চালু করুন",
+  cc:{acidity:"অ্যাসিডিটি / গ্যাস",stress:"স্ট্রেস",sleep:"ঘুম না হওয়া",fatigue:"ক্লান্তি",cold:"সর্দি-কাশি",joint:"জয়েন্টে ব্যথা",constipation:"কোষ্ঠকাঠিন্য",headache:"মাথাব্যথা",bp:"হাই BP",weight:"ওজন",skin:"ত্বক",hair:"চুল পড়া",immunity:"ইমিউনিটি",diabetes:"সুগার",periods:"পিরিয়ড",thyroid:"থাইরয়েড",backpain:"কোমরে ব্যথা",eyes:"চোখ",cholesterol:"কোলেস্টেরল",anemia:"রক্তাল্পতা"},
+ },
+ mr:{
+  tabHome:"होम",tabPlan:"प्लॅन",tabTrack:"ट्रॅकर",tabKitchen:"स्वयंपाकघर",tabComm:"कम्युनिटी",
+  authLogin:"लॉगिन करा",authReg:"नवीन अकाउंट तयार करा",goLogin:"लॉगिन",goReg:"अकाउंट तयार करा",
+  name:"नाव",email:"ईमेल",pass:"पासवर्ड",region:"ठिकाण",logout:"लॉगआउट",hello:(n)=>`नमस्कार, ${n}`,
+  pfTitle:"तुमची हेल्थ प्रोफाइल",pfSub:"भरून प्लॅन तयार करा — हे सेव्हही होते.",
+  age:"वय (वर्षे)",gender:"लिंग",gMale:"पुरुष",gFemale:"स्त्री",gOther:"इतर",height:"उंची (cm)",weight:"वजन (kg)",
+  concern:"समस्या (एक किंवा जास्त)",gen:"AI ने प्लॅन तयार करा",saveProf:"प्रोफाइल सेव्ह करा",
+  hDosha:"आयुर्वेदिक दोष",hSupp:"सप्लिमेंट",hRem:"घरगुती उपाय",hDiet:"आहार",hYoga:"योग / प्राणायाम",hDay:"दिवसाची दिनचर्या",hTip:"लाइफस्टाइल टिप्स",prefer:"जास्त घ्या",avoid:"टाळा",
+  planFree:"फ्री प्लॅन",planPremium:"प्रीमियम ✓",upgrade:"प्रीमियम घ्या",premiumWhy:"प्रीमियममध्ये मिळते: AI चा सखोल प्लॅन + रिपोर्ट विश्लेषण + अनलिमिटेड प्लॅन.",
+  dActive:"अ‍ॅक्टिव्ह प्लॅन",dNoPlan:"अजून कोणताही प्लॅन नाही — प्लॅन टॅबमधून तयार करा.",dNewPlan:"नवीन AI प्लॅन",dLogSym:"लक्षण लॉग",dRoutine:"आजची दिनचर्या",dTrend:"लक्षण ट्रेंड (७ दिवस)",
+  trkTitle:"लक्षण ट्रॅकर",trkWhich:"कोणते लक्षण?",trkSev:"किती तीव्र?",trkSave:"लॉग सेव्ह करा",trkRecent:"अलीकडील लॉग",
+  kTitle:"घरच्या स्वयंपाकघरातून उपचार",kWhat:"काय त्रास आहे?",kHave:"तुमच्याकडे काय आहे? (टॅप करा)",kFind:"उपाय शोधा",kCamOpen:"कॅमेरा उघडा",kCapture:"फोटो घ्या & शोधा",kOrList:"किंवा यादीतून निवडा",kBenefit:"फायदा",
+  cTitle:"कम्युनिटी हीलिंग सर्कल",cShare:"तुमची गोष्ट लिहा",cPost:"पोस्ट करा",
+  listen:"ऐका",shareBtn:"शेअर",close:"बंद करा",whyBtn:"हे का?",ptTitle:"हीलिंग पॉइंट्स",ptFree:"फ्री घ्या",remEnable:"रिमाइंडर चालू करा",
+  cc:{acidity:"अ‍ॅसिडिटी / गॅस",stress:"ताण",sleep:"झोप न येणे",fatigue:"थकवा",cold:"सर्दी-खोकला",joint:"सांधेदुखी",constipation:"बद्धकोष्ठता",headache:"डोकेदुखी",bp:"हाय BP",weight:"वजन",skin:"त्वचा",hair:"केस गळणे",immunity:"रोगप्रतिकारशक्ती",diabetes:"शुगर",periods:"पाळी",thyroid:"थायरॉइड",backpain:"कंबरदुखी",eyes:"डोळे",cholesterol:"कोलेस्टेरॉल",anemia:"रक्ताची कमतरता"},
+ },
+ gu:{
+  tabHome:"હોમ",tabPlan:"પ્લાન",tabTrack:"ટ્રેકર",tabKitchen:"રસોડું",tabComm:"કમ્યુનિટી",
+  authLogin:"લોગિન કરો",authReg:"નવું એકાઉન્ટ બનાવો",goLogin:"લોગિન",goReg:"એકાઉન્ટ બનાવો",
+  name:"નામ",email:"ઈમેલ",pass:"પાસવર્ડ",region:"સ્થળ",logout:"લોગઆઉટ",hello:(n)=>`નમસ્તે, ${n}`,
+  pfTitle:"તમારી હેલ્થ પ્રોફાઇલ",pfSub:"ભરીને પ્લાન બનાવો — આ સેવ પણ થાય છે.",
+  age:"ઉંમર (વર્ષ)",gender:"જાતિ",gMale:"પુરુષ",gFemale:"સ્ત્રી",gOther:"અન્ય",height:"ઊંચાઈ (cm)",weight:"વજન (kg)",
+  concern:"સમસ્યાઓ (એક કે વધુ)",gen:"AI થી પ્લાન બનાવો",saveProf:"પ્રોફાઇલ સેવ કરો",
+  hDosha:"આયુર્વેદિક દોષ",hSupp:"સપ્લિમેન્ટ",hRem:"ઘરેલું ઉપાય",hDiet:"આહાર",hYoga:"યોગ / પ્રાણાયામ",hDay:"દિવસની દિનચર્યા",hTip:"લાઇફસ્ટાઇલ ટિપ્સ",prefer:"વધુ લો",avoid:"ટાળો",
+  planFree:"ફ્રી પ્લાન",planPremium:"પ્રીમિયમ ✓",upgrade:"પ્રીમિયમ લો",premiumWhy:"પ્રીમિયમમાં મળે છે: AI નો ઊંડો પ્લાન + રિપોર્ટ એનાલિસિસ + અનલિમિટેડ પ્લાન.",
+  dActive:"એક્ટિવ પ્લાન",dNoPlan:"હજી કોઈ પ્લાન નથી — પ્લાન ટેબથી બનાવો.",dNewPlan:"નવો AI પ્લાન",dLogSym:"લક્ષણ લોગ",dRoutine:"આજની દિનચર્યા",dTrend:"લક્ષણ ટ્રેન્ડ (૭ દિવસ)",
+  trkTitle:"લક્ષણ ટ્રેકર",trkWhich:"કયું લક્ષણ?",trkSev:"કેટલું તીવ્ર?",trkSave:"લોગ સેવ કરો",trkRecent:"તાજેતરના લોગ",
+  kTitle:"ઘરના રસોડાથી ઈલાજ",kWhat:"શું તકલીફ છે?",kHave:"તમારી પાસે શું છે? (ટૅપ કરો)",kFind:"ઉપાય શોધો",kCamOpen:"કૅમેરા ખોલો",kCapture:"ફોટો લો & શોધો",kOrList:"અથવા યાદીમાંથી પસંદ કરો",kBenefit:"ફાયદો",
+  cTitle:"કમ્યુનિટી હીલિંગ સર્કલ",cShare:"તમારી વાર્તા લખો",cPost:"પોસ્ટ કરો",
+  listen:"સાંભળો",shareBtn:"શેર",close:"બંધ કરો",whyBtn:"આ કેમ?",ptTitle:"હીલિંગ પોઈન્ટ્સ",ptFree:"ફ્રી લો",remEnable:"રિમાઇન્ડર ચાલુ કરો",
+  cc:{acidity:"એસિડિટી / ગેસ",stress:"સ્ટ્રેસ",sleep:"ઊંઘ ન આવવી",fatigue:"થાક",cold:"શરદી-ખાંસી",joint:"સાંધાનો દુખાવો",constipation:"કબજિયાત",headache:"માથાનો દુખાવો",bp:"હાઈ BP",weight:"વજન",skin:"ત્વચા",hair:"વાળ ખરવા",immunity:"ઇમ્યુનિટી",diabetes:"સુગર",periods:"પીરિયડ્સ",thyroid:"થાઇરોઇડ",backpain:"કમરનો દુખાવો",eyes:"આંખો",cholesterol:"કોલેસ્ટ્રોલ",anemia:"લોહીની ઉણપ"},
+ },
+ ta:{
+  tabHome:"முகப்பு",tabPlan:"திட்டம்",tabTrack:"டிராக்கர்",tabKitchen:"சமையலறை",tabComm:"சமூகம்",
+  authLogin:"உள்நுழைக",authReg:"புதிய கணக்கை உருவாக்கு",goLogin:"உள்நுழைக",goReg:"கணக்கை உருவாக்கு",
+  name:"பெயர்",email:"மின்னஞ்சல்",pass:"கடவுச்சொல்",region:"இடம்",logout:"வெளியேறு",hello:(n)=>`வணக்கம், ${n}`,
+  pfTitle:"உங்கள் உடல்நல விவரம்",pfSub:"நிரப்பி திட்டம் உருவாக்குங்கள் — இது சேமிக்கப்படும்.",
+  age:"வயது (ஆண்டுகள்)",gender:"பாலினம்",gMale:"ஆண்",gFemale:"பெண்",gOther:"மற்றவை",height:"உயரம் (cm)",weight:"எடை (kg)",
+  concern:"பிரச்சினைகள் (ஒன்று அல்லது பல)",gen:"AI மூலம் திட்டம் உருவாக்கு",saveProf:"விவரத்தை சேமி",
+  hDosha:"ஆயுர்வேத தோஷம்",hSupp:"சப்ளிமெண்ட்",hRem:"வீட்டு வைத்தியம்",hDiet:"உணவு",hYoga:"யோகா / பிராணாயாமம்",hDay:"தினசரி வழக்கம்",hTip:"வாழ்க்கைமுறை குறிப்புகள்",prefer:"அதிகம் எடுத்துக்கொள்",avoid:"தவிர்க்கவும்",
+  planFree:"இலவச திட்டம்",planPremium:"பிரீமியம் ✓",upgrade:"பிரீமியம் பெறு",premiumWhy:"பிரீமியத்தில்: ஆழமான AI திட்டம் + அறிக்கை பகுப்பாய்வு + வரம்பற்ற திட்டங்கள்.",
+  dActive:"செயலில் உள்ள திட்டம்",dNoPlan:"இன்னும் திட்டம் இல்லை — திட்டம் தாவலில் உருவாக்குங்கள்.",dNewPlan:"புதிய AI திட்டம்",dLogSym:"அறிகுறி பதிவு",dRoutine:"இன்றைய வழக்கம்",dTrend:"அறிகுறி போக்கு (7 நாட்கள்)",
+  trkTitle:"அறிகுறி டிராக்கர்",trkWhich:"எந்த அறிகுறி?",trkSev:"எவ்வளவு தீவிரம்?",trkSave:"பதிவை சேமி",trkRecent:"சமீபத்திய பதிவுகள்",
+  kTitle:"வீட்டு சமையலறையில் இருந்து சிகிச்சை",kWhat:"என்ன பிரச்சினை?",kHave:"உங்களிடம் என்ன உள்ளது? (தட்டவும்)",kFind:"வைத்தியம் தேடு",kCamOpen:"கேமராவை திற",kCapture:"படம் எடுத்து தேடு",kOrList:"அல்லது பட்டியலில் இருந்து தேர்வு",kBenefit:"பயன்",
+  cTitle:"சமூக குணப்படுத்தும் வட்டம்",cShare:"உங்கள் கதையை எழுதுங்கள்",cPost:"பதிவிடு",
+  listen:"கேள்",shareBtn:"பகிர்",close:"மூடு",whyBtn:"ஏன் இது?",ptTitle:"ஹீலிங் பாயிண்ட்ஸ்",ptFree:"இலவசமாக பெறு",remEnable:"நினைவூட்டலை இயக்கு",
+  cc:{acidity:"அமிலத்தன்மை / வாயு",stress:"மன அழுத்தம்",sleep:"தூக்கமின்மை",fatigue:"சோர்வு",cold:"சளி-இருமல்",joint:"மூட்டு வலி",constipation:"மலச்சிக்கல்",headache:"தலைவலி",bp:"உயர் ரத்த அழுத்தம்",weight:"எடை",skin:"தோல்",hair:"முடி உதிர்தல்",immunity:"நோய் எதிர்ப்பு சக்தி",diabetes:"சர்க்கரை",periods:"மாதவிடாய்",thyroid:"தைராய்டு",backpain:"முதுகு வலி",eyes:"கண்கள்",cholesterol:"கொலஸ்ட்ரால்",anemia:"ரத்தசோகை"},
+ },
+ te:{
+  tabHome:"హోమ్",tabPlan:"ప్లాన్",tabTrack:"ట్రాకర్",tabKitchen:"వంటగది",tabComm:"కమ్యూనిటీ",
+  authLogin:"లాగిన్ అవ్వండి",authReg:"కొత్త ఖాతా సృష్టించండి",goLogin:"లాగిన్",goReg:"ఖాతా సృష్టించు",
+  name:"పేరు",email:"ఈమెయిల్",pass:"పాస్‌వర్డ్",region:"ప్రాంతం",logout:"లాగౌట్",hello:(n)=>`నమస్తే, ${n}`,
+  pfTitle:"మీ ఆరోగ్య ప్రొఫైల్",pfSub:"నింపి ప్లాన్ తయారు చేయండి — ఇది సేవ్ అవుతుంది.",
+  age:"వయస్సు (సంవత్సరాలు)",gender:"లింగం",gMale:"పురుషుడు",gFemale:"స్త్రీ",gOther:"ఇతర",height:"ఎత్తు (cm)",weight:"బరువు (kg)",
+  concern:"సమస్యలు (ఒకటి లేదా ఎక్కువ)",gen:"AI తో ప్లాన్ తయారు చేయి",saveProf:"ప్రొఫైల్ సేవ్ చేయి",
+  hDosha:"ఆయుర్వేద దోషం",hSupp:"సప్లిమెంట్",hRem:"ఇంటి చిట్కాలు",hDiet:"ఆహారం",hYoga:"యోగా / ప్రాణాయామం",hDay:"రోజువారీ దినచర్య",hTip:"లైఫ్‌స్టైల్ చిట్కాలు",prefer:"ఎక్కువ తీసుకోండి",avoid:"తప్పించండి",
+  planFree:"ఫ్రీ ప్లాన్",planPremium:"ప్రీమియం ✓",upgrade:"ప్రీమియం తీసుకో",premiumWhy:"ప్రీమియంలో: లోతైన AI ప్లాన్ + రిపోర్ట్ విశ్లేషణ + అపరిమిత ప్లాన్‌లు.",
+  dActive:"యాక్టివ్ ప్లాన్",dNoPlan:"ఇంకా ప్లాన్ లేదు — ప్లాన్ ట్యాబ్ నుండి తయారు చేయండి.",dNewPlan:"కొత్త AI ప్లాన్",dLogSym:"లక్షణం లాగ్",dRoutine:"నేటి దినచర్య",dTrend:"లక్షణ ట్రెండ్ (7 రోజులు)",
+  trkTitle:"లక్షణ ట్రాకర్",trkWhich:"ఏ లక్షణం?",trkSev:"ఎంత తీవ్రం?",trkSave:"లాగ్ సేవ్ చేయి",trkRecent:"ఇటీవలి లాగ్‌లు",
+  kTitle:"ఇంటి వంటగది నుండి చికిత్స",kWhat:"ఏం ఇబ్బంది?",kHave:"మీ దగ్గర ఏం ఉంది? (ట్యాప్ చేయండి)",kFind:"చిట్కా వెతుకు",kCamOpen:"కెమెరా తెరువు",kCapture:"ఫోటో తీసి వెతుకు",kOrList:"లేదా జాబితా నుండి ఎంచుకో",kBenefit:"ప్రయోజనం",
+  cTitle:"కమ్యూనిటీ హీలింగ్ సర్కిల్",cShare:"మీ కథ రాయండి",cPost:"పోస్ట్ చేయి",
+  listen:"వినండి",shareBtn:"షేర్",close:"మూసివేయి",whyBtn:"ఇది ఎందుకు?",ptTitle:"హీలింగ్ పాయింట్స్",ptFree:"ఫ్రీగా తీసుకో",remEnable:"రిమైండర్ ఆన్ చేయి",
+  cc:{acidity:"ఆమ్లత్వం / గ్యాస్",stress:"ఒత్తిడి",sleep:"నిద్ర రాకపోవడం",fatigue:"అలసట",cold:"జలుబు-దగ్గు",joint:"కీళ్ల నొప్పి",constipation:"మలబద్ధకం",headache:"తలనొప్పి",bp:"హై BP",weight:"బరువు",skin:"చర్మం",hair:"జుట్టు రాలడం",immunity:"రోగనిరోధక శక్తి",diabetes:"షుగర్",periods:"పీరియడ్స్",thyroid:"థైరాయిడ్",backpain:"నడుము నొప్పి",eyes:"కళ్ళు",cholesterol:"కొలెస్ట్రాల్",anemia:"రక్తహీనత"},
+ },
+ kn:{
+  tabHome:"ಹೋಮ್",tabPlan:"ಪ್ಲಾನ್",tabTrack:"ಟ್ರ್ಯಾಕರ್",tabKitchen:"ಅಡುಗೆಮನೆ",tabComm:"ಸಮುದಾಯ",
+  authLogin:"ಲಾಗಿನ್ ಮಾಡಿ",authReg:"ಹೊಸ ಖಾತೆ ರಚಿಸಿ",goLogin:"ಲಾಗಿನ್",goReg:"ಖಾತೆ ರಚಿಸಿ",
+  name:"ಹೆಸರು",email:"ಇಮೇಲ್",pass:"ಪಾಸ್‌ವರ್ಡ್",region:"ಸ್ಥಳ",logout:"ಲಾಗೌಟ್",hello:(n)=>`ನಮಸ್ಕಾರ, ${n}`,
+  pfTitle:"ನಿಮ್ಮ ಆರೋಗ್ಯ ಪ್ರೊಫೈಲ್",pfSub:"ಭರ್ತಿ ಮಾಡಿ ಪ್ಲಾನ್ ರಚಿಸಿ — ಇದು ಉಳಿಸಲ್ಪಡುತ್ತದೆ.",
+  age:"ವಯಸ್ಸು (ವರ್ಷ)",gender:"ಲಿಂಗ",gMale:"ಪುರುಷ",gFemale:"ಮಹಿಳೆ",gOther:"ಇತರೆ",height:"ಎತ್ತರ (cm)",weight:"ತೂಕ (kg)",
+  concern:"ಸಮಸ್ಯೆಗಳು (ಒಂದು ಅಥವಾ ಹೆಚ್ಚು)",gen:"AI ನಿಂದ ಪ್ಲಾನ್ ರಚಿಸಿ",saveProf:"ಪ್ರೊಫೈಲ್ ಉಳಿಸಿ",
+  hDosha:"ಆಯುರ್ವೇದ ದೋಷ",hSupp:"ಸಪ್ಲಿಮೆಂಟ್",hRem:"ಮನೆಮದ್ದು",hDiet:"ಆಹಾರ",hYoga:"ಯೋಗ / ಪ್ರಾಣಾಯಾಮ",hDay:"ದಿನಚರಿ",hTip:"ಜೀವನಶೈಲಿ ಸಲಹೆಗಳು",prefer:"ಹೆಚ್ಚು ತೆಗೆದುಕೊಳ್ಳಿ",avoid:"ತಪ್ಪಿಸಿ",
+  planFree:"ಫ್ರೀ ಪ್ಲಾನ್",planPremium:"ಪ್ರೀಮಿಯಂ ✓",upgrade:"ಪ್ರೀಮಿಯಂ ಪಡೆಯಿರಿ",premiumWhy:"ಪ್ರೀಮಿಯಂನಲ್ಲಿ: ಆಳವಾದ AI ಪ್ಲಾನ್ + ವರದಿ ವಿಶ್ಲೇಷಣೆ + ಅನಿಯಮಿತ ಪ್ಲಾನ್‌ಗಳು.",
+  dActive:"ಸಕ್ರಿಯ ಪ್ಲಾನ್",dNoPlan:"ಇನ್ನೂ ಪ್ಲಾನ್ ಇಲ್ಲ — ಪ್ಲಾನ್ ಟ್ಯಾಬ್‌ನಿಂದ ರಚಿಸಿ.",dNewPlan:"ಹೊಸ AI ಪ್ಲಾನ್",dLogSym:"ಲಕ್ಷಣ ಲಾಗ್",dRoutine:"ಇಂದಿನ ದಿನಚರಿ",dTrend:"ಲಕ್ಷಣ ಟ್ರೆಂಡ್ (7 ದಿನ)",
+  trkTitle:"ಲಕ್ಷಣ ಟ್ರ್ಯಾಕರ್",trkWhich:"ಯಾವ ಲಕ್ಷಣ?",trkSev:"ಎಷ್ಟು ತೀವ್ರ?",trkSave:"ಲಾಗ್ ಉಳಿಸಿ",trkRecent:"ಇತ್ತೀಚಿನ ಲಾಗ್‌ಗಳು",
+  kTitle:"ಮನೆ ಅಡುಗೆಮನೆಯಿಂದ ಚಿಕಿತ್ಸೆ",kWhat:"ಏನು ತೊಂದರೆ?",kHave:"ನಿಮ್ಮ ಬಳಿ ಏನಿದೆ? (ಟ್ಯಾಪ್ ಮಾಡಿ)",kFind:"ಪರಿಹಾರ ಹುಡುಕಿ",kCamOpen:"ಕ್ಯಾಮೆರಾ ತೆರೆಯಿರಿ",kCapture:"ಫೋಟೋ ತೆಗೆದು ಹುಡುಕಿ",kOrList:"ಅಥವಾ ಪಟ್ಟಿಯಿಂದ ಆರಿಸಿ",kBenefit:"ಪ್ರಯೋಜನ",
+  cTitle:"ಸಮುದಾಯ ಹೀಲಿಂಗ್ ಸರ್ಕಲ್",cShare:"ನಿಮ್ಮ ಕಥೆ ಬರೆಯಿರಿ",cPost:"ಪೋಸ್ಟ್ ಮಾಡಿ",
+  listen:"ಕೇಳಿ",shareBtn:"ಹಂಚಿಕೊಳ್ಳಿ",close:"ಮುಚ್ಚಿ",whyBtn:"ಇದು ಏಕೆ?",ptTitle:"ಹೀಲಿಂಗ್ ಪಾಯಿಂಟ್ಸ್",ptFree:"ಫ್ರೀ ಪಡೆಯಿರಿ",remEnable:"ರಿಮೈಂಡರ್ ಆನ್ ಮಾಡಿ",
+  cc:{acidity:"ಆಮ್ಲೀಯತೆ / ಗ್ಯಾಸ್",stress:"ಒತ್ತಡ",sleep:"ನಿದ್ರೆ ಬಾರದಿರುವುದು",fatigue:"ಆಯಾಸ",cold:"ಶೀತ-ಕೆಮ್ಮು",joint:"ಕೀಲು ನೋವು",constipation:"ಮಲಬದ್ಧತೆ",headache:"ತಲೆನೋವು",bp:"ಹೈ BP",weight:"ತೂಕ",skin:"ಚರ್ಮ",hair:"ಕೂದಲು ಉದುರುವಿಕೆ",immunity:"ರೋಗನಿರೋಧಕ ಶಕ್ತಿ",diabetes:"ಸಕ್ಕರೆ",periods:"ಋತುಚಕ್ರ",thyroid:"ಥೈರಾಯ್ಡ್",backpain:"ಬೆನ್ನು ನೋವು",eyes:"ಕಣ್ಣುಗಳು",cholesterol:"ಕೊಲೆಸ್ಟ್ರಾಲ್",anemia:"ರಕ್ತಹೀನತೆ"},
+ },
+ pa:{
+  tabHome:"ਹੋਮ",tabPlan:"ਪਲਾਨ",tabTrack:"ਟ੍ਰੈਕਰ",tabKitchen:"ਰਸੋਈ",tabComm:"ਕਮਿਊਨਿਟੀ",
+  authLogin:"ਲੌਗਿਨ ਕਰੋ",authReg:"ਨਵਾਂ ਖਾਤਾ ਬਣਾਓ",goLogin:"ਲੌਗਿਨ",goReg:"ਖਾਤਾ ਬਣਾਓ",
+  name:"ਨਾਮ",email:"ਈਮੇਲ",pass:"ਪਾਸਵਰਡ",region:"ਥਾਂ",logout:"ਲੌਗਆਉਟ",hello:(n)=>`ਸਤ ਸ੍ਰੀ ਅਕਾਲ, ${n}`,
+  pfTitle:"ਤੁਹਾਡੀ ਹੈਲਥ ਪ੍ਰੋਫਾਈਲ",pfSub:"ਭਰ ਕੇ ਪਲਾਨ ਬਣਾਓ — ਇਹ ਸੇਵ ਵੀ ਹੁੰਦਾ ਹੈ।",
+  age:"ਉਮਰ (ਸਾਲ)",gender:"ਲਿੰਗ",gMale:"ਮਰਦ",gFemale:"ਔਰਤ",gOther:"ਹੋਰ",height:"ਕੱਦ (cm)",weight:"ਭਾਰ (kg)",
+  concern:"ਸਮੱਸਿਆਵਾਂ (ਇੱਕ ਜਾਂ ਵੱਧ)",gen:"AI ਨਾਲ ਪਲਾਨ ਬਣਾਓ",saveProf:"ਪ੍ਰੋਫਾਈਲ ਸੇਵ ਕਰੋ",
+  hDosha:"ਆਯੁਰਵੈਦਿਕ ਦੋਸ਼",hSupp:"ਸਪਲੀਮੈਂਟ",hRem:"ਘਰੇਲੂ ਉਪਾਅ",hDiet:"ਖੁਰਾਕ",hYoga:"ਯੋਗ / ਪ੍ਰਾਣਾਯਾਮ",hDay:"ਦਿਨ ਦੀ ਰੁਟੀਨ",hTip:"ਲਾਈਫਸਟਾਈਲ ਟਿਪਸ",prefer:"ਵੱਧ ਲਵੋ",avoid:"ਬਚੋ",
+  planFree:"ਫ੍ਰੀ ਪਲਾਨ",planPremium:"ਪ੍ਰੀਮੀਅਮ ✓",upgrade:"ਪ੍ਰੀਮੀਅਮ ਲਵੋ",premiumWhy:"ਪ੍ਰੀਮੀਅਮ ਵਿੱਚ ਮਿਲਦਾ ਹੈ: AI ਦਾ ਡੂੰਘਾ ਪਲਾਨ + ਰਿਪੋਰਟ ਵਿਸ਼ਲੇਸ਼ਣ + ਅਨਲਿਮਿਟੇਡ ਪਲਾਨ।",
+  dActive:"ਐਕਟਿਵ ਪਲਾਨ",dNoPlan:"ਹਾਲੇ ਕੋਈ ਪਲਾਨ ਨਹੀਂ — ਪਲਾਨ ਟੈਬ ਤੋਂ ਬਣਾਓ।",dNewPlan:"ਨਵਾਂ AI ਪਲਾਨ",dLogSym:"ਲੱਛਣ ਲੌਗ",dRoutine:"ਅੱਜ ਦੀ ਰੁਟੀਨ",dTrend:"ਲੱਛਣ ਟ੍ਰੈਂਡ (7 ਦਿਨ)",
+  trkTitle:"ਲੱਛਣ ਟ੍ਰੈਕਰ",trkWhich:"ਕਿਹੜਾ ਲੱਛਣ?",trkSev:"ਕਿੰਨਾ ਤੇਜ਼?",trkSave:"ਲੌਗ ਸੇਵ ਕਰੋ",trkRecent:"ਹਾਲੀਆ ਲੌਗ",
+  kTitle:"ਘਰ ਦੀ ਰਸੋਈ ਤੋਂ ਇਲਾਜ",kWhat:"ਕੀ ਤਕਲੀਫ਼ ਹੈ?",kHave:"ਤੁਹਾਡੇ ਕੋਲ ਕੀ ਹੈ? (ਟੈਪ ਕਰੋ)",kFind:"ਉਪਾਅ ਲੱਭੋ",kCamOpen:"ਕੈਮਰਾ ਖੋਲ੍ਹੋ",kCapture:"ਫੋਟੋ ਲਵੋ & ਲੱਭੋ",kOrList:"ਜਾਂ ਸੂਚੀ ਵਿੱਚੋਂ ਚੁਣੋ",kBenefit:"ਫਾਇਦਾ",
+  cTitle:"ਕਮਿਊਨਿਟੀ ਹੀਲਿੰਗ ਸਰਕਲ",cShare:"ਆਪਣੀ ਕਹਾਣੀ ਲਿਖੋ",cPost:"ਪੋਸਟ ਕਰੋ",
+  listen:"ਸੁਣੋ",shareBtn:"ਸ਼ੇਅਰ",close:"ਬੰਦ ਕਰੋ",whyBtn:"ਇਹ ਕਿਉਂ?",ptTitle:"ਹੀਲਿੰਗ ਪੁਆਇੰਟਸ",ptFree:"ਫ੍ਰੀ ਲਵੋ",remEnable:"ਰਿਮਾਈਂਡਰ ਚਾਲੂ ਕਰੋ",
+  cc:{acidity:"ਐਸਿਡਿਟੀ / ਗੈਸ",stress:"ਤਣਾਅ",sleep:"ਨੀਂਦ ਨਾ ਆਉਣਾ",fatigue:"ਥਕਾਵਟ",cold:"ਜ਼ੁਕਾਮ-ਖੰਘ",joint:"ਜੋੜਾਂ ਦਾ ਦਰਦ",constipation:"ਕਬਜ਼",headache:"ਸਿਰ ਦਰਦ",bp:"ਹਾਈ BP",weight:"ਭਾਰ",skin:"ਚਮੜੀ",hair:"ਵਾਲ ਝੜਨਾ",immunity:"ਇਮਿਊਨਿਟੀ",diabetes:"ਸ਼ੂਗਰ",periods:"ਪੀਰੀਅਡਸ",thyroid:"ਥਾਇਰਾਇਡ",backpain:"ਕਮਰ ਦਰਦ",eyes:"ਅੱਖਾਂ",cholesterol:"ਕੋਲੈਸਟ੍ਰੋਲ",anemia:"ਖੂਨ ਦੀ ਕਮੀ"},
+ },
+ ml:{
+  tabHome:"ഹോം",tabPlan:"പ്ലാൻ",tabTrack:"ട്രാക്കർ",tabKitchen:"അടുക്കള",tabComm:"കമ്മ്യൂണിറ്റി",
+  authLogin:"ലോഗിൻ ചെയ്യുക",authReg:"പുതിയ അക്കൗണ്ട് ഉണ്ടാക്കുക",goLogin:"ലോഗിൻ",goReg:"അക്കൗണ്ട് ഉണ്ടാക്കുക",
+  name:"പേര്",email:"ഇമെയിൽ",pass:"പാസ്‌വേഡ്",region:"സ്ഥലം",logout:"ലോഗൗട്ട്",hello:(n)=>`നമസ്കാരം, ${n}`,
+  pfTitle:"നിങ്ങളുടെ ആരോഗ്യ പ്രൊഫൈൽ",pfSub:"പൂരിപ്പിച്ച് പ്ലാൻ ഉണ്ടാക്കൂ — ഇത് സേവ് ആകും.",
+  age:"വയസ്സ് (വർഷം)",gender:"ലിംഗം",gMale:"പുരുഷൻ",gFemale:"സ്ത്രീ",gOther:"മറ്റുള്ളവ",height:"ഉയരം (cm)",weight:"ഭാരം (kg)",
+  concern:"പ്രശ്നങ്ങൾ (ഒന്നോ അതിലധികമോ)",gen:"AI ഉപയോഗിച്ച് പ്ലാൻ ഉണ്ടാക്കൂ",saveProf:"പ്രൊഫൈൽ സേവ് ചെയ്യൂ",
+  hDosha:"ആയുർവേദ ദോഷം",hSupp:"സപ്ലിമെന്റ്",hRem:"വീട്ടുവൈദ്യം",hDiet:"ഭക്ഷണക്രമം",hYoga:"യോഗ / പ്രാണായാമം",hDay:"ദിനചര്യ",hTip:"ലൈഫ്‌സ്റ്റൈൽ ടിപ്പുകൾ",prefer:"കൂടുതൽ കഴിക്കൂ",avoid:"ഒഴിവാക്കൂ",
+  planFree:"ഫ്രീ പ്ലാൻ",planPremium:"പ്രീമിയം ✓",upgrade:"പ്രീമിയം എടുക്കൂ",premiumWhy:"പ്രീമിയത്തിൽ: ആഴത്തിലുള്ള AI പ്ലാൻ + റിപ്പോർട്ട് വിശകലനം + പരിധിയില്ലാത്ത പ്ലാനുകൾ.",
+  dActive:"ആക്ടീവ് പ്ലാൻ",dNoPlan:"ഇതുവരെ പ്ലാൻ ഇല്ല — പ്ലാൻ ടാബിൽ നിന്ന് ഉണ്ടാക്കൂ.",dNewPlan:"പുതിയ AI പ്ലാൻ",dLogSym:"ലക്ഷണം ലോഗ്",dRoutine:"ഇന്നത്തെ ദിനചര്യ",dTrend:"ലക്ഷണ ട്രെൻഡ് (7 ദിവസം)",
+  trkTitle:"ലക്ഷണ ട്രാക്കർ",trkWhich:"ഏത് ലക്ഷണം?",trkSev:"എത്ര കഠിനം?",trkSave:"ലോഗ് സേവ് ചെയ്യൂ",trkRecent:"സമീപകാല ലോഗുകൾ",
+  kTitle:"വീട്ടിലെ അടുക്കളയിൽ നിന്ന് ചികിത്സ",kWhat:"എന്ത് പ്രശ്നം?",kHave:"നിങ്ങളുടെ കയ്യിൽ എന്തുണ്ട്? (ടാപ്പ് ചെയ്യൂ)",kFind:"പരിഹാരം കണ്ടെത്തൂ",kCamOpen:"ക്യാമറ തുറക്കൂ",kCapture:"ഫോട്ടോ എടുത്ത് കണ്ടെത്തൂ",kOrList:"അല്ലെങ്കിൽ ലിസ്റ്റിൽ നിന്ന് തിരഞ്ഞെടുക്കൂ",kBenefit:"ഗുണം",
+  cTitle:"കമ്മ്യൂണിറ്റി ഹീലിംഗ് സർക്കിൾ",cShare:"നിങ്ങളുടെ കഥ എഴുതൂ",cPost:"പോസ്റ്റ് ചെയ്യൂ",
+  listen:"കേൾക്കൂ",shareBtn:"ഷെയർ",close:"അടയ്ക്കൂ",whyBtn:"എന്തുകൊണ്ട്?",ptTitle:"ഹീലിംഗ് പോയിന്റുകൾ",ptFree:"ഫ്രീ എടുക്കൂ",remEnable:"റിമൈൻഡർ ഓൺ ചെയ്യൂ",
+  cc:{acidity:"അസിഡിറ്റി / ഗ്യാസ്",stress:"സ്ട്രെസ്",sleep:"ഉറക്കമില്ലായ്മ",fatigue:"ക്ഷീണം",cold:"ജലദോഷം-ചുമ",joint:"സന്ധി വേദന",constipation:"മലബന്ധം",headache:"തലവേദന",bp:"ഹൈ BP",weight:"ഭാരം",skin:"ത്വക്ക്",hair:"മുടികൊഴിച്ചിൽ",immunity:"പ്രതിരോധശേഷി",diabetes:"ഷുഗർ",periods:"ആർത്തവം",thyroid:"തൈറോയ്ഡ്",backpain:"നടുവേദന",eyes:"കണ്ണുകൾ",cholesterol:"കൊളസ്ട്രോൾ",anemia:"വിളർച്ച"},
  }
 };
 const CONCERNS=[["acidity","Acidity / gas","Acidity / gas"],["stress","Stress","Stress / anxiety"],["sleep","Neend na aana","Poor sleep"],["fatigue","Thakaan","Fatigue"],["cold","Sardi-khaansi","Cold & cough"],["joint","Jodo ka dard","Joint pain"],["constipation","Kabz","Constipation"],["headache","Sir dard","Headache"],["bp","High BP","High BP"],["weight","Weight","Weight"],["skin","Skin","Skin"],["hair","Baal jhadna","Hair fall"],["immunity","Immunity","Immunity"],["diabetes","Sugar","Blood sugar"],["periods","Periods","Periods"],["thyroid","Thyroid","Thyroid"],["backpain","Kamar dard","Back pain"],["eyes","Aankhein","Eye strain"],["cholesterol","Cholesterol","Cholesterol"],["anemia","Khoon ki kami","Anemia"]];
 
-function t(){return T[lang];}
+let _tc=null,_tcLang=null;
+function t(){ if(_tc&&_tcLang===lang)return _tc; const cur=T[lang]||T.hi; _tc=Object.assign({},T.en,cur); _tcLang=lang; return _tc; }
 async function api(path,opts={}){
  const h={"Content-Type":"application/json"};
  if(token)h.Authorization="Bearer "+token;
@@ -683,7 +870,7 @@ function addReportRow(marker="",value=""){
 /* ---- render static text ---- */
 function renderStatic(){
  const x=t();
- $("lHi").classList.toggle("on",lang==="hi");$("lEn").classList.toggle("on",lang==="en");
+ if($("langSel"))$("langSel").value=lang;
  // auth
  $("authTitle").textContent=authMode==="login"?x.authLogin:x.authReg;
  $("authSub").textContent=authMode==="login"?x.subLogin:x.subReg;
@@ -707,7 +894,7 @@ function renderStatic(){
  $("pReportFileHint").textContent=x.reportFileHint;$("pReportOr").textContent=x.reportOr;
  $("pNotes").textContent=x.notes;$("genBtn").textContent=x.gen;$("saveProfBtn").textContent=x.saveProf;
  $("histTitle").textContent=x.hist;$("histSub").textContent=x.histSub;
- document.querySelectorAll(".lbl").forEach(el=>{const c=CONCERNS.find(c=>c[0]===el.dataset.id);el.textContent=(CEMO[c[0]]?CEMO[c[0]]+" ":"")+(lang==="hi"?c[1]:c[2]);});
+ {const cc=t().cc;document.querySelectorAll(".lbl").forEach(el=>{const c=CONCERNS.find(c=>c[0]===el.dataset.id);const label=(cc&&cc[c[0]])?cc[c[0]]:(lang==="hi"?c[1]:c[2]);el.textContent=(CEMO[c[0]]?CEMO[c[0]]+" ":"")+label;});}
  
  // upgrade panel static
  $("upTitle").textContent=x.upgrade;$("upWhy").textContent=pwhy();$("upChoose").textContent=x.choosePay;
@@ -728,8 +915,31 @@ function renderPlanStrip(){
 }
 
 /* ---- auth actions ---- */
-$("lHi").onclick=()=>{lang="hi";localStorage.setItem("nh_lang","hi");renderStatic();};
-$("lEn").onclick=()=>{lang="en";localStorage.setItem("nh_lang","en");renderStatic();};
+/* Bhasha picker — poora app + voice us bhasha me */
+(function(){const sel=$("langSel");if(!sel)return;
+ sel.innerHTML=LANGS.map(l=>`<option value="${l[0]}">${l[1]}</option>`).join("");
+ if(!LANGS.find(l=>l[0]===lang))lang="hin";
+ sel.value=lang;
+ sel.onchange=()=>applyLang(sel.value);
+})();
+function applyLang(code){
+ lang=code;try{localStorage.setItem("nh_lang",code);}catch(e){}
+ _tc=null;                 // merge cache reset
+ try{stopSpeak();}catch(e){}
+ renderStatic();
+ refreshView();
+}
+/* bhasha badalne par current screen ka dynamic content dobara load ho */
+function refreshView(){
+ try{
+  const tb=curTab||"home";
+  if(tb==="home"&&typeof loadDashboard==="function")loadDashboard();
+  else if(tb==="track"&&typeof loadTracker==="function")loadTracker();
+  else if(tb==="kitchen"&&typeof loadKitchen==="function")loadKitchen();
+  else if(tb==="community"&&typeof loadCommunity==="function")loadCommunity();
+  else if(tb==="plan"&&window._lastPlan&&typeof renderPlan==="function")renderPlan(window._lastPlan,window._lastSrc);
+ }catch(e){}
+}
 $("authSwitch").onclick=()=>{authMode=authMode==="login"?"register":"login";$("authErr").textContent="";renderStatic();};
 $("authGo").onclick=async()=>{
  const x=t();$("authErr").textContent="";
@@ -821,6 +1031,7 @@ $("genBtn").onclick=async()=>{
 
 /* ---- render plan ---- */
 function renderPlan(pl,source){
+ window._lastPlan=pl;window._lastSrc=source;
  const x=t();
  const DC={vata:"var(--vata)",pitta:"var(--pitta)",kapha:"var(--kapha)"};
  const da=pl.dosha_analysis||{};const bp=da.balance_percent||{};
@@ -1118,6 +1329,54 @@ function routineEmoji(act){const a=String(act||"").toLowerCase();
  if(/phal|fruit/.test(a))return"🍎";
  if(/walk|chaal|tehal/.test(a))return"🚶";
  return"🌿";}
+/* ===== Routine ke 2-4 alag vikalp (yoga / nashta / lunch / dinner / herbal tea) ===== */
+const ALT={
+ yoga:[
+  {hi:["Anulom-Vilom (5 min)","Naak se dheere saans — man shaant, pachan theek"],hin:["अनुलोम-विलोम (5 min)","नाक से धीरे सांस — मन शांत, पाचन ठीक"],en:["Anulom-Vilom (5 min)","Slow alternate-nostril breathing — calm mind, better digestion"]},
+  {hi:["Surya Namaskar (5-7 round)","Poora sharir active, din bhar energy"],hin:["सूर्य नमस्कार (5-7 राउंड)","पूरा शरीर एक्टिव, दिनभर एनर्जी"],en:["Surya Namaskar (5-7 rounds)","Full-body warm-up, all-day energy"]},
+  {hi:["Vajrasana (khaane ke baad 5-10 min)","Pachan sudhre, gas-acidity kam"],hin:["वज्रासन (खाने के बाद 5-10 min)","पाचन सुधरे, गैस-एसिडिटी कम"],en:["Vajrasana (5-10 min after meals)","Better digestion, less gas/acidity"]},
+  {hi:["Bhramari (6-7 baar)","Tension turant kam, neend achhi"],hin:["भ्रामरी (6-7 बार)","तनाव तुरंत कम, नींद अच्छी"],en:["Bhramari (6-7 times)","Quickly lowers stress, better sleep"]},
+ ],
+ nashta:[
+  {hi:["Poha","Halka aur sulabh — nimbu aur moongfali ke saath"],hin:["पोहा","हल्का और सुपाच्य — नींबू और मूंगफली के साथ"],en:["Poha","Light & easy — with lemon and peanuts"]},
+  {hi:["Namkeen daliya","Fibre se bharpoor, pet bhara-bhara"],hin:["नमकीन दलिया","फाइबर से भरपूर, पेट भरा-भरा"],en:["Savoury daliya","High-fibre, keeps you full"]},
+  {hi:["Idli-sambar","Steam kiya hua, halka protein"],hin:["इडली-सांभर","भाप में बना, हल्का प्रोटीन"],en:["Idli-sambar","Steamed, light protein"]},
+  {hi:["Ankurit moong","Protein aur energy, kam calorie"],hin:["अंकुरित मूंग","प्रोटीन और एनर्जी, कम कैलोरी"],en:["Sprouted moong","Protein & energy, low calorie"]},
+ ],
+ lunch:[
+  {hi:["Dal, roti, hari sabzi","Santulit thali — protein + fibre"],hin:["दाल, रोटी, हरी सब्ज़ी","संतुलित थाली — प्रोटीन + फाइबर"],en:["Dal, roti, green veg","Balanced plate — protein + fibre"]},
+  {hi:["Moong dal khichdi","Sulabh, pet ke liye aaram"],hin:["मूंग दाल खिचड़ी","सुपाच्य, पेट के लिए आराम"],en:["Moong dal khichdi","Easy to digest, soothes the gut"]},
+  {hi:["Dahi-chawal","Thanda, pachan ko aaram"],hin:["दही-चावल","ठंडा, पाचन को आराम"],en:["Curd rice","Cooling, calms digestion"]},
+  {hi:["Rajma/chole + chawal","Protein se bharpoor (kam tel)"],hin:["राजमा/छोले + चावल","प्रोटीन से भरपूर (कम तेल)"],en:["Rajma/chole + rice","Protein-rich (go light on oil)"]},
+ ],
+ dinner:[
+  {hi:["Halki roti-sabzi","Raat mein kam, sone se 2 ghante pehle"],hin:["हल्की रोटी-सब्ज़ी","रात में कम, सोने से 2 घंटे पहले"],en:["Light roti & veg","Eat light, 2 hrs before bed"]},
+  {hi:["Sabzi ka soup","Halka aur garm — pachan aasan"],hin:["सब्ज़ी का सूप","हल्का और गर्म — पाचन आसान"],en:["Vegetable soup","Light & warm — easy digestion"]},
+  {hi:["Daliya ya khichdi","Raat ko sulabh aur halka"],hin:["दलिया या खिचड़ी","रात को सुपाच्य और हल्का"],en:["Daliya or khichdi","Light & easy at night"]},
+  {hi:["Sabzi wala oats","Fibre, bina bhaari pet ke"],hin:["सब्ज़ी वाला ओट्स","फाइबर, बिना भारी पेट के"],en:["Vegetable oats","Fibre without heaviness"]},
+ ],
+ tea:[
+  {hi:["Tulsi-adrak chai","Immunity aur gale ke liye"],hin:["तुलसी-अदरक चाय","इम्युनिटी और गले के लिए"],en:["Tulsi-ginger tea","For immunity & throat"]},
+  {hi:["Jeera-saunf paani","Khaane ke baad — gas-acidity kam"],hin:["जीरा-सौंफ पानी","खाने के बाद — गैस-एसिडिटी कम"],en:["Cumin-fennel water","After meals — less gas/acidity"]},
+  {hi:["Daalchini-shahad chai","Metabolism aur sugar support"],hin:["दालचीनी-शहद चाय","मेटाबॉलिज्म और शुगर सपोर्ट"],en:["Cinnamon-honey tea","Metabolism & sugar support"]},
+  {hi:["Ajwain ya chamomile chai","Raat ko aaram, achhi neend"],hin:["अजवाइन या कैमोमाइल चाय","रात को आराम, अच्छी नींद"],en:["Ajwain or chamomile tea","Night-time calm, better sleep"]},
+ ],
+};
+const OPT_LBL={
+ hi:{more:"aur vikalp",yoga:"aur yoga",nashta:"nashte ke vikalp",lunch:"lunch ke vikalp",dinner:"dinner ke vikalp",tea:"chai ke vikalp"},
+ hin:{more:"और विकल्प",yoga:"और योग",nashta:"नाश्ते के विकल्प",lunch:"लंच के विकल्प",dinner:"डिनर के विकल्प",tea:"हर्बल चाय के विकल्प"},
+ en:{more:"more options",yoga:"more yoga",nashta:"breakfast options",lunch:"lunch options",dinner:"dinner options",tea:"herbal tea options"},
+};
+function routineCat(act){const a=String(act||"").toLowerCase();
+ if(/yoga|pranayam|dhyan|medit|vyayam|exercise|aasan|asan|योग|प्राणायाम|ध्यान|व्यायाम|आसन/.test(a))return"yoga";
+ if(/nashta|nasta|breakfast|नाश्ता|नास्ता/.test(a))return"nashta";
+ if(/lunch|dopahar|दोपहर/.test(a))return"lunch";
+ if(/dinner|raat ka|raat|shaam|रात|शाम|डिनर/.test(a))return"dinner";
+ if(/herbal|kaadha|kadha|chai|tea|चाय|काढ़ा|हर्बल/.test(a))return"tea";
+ return null;}
+function routineOpts(cat){return (ALT[cat]||[]).map(o=>o[lang]||o.en||o.hi);}
+function optLabel(cat){const m=OPT_LBL[lang]||OPT_LBL.en;return m[cat]||m.more;}
+function wireRoutineOpts(root){ (root||document).querySelectorAll("[data-ropt]").forEach(b=>{ b.onclick=()=>{ const el=$("ropts"+b.dataset.ropt); if(!el)return; el.classList.toggle("hidden"); const arw=b.querySelector(".arw"); if(arw)arw.textContent=el.classList.contains("hidden")?"▾":"▴"; }; }); }
 async function loadDashboard(){
  const x=t();
  try{
@@ -1159,13 +1418,14 @@ async function loadDashboard(){
    <div class="mini-card c-progress" id="progCard"><p class="mc-h">${x.progressT}</p><p class="mc-b">…</p></div>
    <div id="homeTesti"></div>
    ${routine.length?`<h2 style="font-family:var(--f-head);font-size:18px;margin:22px 0 10px">🌅 ${x.dRoutine}</h2>
-     <div class="routine-card"><div class="routine-line"></div>${routine.map((r,i)=>`<div class="r-row"><div class="r-dot">${routineEmoji(r.activity)}</div><div class="r-body"><div class="r-time">${esc(r.time)}</div><div class="r-act">${esc(r.activity)}</div></div></div>`).join("")}</div>
+     <div class="routine-card"><div class="routine-line"></div>${routine.map((r,i)=>{const cat=routineCat(r.activity);const opts=cat?routineOpts(cat):[];return `<div class="r-row"><div class="r-dot">${routineEmoji(r.activity)}</div><div class="r-body"><div class="r-time">${esc(r.time)}</div><div class="r-act">${esc(r.activity)}</div>${opts.length?`<button class="r-opt-btn" type="button" data-ropt="${i}">+ ${esc(optLabel(cat))} <span class="arw">▾</span></button><div class="r-opts hidden" id="ropts${i}">${opts.map(o=>`<div class="r-opt"><b>${esc(o[0])}</b><div class="ro-how">${esc(o[1])}</div></div>`).join("")}</div>`:""}</div></div>`;}).join("")}</div>
      <div class="mini-card c-progress" style="display:flex;align-items:center;justify-content:space-between;gap:10px"><div><p class="mc-h" style="margin:0">${x.remT}</p><p class="sub" style="margin:2px 0 0;font-size:12px">${x.remHint}</p></div>${remBtn}</div>`:""}
    <h2 style="font-family:var(--f-head);font-size:18px;margin:22px 0 10px">${x.dTrend}</h2>
    <div class="card"><div class="d-bars">${bars}</div></div>
   `;
   $("qNewPlan").onclick=()=>setTab("plan");
   $("qLog").onclick=()=>setTab("track");
+  wireRoutineOpts($("viewHome"));
   if($("adjBtn"))$("adjBtn").onclick=()=>setTab("plan");
   if($("remBtn"))$("remBtn").onclick=()=>enableReminders(routine);
   if(remindersOn())scheduleReminders(routine);
@@ -1350,7 +1610,7 @@ async function captureCam(){
  const durl=cv.toDataURL("image/jpeg",0.8);const data=durl.slice(durl.indexOf(",")+1);
  const btn=$("kCap");btn.disabled=true;btn.textContent="📸 "+x.kScanning;
  try{const r=await api("/kitchen/scan",{method:"POST",body:JSON.stringify({concern:kConcern,image:{media_type:"image/jpeg",data},language:lang})});closeCam();renderKitchenResult(r);}
- catch(e){$("kErr").textContent=e.message;}
+ catch(e){closeCam();$("kErr").textContent="";toast(e.message);if($("kListWrap")){$("kListWrap").classList.remove("hidden");$("kListWrap").scrollIntoView({behavior:"smooth",block:"center"});}}
  btn.disabled=false;btn.textContent="📸 "+x.kCapture;
 }
 function renderKitchenResult(r){
@@ -1382,13 +1642,13 @@ async function scanRemedy(ev){
  if(!file)return;
  if(!kConcern){$("kErr").textContent=x.kPickC;return;}
  $("kErr").textContent="";
- const btn=$("kScanBtn");btn.disabled=true;btn.textContent="📷 "+x.kScanning;
+ const btn=$("kScanBtn");if(btn){btn.disabled=true;btn.textContent="📷 "+x.kScanning;}
  try{
    const data=await fileToBase64(file);
    const r=await api("/kitchen/scan",{method:"POST",body:JSON.stringify({concern:kConcern,image:{media_type:file.type||"image/jpeg",data},language:lang})});
    renderKitchenResult(r);
- }catch(e){$("kErr").textContent=e.message;}
- btn.disabled=false;btn.textContent="📷 "+x.kScan;
+ }catch(e){$("kErr").textContent="";toast(e.message);if($("kListWrap")){$("kListWrap").classList.remove("hidden");$("kListWrap").scrollIntoView({behavior:"smooth",block:"center"});}}
+ if(btn){btn.disabled=false;btn.textContent="📷 "+x.kScan;}
 }
 
 /* ============ COMMUNITY (Healing Circles) ============ */
