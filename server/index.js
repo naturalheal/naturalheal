@@ -187,9 +187,14 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => {
-  console.log(`\n  🌿 NaturalHeal AI:  http://localhost:${PORT}`);
-  console.log(`  Admin panel:        http://localhost:${PORT}/admin`);
-  console.log(`  AI mode: ${process.env.ANTHROPIC_API_KEY ? "Claude API (live)" : "Offline fallback (no API key)"}`);
-  console.log(`  Payments: Razorpay ${process.env.RAZORPAY_KEY_ID ? "on" : "off"} · Stripe ${process.env.STRIPE_SECRET_KEY ? "on" : "off"}\n`);
-});
+function boot() {
+  server.listen(PORT, () => {
+    console.log(`\n  🌿 NaturalHeal AI:  http://localhost:${PORT}`);
+    console.log(`  Admin panel:        http://localhost:${PORT}/admin`);
+    console.log(`  AI mode: ${process.env.ANTHROPIC_API_KEY ? "Claude API (live)" : "Offline fallback (no API key)"}`);
+    console.log(`  Data: ${db.remoteOn ? "Upstash permanent ✓" : db.onDisk ? ("Permanent disk ✓ (" + db.dbPath + ")") : "local file (free host par reset ho sakta hai)"}`);
+    console.log(`  Payments: Razorpay ${process.env.RAZORPAY_KEY_ID ? "on" : "off"} · Stripe ${process.env.STRIPE_SECRET_KEY ? "on" : "off"}\n`);
+  });
+}
+// Pehle Upstash se data restore karo (agar set hai), phir server chalu karo
+(db.init ? db.init() : Promise.resolve()).then(boot).catch((e) => { console.error("store init:", e.message); boot(); });

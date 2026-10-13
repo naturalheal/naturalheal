@@ -1,23 +1,86 @@
 // ---------------------------------------------------------------------------
-// Data store — ek JSON file mein sab data (koi database install nahi chahiye).
-// Tables: users, health_profiles, ai_plans, payments
-// Bade scale pe PostgreSQL pe jaana ho to schema.sql ready hai.
+// Data store — ek JSON blob mein sab data (koi database install nahi chahiye).
+// Tables: users, health_profiles, ai_plans, payments, ...
+//
+// PERMANENT DATA (free): agar UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN
+// env me set hain, to poora data Upstash (free cloud Redis) me bhi save hota hai
+// aur server restart par wahin se wapas aa jaata hai. Env na ho to pehle jaisa
+// local file par chalta hai (free host par restart par reset ho jaata hai).
 // ---------------------------------------------------------------------------
 const fs = require("fs");
 const path = require("path");
 
-const FILE = path.join(__dirname, "..", process.env.DB_FILE || "naturalheal-data.json");
+// DB_FILE absolute ho (jaise /data/naturalheal-data.json — paid persistent disk) to seedha wahi use karo,
+// warna project folder ke andar (free host).
+const DBF = process.env.DB_FILE || "naturalheal-data.json";
+const FILE = path.isAbsolute(DBF) ? DBF : path.join(__dirname, "..", DBF);
+const KEYS = ["users", "health_profiles", "ai_plans", "payments", "symptoms", "members", "settings", "posts", "shares", "points_ledger", "redemptions"];
 
-let data = { users: [], health_profiles: [], ai_plans: [], payments: [], symptoms: [], members: [], settings: [], posts: [], shares: [], points_ledger: [], redemptions: [] };
+let data = {};
+for (const k of KEYS) data[k] = [];
 try {
   if (fs.existsSync(FILE)) data = JSON.parse(fs.readFileSync(FILE, "utf8"));
 } catch (e) { console.error("data file padhne mein dikkat, naya banayenge:", e.message); }
-for (const k of ["users", "health_profiles", "ai_plans", "payments", "symptoms", "members", "settings", "posts", "shares", "points_ledger", "redemptions"]) if (!data[k]) data[k] = [];
+for (const k of KEYS) if (!data[k]) data[k] = [];
+
+// ---- Upstash (free permanent backup) ----
+const UP_URL = process.env.UPSTASH_REDIS_REST_URL || "";
+const UP_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || "";
+const UP_KEY = process.env.UPSTASH_KEY || "naturalheal:db";
+const remoteOn = !!(UP_URL && UP_TOKEN);
+
+async function upstash(cmd) {
+  const r = await fetch(UP_URL, {
+    method: "POST",
+    headers: { Authorization: "Bearer " + UP_TOKEN, "Content-Type": "application/json" },
+    body: JSON.stringify(cmd),
+  });
+  if (!r.ok) throw new Error("upstash HTTP " + r.status);
+  return r.json();
+}
+
+let pushTimer = null, pushing = false, pushAgain = false;
+function pushRemote() {
+  if (!remoteOn) return;
+  if (pushTimer) clearTimeout(pushTimer);
+  pushTimer = setTimeout(doPush, 800); // debounce: kai writes ko ek saath bhejo
+}
+async function doPush() {
+  if (!remoteOn) return;
+  if (pushing) { pushAgain = true; return; }
+  pushing = true;
+  try { await upstash(["SET", UP_KEY, JSON.stringify(data)]); }
+  catch (e) { console.error("remote save fail:", e.message); }
+  pushing = false;
+  if (pushAgain) { pushAgain = false; doPush(); }
+}
+
+// Boot par Upstash se data wapas load karo (permanent)
+async function init() {
+  if (!remoteOn) return;
+  try {
+    const res = await upstash(["GET", UP_KEY]);
+    if (res && typeof res.result === "string" && res.result.length) {
+      const remote = JSON.parse(res.result);
+      if (remote && typeof remote === "object") {
+        data = remote;
+        for (const k of KEYS) if (!data[k]) data[k] = [];
+        console.log("  Data: Upstash se restore ho gaya (permanent) ✓");
+        return;
+      }
+    }
+    await doPush(); // Upstash khaali tha — abhi wala data seed kar do
+    console.log("  Data: Upstash juda (permanent, fresh) ✓");
+  } catch (e) { console.error("remote restore fail:", e.message); }
+}
 
 function save() {
-  const tmp = FILE + ".tmp";
-  fs.writeFileSync(tmp, JSON.stringify(data, null, 0));
-  fs.renameSync(tmp, FILE);
+  try {
+    const tmp = FILE + ".tmp";
+    fs.writeFileSync(tmp, JSON.stringify(data, null, 0));
+    fs.renameSync(tmp, FILE);
+  } catch (e) { /* read-only FS par Upstash hi asli store hai */ }
+  pushRemote();
 }
 
 function collection(name) {
@@ -47,4 +110,8 @@ module.exports = {
   points_ledger: collection("points_ledger"),
   redemptions: collection("redemptions"),
   _raw: () => data,
+  init,
+  remoteOn,
+  onDisk: path.isAbsolute(DBF),
+  dbPath: FILE,
 };
