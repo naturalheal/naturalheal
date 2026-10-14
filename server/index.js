@@ -85,6 +85,7 @@ const R = [
   ["GET", "/api/admin/settings", admin.readSettings, { admin: true }],
   ["PUT", "/api/admin/settings", admin.writeSettings, { admin: true }],
   ["POST", "/api/admin/reset-data", admin.resetData, { admin: true }],
+  ["GET", "/api/admin/backup", admin.backup, { admin: true }],
   ["GET", "/api/admin/report/plans", admin.plansReport, { admin: true }],
   ["GET", "/api/admin/report/symptoms", admin.symptomsReport, { admin: true }],
   ["GET", "/api/admin/report/members", admin.membersReport, { admin: true }],

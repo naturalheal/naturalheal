@@ -126,6 +126,9 @@ function recentPayments() {
   return { payments: rows };
 }
 
+// Poora data backup (admin download) — apne paas copy rakhne ke liye
+function backup() { return db._raw(); }
+
 // Fresh start (launch se pehle): sab test data saaf, admin account bacha rehta hai
 function resetData(ctx) {
   const b = ctx.body || {};
@@ -134,4 +137,4 @@ function resetData(ctx) {
   return { ok: true, kept_admin: ctx.user.id };
 }
 
-module.exports = { stats, listUsers, userDetail, setPremium, deleteUser, recentPayments, readSettings, writeSettings, plansReport, symptomsReport, membersReport, userMembers, adminUpdateMember, adminDeleteMember, resetData };
+module.exports = { stats, listUsers, userDetail, setPremium, deleteUser, recentPayments, readSettings, writeSettings, plansReport, symptomsReport, membersReport, userMembers, adminUpdateMember, adminDeleteMember, resetData, backup };
