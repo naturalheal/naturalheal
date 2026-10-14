@@ -49,9 +49,13 @@ input,select,textarea{width:100%;font:inherit;font-size:15px;color:var(--fg);bac
 textarea{resize:vertical;min-height:58px}
 input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);border-color:var(--accent)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.grid>div{min-width:0}
+input,select,textarea{min-width:0;max-width:100%}
+input[type=file]{max-width:100%}
 @media(max-width:520px){.grid{grid-template-columns:1fr}}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
-.chip input{position:absolute;opacity:0;pointer-events:none}
+.chip{position:relative}
+.chip input{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;left:0;top:0;margin:0}
 .chip span{display:inline-block;padding:8px 13px;border:1px solid var(--line);border-radius:999px;font-size:13.5px;font-weight:600;background:var(--bg);cursor:pointer;user-select:none}
 .chip input:checked+span{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}
 .btn{border:none;cursor:pointer;font-family:var(--f-body);font-weight:800;font-size:15px;padding:13px 18px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
@@ -79,7 +83,8 @@ body.big{zoom:1.18}
 .f-say{font-size:13.5px;font-weight:700}
 /* Kitchen remedy */
 .kgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:9px;margin-top:6px}
-.kitem input{position:absolute;opacity:0;pointer-events:none}
+.kitem{position:relative}
+.kitem input{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;left:0;top:0;margin:0}
 .kitem span{display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 6px;border:1.5px solid var(--line);border-radius:14px;background:var(--bg);cursor:pointer;font-weight:700;font-size:13px;text-align:center}
 .kitem .ke{font-size:28px;line-height:1}
 .kitem input:checked+span{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}
@@ -1376,7 +1381,16 @@ function routineCat(act){const a=String(act||"").toLowerCase();
  return null;}
 function routineOpts(cat){return (ALT[cat]||[]).map(o=>o[lang]||o.en||o.hi);}
 function optLabel(cat){const m=OPT_LBL[lang]||OPT_LBL.en;return m[cat]||m.more;}
-function wireRoutineOpts(root){ (root||document).querySelectorAll("[data-ropt]").forEach(b=>{ b.onclick=()=>{ const el=$("ropts"+b.dataset.ropt); if(!el)return; el.classList.toggle("hidden"); const arw=b.querySelector(".arw"); if(arw)arw.textContent=el.classList.contains("hidden")?"▾":"▴"; }; }); }
+let _roptWired=false;
+function wireRoutineOpts(){ if(_roptWired)return; _roptWired=true;
+ // delegation: kisi bhi yoga/nashta/lunch/dinner/chai button par tap -> uske options khul/band
+ document.addEventListener("click",function(e){
+  const b=e.target&&e.target.closest?e.target.closest(".r-opt-btn"):null; if(!b)return;
+  const el=$("ropts"+b.dataset.ropt); if(!el)return;
+  el.classList.toggle("hidden");
+  const arw=b.querySelector(".arw"); if(arw)arw.textContent=el.classList.contains("hidden")?"▾":"▴";
+ });
+}
 async function loadDashboard(){
  const x=t();
  try{
