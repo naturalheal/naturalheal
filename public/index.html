@@ -1384,13 +1384,16 @@ function routineOpts(cat){return (ALT[cat]||[]).map(o=>o[lang]||o.en||o.hi);}
 function optLabel(cat){const m=OPT_LBL[lang]||OPT_LBL.en;return m[cat]||m.more;}
 let _roptWired=false;
 function wireRoutineOpts(){ if(_roptWired)return; _roptWired=true;
- // delegation: kisi bhi yoga/nashta/lunch/dinner/chai button par tap -> uske options khul/band
+ // delegation: yoga/nashta/lunch/dinner/chai button par tap -> options ek popup (sheet) me khulein ("why this" ki tarah)
  document.addEventListener("click",function(e){
   const b=e.target&&e.target.closest?e.target.closest(".r-opt-btn"):null; if(!b)return;
-  const el=$("ropts"+b.dataset.ropt); if(!el)return;
-  el.classList.toggle("hidden");
-  const arw=b.querySelector(".arw"); if(arw)arw.textContent=el.classList.contains("hidden")?"▾":"▴";
+  routineSheet(b.dataset.rcat);
  });
+}
+function routineSheet(cat){
+ const opts=routineOpts(cat); if(!opts.length)return;
+ const body=opts.map(o=>`<div class="r-opt"><b>${esc(o[0])}</b><div class="ro-how">${esc(o[1])}</div></div>`).join("");
+ openSheet(`<h3 style="margin:0 0 4px;font-family:var(--f-head);font-size:19px">${esc(optLabel(cat))}</h3><div class="r-opts" style="display:flex">${body}</div>`);
 }
 async function loadDashboard(){
  const x=t();
@@ -1433,7 +1436,7 @@ async function loadDashboard(){
    <div class="mini-card c-progress" id="progCard"><p class="mc-h">${x.progressT}</p><p class="mc-b">…</p></div>
    <div id="homeTesti"></div>
    ${routine.length?`<h2 style="font-family:var(--f-head);font-size:18px;margin:22px 0 10px">🌅 ${x.dRoutine}</h2>
-     <div class="routine-card"><div class="routine-line"></div>${routine.map((r,i)=>{const cat=routineCat(r.activity);const opts=cat?routineOpts(cat):[];return `<div class="r-row"><div class="r-dot">${routineEmoji(r.activity)}</div><div class="r-body"><div class="r-time">${esc(r.time)}</div><div class="r-act">${esc(r.activity)}</div>${opts.length?`<button class="r-opt-btn" type="button" data-ropt="${i}">+ ${esc(optLabel(cat))} <span class="arw">▾</span></button><div class="r-opts hidden" id="ropts${i}">${opts.map(o=>`<div class="r-opt"><b>${esc(o[0])}</b><div class="ro-how">${esc(o[1])}</div></div>`).join("")}</div>`:""}</div></div>`;}).join("")}</div>
+     <div class="routine-card"><div class="routine-line"></div>${routine.map((r,i)=>{const cat=routineCat(r.activity);const opts=cat?routineOpts(cat):[];return `<div class="r-row"><div class="r-dot">${routineEmoji(r.activity)}</div><div class="r-body"><div class="r-time">${esc(r.time)}</div><div class="r-act">${esc(r.activity)}</div>${(cat&&opts.length)?`<button class="r-opt-btn" type="button" data-rcat="${cat}">+ ${esc(optLabel(cat))}</button>`:""}</div></div>`;}).join("")}</div>
      <div class="mini-card c-progress" style="display:flex;align-items:center;justify-content:space-between;gap:10px"><div><p class="mc-h" style="margin:0">${x.remT}</p><p class="sub" style="margin:2px 0 0;font-size:12px">${x.remHint}</p></div>${remBtn}</div>`:""}
    <h2 style="font-family:var(--f-head);font-size:18px;margin:22px 0 10px">${x.dTrend}</h2>
    <div class="card"><div class="d-bars">${bars}</div></div>
