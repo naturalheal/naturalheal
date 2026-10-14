@@ -5,7 +5,7 @@
 // taaki app AI ke bina bhi chale.
 // ---------------------------------------------------------------------------
 // Note: Anthropic API ko seedha fetch se call karte hain (koi SDK package nahi chahiye).
-const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5";
+const MODEL = process.env.ANTHROPIC_MODEL || "claude-haiku-4-5";
 const KEY = process.env.ANTHROPIC_API_KEY || "";
 const API_URL = "https://api.anthropic.com/v1/messages";
 
