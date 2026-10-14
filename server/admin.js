@@ -126,4 +126,12 @@ function recentPayments() {
   return { payments: rows };
 }
 
-module.exports = { stats, listUsers, userDetail, setPremium, deleteUser, recentPayments, readSettings, writeSettings, plansReport, symptomsReport, membersReport, userMembers, adminUpdateMember, adminDeleteMember };
+// Fresh start (launch se pehle): sab test data saaf, admin account bacha rehta hai
+function resetData(ctx) {
+  const b = ctx.body || {};
+  if (b.confirm !== "RESET") throw new HttpError(400, "Confirm ke liye 'RESET' likhein");
+  db.resetKeepAdmin(ctx.user.id);
+  return { ok: true, kept_admin: ctx.user.id };
+}
+
+module.exports = { stats, listUsers, userDetail, setPremium, deleteUser, recentPayments, readSettings, writeSettings, plansReport, symptomsReport, membersReport, userMembers, adminUpdateMember, adminDeleteMember, resetData };

@@ -336,7 +336,20 @@ async function secSettings(){
   <div class="err" id="sErr"></div>
   <button class="btn" id="sSave" style="width:100%">Save changes</button>
   <p class="sub" style="margin-top:10px">Save karte hi ye changes app mein live ho jaate hain.</p>
+ </div>
+ <div class="card" style="max-width:560px;margin-top:16px;border:1.5px solid #e0b4b4">
+  <h3 style="font-family:var(--f-head);font-weight:600;font-size:16px;margin:0 0 6px;color:#c0392b">⚠ Fresh start (launch se pehle)</h3>
+  <p class="sub" style="margin:0 0 10px">Testing ka <b>saara data</b> (users, plans, logs, points, community) hamesha ke liye delete ho jayega — sirf aapka admin account bachega. Ye sirf <b>launch se theek pehle</b> ek baar dabayein.</p>
+  <div class="err" id="rErr"></div>
+  <button class="btn" id="rReset" style="width:100%;background:#c0392b;border-color:#c0392b;color:#fff">Saara test data clear karo</button>
  </div>`;
+ $("rReset").onclick=async()=>{
+   if(!confirm("Pakka? Saara test data delete ho jayega (sirf admin account bachega). Ye wapas nahi aayega."))return;
+   const code=prompt("Confirm karne ke liye bade akshar me  RESET  likhein:");
+   if(code!=="RESET"){toast("Cancel — RESET nahi likha");return;}
+   try{await api("/admin/reset-data",{method:"POST",body:JSON.stringify({confirm:"RESET"})});toast("Saaf ho gaya ✓ Ab fresh start!");}
+   catch(e){$("rErr").textContent=e.message;}
+ };
  $("sSave").onclick=async()=>{try{
    const pk=["referral","plan","profile","post","log","share","like","member","member_max_awards","share_daily_cap","like_daily_cap","redeem_premium_month","rupee_per_point","product_min_points"];
    const points={};pk.forEach(k=>{const el=$("pt_"+k);if(el)points[k]=el.value;});

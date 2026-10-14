@@ -114,4 +114,13 @@ module.exports = {
   remoteOn,
   onDisk: path.isAbsolute(DBF),
   dbPath: FILE,
+  // Launch se pehle fresh start: admin ka account rakho, baaki sab test data saaf
+  resetKeepAdmin: (adminId) => {
+    data.users = (data.users || []).filter((u) => u.id === adminId);
+    data.members = (data.members || []).filter((m) => m.user_id === adminId);
+    data.health_profiles = (data.health_profiles || []).filter((p) => p.user_id === adminId);
+    data.ai_plans = []; data.payments = []; data.symptoms = [];
+    data.posts = []; data.shares = []; data.points_ledger = []; data.redemptions = [];
+    save();
+  },
 };
