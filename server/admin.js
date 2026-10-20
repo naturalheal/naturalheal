@@ -155,6 +155,12 @@ function upiList() {
   const rows = db.upi_payments.all().sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
   return { payments: rows, pending: rows.filter((r) => r.status === "pending").length };
 }
+async function notifyTest() {
+  const { notifyAdmin } = require("./billing");
+  const r = await notifyAdmin("🔔 Test — NaturalHeal admin alert chaalu hai. Payment aane par aise hi message aayega.", true);
+  if (!r.ok) throw new HttpError(400, r.error || "Telegram message nahi gaya");
+  return { ok: true };
+}
 function upiSet(ctx) {
   const p = db.upi_payments.get(ctx.params.id);
   if (!p) throw new HttpError(404, "Request nahi mili");
@@ -178,4 +184,4 @@ function resetData(ctx) {
   return { ok: true, kept_admin: ctx.user.id };
 }
 
-module.exports = { stats, listUsers, userDetail, setPremium, deleteUser, recentPayments, readSettings, writeSettings, plansReport, symptomsReport, membersReport, userMembers, adminUpdateMember, adminDeleteMember, resetData, backup, resetPassword, addConcern, deleteConcern, upiList, upiSet };
+module.exports = { stats, listUsers, userDetail, setPremium, deleteUser, recentPayments, readSettings, writeSettings, plansReport, symptomsReport, membersReport, userMembers, adminUpdateMember, adminDeleteMember, resetData, backup, resetPassword, addConcern, deleteConcern, upiList, upiSet, notifyTest };

@@ -124,6 +124,21 @@ function razorpayWebhook(ctx) {
   return { received: true };
 }
 
+// ---- Admin ko Telegram par turant alert (free) ----
+async function notifyAdmin(text, wait) {
+  const s = getSettings();
+  const token = s.telegram_bot_token, chat = s.telegram_chat_id;
+  if (!token || !chat) return { ok: false, error: "Telegram set nahi hai (token/chat id daalein)" };
+  const p = fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: chat, text, disable_web_page_preview: true }),
+  }).then(async (r) => { const d = await r.json().catch(() => ({})); return { ok: !!d.ok, error: d.ok ? null : (d.description || "bhej nahi paaya") }; })
+    .catch((e) => ({ ok: false, error: e.message }));
+  if (wait) return p;
+  p.catch(() => {});
+  return { ok: true };
+}
+
 // ---- UPI direct (gateway-free): user UTR daalta hai; admin approve ya auto-approve ----
 function upiSubmit(ctx) {
   const user = ctx.user;
@@ -137,6 +152,7 @@ function upiSubmit(ctx) {
   const auto = !!s.upi_auto_approve;
   const rec = { id: uid(), user_id: user.id, user_name: user.name, user_email: user.email, utr, amount, status: auto ? "approved" : "pending", created_at: new Date().toISOString() };
   db.upi_payments.insert(rec);
+  notifyAdmin(`💰 Nayi payment (NaturalHeal)\nUser: ${user.name} (${user.email})\nAmount: ₹${amount}\nUTR: ${utr}\n${auto ? "✅ Auto-approved — Premium chalu" : "⏳ PENDING — admin me jaake Approve karein"}`);
   if (auto) {
     grantPremium(user.id, { provider: "upi", days: 31 });
     logPayment(user.id, { provider: "upi", amount, currency: "INR", status: "paid", ref_id: utr });
@@ -145,4 +161,4 @@ function upiSubmit(ctx) {
   return { status: "pending" };
 }
 
-module.exports = { pricing, stripeCheckout, razorpaySubscribe, stripeWebhook, razorpayWebhook, grantPremium, revokePremium, logPayment, upiSubmit };
+module.exports = { pricing, stripeCheckout, razorpaySubscribe, stripeWebhook, razorpayWebhook, grantPremium, revokePremium, logPayment, upiSubmit, notifyAdmin };

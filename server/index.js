@@ -92,6 +92,7 @@ const R = [
   ["DELETE", "/api/admin/concerns/:id", admin.deleteConcern, { admin: true }],
   ["GET", "/api/admin/upi", admin.upiList, { admin: true }],
   ["POST", "/api/admin/upi/:id", admin.upiSet, { admin: true }],
+  ["POST", "/api/admin/notify-test", admin.notifyTest, { admin: true }],
   ["POST", "/api/concerns", routes.addConcernRoute, { auth: true }],
   ["GET", "/api/admin/report/plans", admin.plansReport, { admin: true }],
   ["GET", "/api/admin/report/symptoms", admin.symptomsReport, { admin: true }],

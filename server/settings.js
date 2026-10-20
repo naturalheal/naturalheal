@@ -45,6 +45,9 @@ function defaults() {
     upi_id: process.env.UPI_ID || "",        // jaise: name@okhdfcbank
     upi_name: process.env.UPI_NAME || "",    // jiske naam par paisa aayega
     upi_auto_approve: false,     // ON = sahi format + non-duplicate UTR par turant premium (bharose par)
+    // Admin ko turant alert — Telegram (free). Payment aate hi phone par message.
+    telegram_bot_token: process.env.TELEGRAM_BOT_TOKEN || "",
+    telegram_chat_id: process.env.TELEGRAM_CHAT_ID || "",
     // Extra bimariyan/samasyaein — admin ya user add karte hain, sabko chip ke roop me dikhti hain
     custom_concerns: [],         // [{id, label}]
   };
@@ -72,6 +75,8 @@ function saveSettings(patch) {
   if (patch.upi_id != null) clean.upi_id = String(patch.upi_id).trim().slice(0, 80);
   if (patch.upi_name != null) clean.upi_name = String(patch.upi_name).trim().slice(0, 60);
   if (patch.upi_auto_approve != null) clean.upi_auto_approve = !!patch.upi_auto_approve;
+  if (patch.telegram_bot_token != null) clean.telegram_bot_token = String(patch.telegram_bot_token).trim().slice(0, 120);
+  if (patch.telegram_chat_id != null) clean.telegram_chat_id = String(patch.telegram_chat_id).trim().slice(0, 40);
   const cur = db.settings.get("app");
   // Points rules (nested) — sirf valid number keys merge
   let pointsMerged;
