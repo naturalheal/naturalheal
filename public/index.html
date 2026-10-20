@@ -262,6 +262,15 @@ ul.items li b{color:var(--accent-ink)}
 .r-opt-btn{margin-top:5px;background:var(--surface);border:1px solid var(--accent);color:var(--accent-ink);border-radius:999px;padding:4px 11px;font:inherit;font-weight:800;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
 .r-opts{margin-top:9px;display:flex;flex-direction:column;gap:8px}
 .r-opts.hidden{display:none}
+/* Welcome / disclaimer pop-up */
+.welcome-ov{position:fixed;inset:0;background:rgba(20,30,25,.55);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;animation:fadeIn .2s ease}
+.welcome-card{background:linear-gradient(165deg,var(--accent-soft),var(--surface));border:1px solid var(--line);border-radius:22px;max-width:420px;width:100%;padding:26px 22px;text-align:center;box-shadow:0 20px 50px rgba(20,30,25,.3);animation:sheetUp .25s ease;max-height:88vh;overflow-y:auto}
+.welcome-leaf{font-size:44px;line-height:1}
+.welcome-tag{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-top:6px}
+.welcome-title{font-family:var(--f-head);font-size:23px;margin:4px 0 10px;color:var(--accent-ink)}
+.welcome-body{font-size:15px;line-height:1.65;color:var(--fg);margin:0}
+.welcome-note{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px;font-weight:600;color:var(--muted)}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .r-opt{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:9px 12px}
 .r-opt b{font-size:14px}
 .r-opt .ro-how{font-size:12.5px;color:var(--muted);margin-top:2px}
@@ -995,7 +1004,7 @@ function fillProfile(p){
  $("reportRows").innerHTML="";(p.report||[]).forEach(r=>addReportRow(r.marker,r.value));
 }
 function showAuth(){$("authView").classList.remove("hidden");$("appView").classList.add("hidden");$("memberSel").classList.add("hidden");$("logoutBtn").classList.add("hidden");renderStatic();}
-function showApp(){$("authView").classList.add("hidden");$("appView").classList.remove("hidden");$("memberSel").classList.remove("hidden");$("logoutBtn").classList.remove("hidden");renderStatic();setTab("home");applyDeepLink();}
+function showApp(){$("authView").classList.add("hidden");$("appView").classList.remove("hidden");$("memberSel").classList.remove("hidden");$("logoutBtn").classList.remove("hidden");renderStatic();setTab("home");applyDeepLink();showWelcome();}
 
 /* ---- gather profile from form ---- */
 function gather(){
@@ -1368,6 +1377,36 @@ const ALT={
   {hi:["Ajwain ya chamomile chai","Raat ko aaram, achhi neend"],hin:["अजवाइन या कैमोमाइल चाय","रात को आराम, अच्छी नींद"],en:["Ajwain or chamomile tea","Night-time calm, better sleep"]},
  ],
 };
+/* Welcome / disclaimer — holistic healing, sirf salah/guide (koi ilaj nahi). User ki chuni bhasha me. */
+const WELCOME={
+ en:{tag:"Holistic Healing",title:"Welcome 🌿",body:"This app gives you natural, holistic wellness guidance — simple advice you can follow at home. It's a guide to help you improve step by step, not a medicine or treatment.",note:"⚕ For serious problems, pregnancy, or if you take regular medicine, please consult a doctor.",btn:"I understand — let's start"},
+ hi:{tag:"Holistic Healing",title:"Namaste 🌿",body:"Ye app aapko kudrati (natural) aur holistic sehat ki salah deti hai — aasan sujhav jo aap ghar par apna sakein. Ye ek guide hai jo aapko dheere-dheere behtar hone me madad karti hai — koi dawai ya ilaj nahi.",note:"⚕ Gambhir samasya, pregnancy, ya dawai chal rahi ho to doctor se zaroor poochein.",btn:"Samajh gaya — shuru karein"},
+ hin:{tag:"होलिस्टिक हीलिंग",title:"नमस्ते 🌿",body:"ये ऐप आपको कुदरती (नैचुरल) और होलिस्टिक सेहत की सलाह देती है — आसान सुझाव जो आप घर पर अपना सकें। ये एक गाइड है जो आपको धीरे-धीरे बेहतर होने में मदद करती है — कोई दवाई या इलाज नहीं।",note:"⚕ गंभीर समस्या, प्रेग्नेंसी, या दवाई चल रही हो तो डॉक्टर से ज़रूर पूछें।",btn:"समझ गया — शुरू करें"},
+ bn:{tag:"হোলিস্টিক হিলিং",title:"স্বাগতম 🌿",body:"এই অ্যাপ আপনাকে প্রাকৃতিক ও হোলিস্টিক স্বাস্থ্যের পরামর্শ দেয় — সহজ উপায় যা আপনি বাড়িতে মেনে চলতে পারেন। এটি একটি গাইড, ধীরে ধীরে ভালো হতে সাহায্য করে — কোনো ওষুধ বা চিকিৎসা নয়।",note:"⚕ গুরুতর সমস্যা, গর্ভাবস্থা, বা নিয়মিত ওষুধ চললে ডাক্তারের পরামর্শ নিন।",btn:"বুঝেছি — শুরু করুন"},
+ mr:{tag:"होलिस्टिक हीलिंग",title:"नमस्कार 🌿",body:"हे अ‍ॅप तुम्हाला नैसर्गिक व होलिस्टिक आरोग्याचा सल्ला देते — घरी करता येतील असे सोपे उपाय. हे एक मार्गदर्शक आहे जे तुम्हाला हळूहळू सुधारण्यास मदत करते — कोणतेही औषध किंवा उपचार नाही.",note:"⚕ गंभीर समस्या, गर्भधारणा, किंवा औषध सुरू असल्यास डॉक्टरांचा सल्ला घ्या.",btn:"समजले — सुरू करा"},
+ gu:{tag:"હોલિસ્ટિક હીલિંગ",title:"નમસ્તે 🌿",body:"આ એપ તમને કુદરતી અને હોલિસ્ટિક આરોગ્યની સલાહ આપે છે — ઘરે અનુસરી શકાય એવા સરળ ઉપાય. આ એક ગાઇડ છે જે તમને ધીમે ધીમે સારા થવામાં મદદ કરે છે — કોઈ દવા કે ઈલાજ નથી.",note:"⚕ ગંભીર સમસ્યા, ગર્ભાવસ્થા, કે દવા ચાલતી હોય તો ડૉક્ટરની સલાહ લો.",btn:"સમજ્યું — શરૂ કરો"},
+ ta:{tag:"முழுமை நலவாழ்வு",title:"வணக்கம் 🌿",body:"இந்த செயலி உங்களுக்கு இயற்கை மற்றும் முழுமையான நல ஆலோசனை வழங்குகிறது — வீட்டிலேயே பின்பற்றக்கூடிய எளிய வழிகள். இது படிப்படியாக முன்னேற உதவும் வழிகாட்டி — மருந்து அல்லது சிகிச்சை அல்ல.",note:"⚕ கடுமையான பிரச்சினை, கர்ப்பம், அல்லது மருந்து எடுத்தால் மருத்துவரை அணுகவும்.",btn:"புரிந்தது — தொடங்கலாம்"},
+ te:{tag:"హోలిస్టిక్ హీలింగ్",title:"నమస్తే 🌿",body:"ఈ యాప్ మీకు సహజమైన, సంపూర్ణ ఆరోగ్య సలహా ఇస్తుంది — ఇంట్లోనే పాటించగల సులభమైన సూచనలు. ఇది మిమ్మల్ని క్రమంగా మెరుగుపడేలా సహాయపడే మార్గదర్శి — మందు లేదా చికిత్స కాదు.",note:"⚕ తీవ్రమైన సమస్య, గర్భం, లేదా మందులు వాడుతుంటే వైద్యుడిని సంప్రదించండి.",btn:"అర్థమైంది — ప్రారంభిద్దాం"},
+ kn:{tag:"ಹೋಲಿಸ್ಟಿಕ್ ಹೀಲಿಂಗ್",title:"ನಮಸ್ಕಾರ 🌿",body:"ಈ ಆ್ಯಪ್ ನಿಮಗೆ ನೈಸರ್ಗಿಕ ಮತ್ತು ಸಮಗ್ರ ಆರೋಗ್ಯ ಸಲಹೆ ನೀಡುತ್ತದೆ — ಮನೆಯಲ್ಲೇ ಅನುಸರಿಸಬಹುದಾದ ಸರಳ ಸಲಹೆಗಳು. ಇದು ನಿಧಾನವಾಗಿ ಸುಧಾರಿಸಲು ಸಹಾಯ ಮಾಡುವ ಮಾರ್ಗದರ್ಶಿ — ಔಷಧ ಅಥವಾ ಚಿಕಿತ್ಸೆ ಅಲ್ಲ.",note:"⚕ ಗಂಭೀರ ಸಮಸ್ಯೆ, ಗರ್ಭಾವಸ್ಥೆ, ಅಥವಾ ಔಷಧ ತೆಗೆದುಕೊಳ್ಳುತ್ತಿದ್ದರೆ ವೈದ್ಯರನ್ನು ಸಂಪರ್ಕಿಸಿ.",btn:"ಅರ್ಥವಾಯಿತು — ಪ್ರಾರಂಭಿಸೋಣ"},
+ pa:{tag:"ਹੋਲਿਸਟਿਕ ਹੀਲਿੰਗ",title:"ਸਤ ਸ੍ਰੀ ਅਕਾਲ 🌿",body:"ਇਹ ਐਪ ਤੁਹਾਨੂੰ ਕੁਦਰਤੀ ਅਤੇ ਹੋਲਿਸਟਿਕ ਸਿਹਤ ਦੀ ਸਲਾਹ ਦਿੰਦੀ ਹੈ — ਘਰ ਵਿੱਚ ਅਪਣਾਉਣ ਯੋਗ ਆਸਾਨ ਸੁਝਾਅ। ਇਹ ਇੱਕ ਗਾਈਡ ਹੈ ਜੋ ਤੁਹਾਨੂੰ ਹੌਲੀ-ਹੌਲੀ ਬਿਹਤਰ ਹੋਣ ਵਿੱਚ ਮਦਦ ਕਰਦੀ ਹੈ — ਕੋਈ ਦਵਾਈ ਜਾਂ ਇਲਾਜ ਨਹੀਂ।",note:"⚕ ਗੰਭੀਰ ਸਮੱਸਿਆ, ਗਰਭ, ਜਾਂ ਦਵਾਈ ਚੱਲ ਰਹੀ ਹੋਵੇ ਤਾਂ ਡਾਕਟਰ ਦੀ ਸਲਾਹ ਲਓ।",btn:"ਸਮਝ ਗਿਆ — ਸ਼ੁਰੂ ਕਰੋ"},
+ ml:{tag:"ഹോളിസ്റ്റിക് ഹീലിംഗ്",title:"നമസ്കാരം 🌿",body:"ഈ ആപ്പ് നിങ്ങൾക്ക് പ്രകൃതിദത്തവും സമഗ്രവുമായ ആരോഗ്യ ഉപദേശം നൽകുന്നു — വീട്ടിൽ പിന്തുടരാവുന്ന ലളിതമായ നിർദ്ദേശങ്ങൾ. ഇത് പടിപടിയായി മെച്ചപ്പെടാൻ സഹായിക്കുന്ന ഒരു വഴികാട്ടിയാണ് — മരുന്നോ ചികിത്സയോ അല്ല.",note:"⚕ ഗുരുതരമായ പ്രശ്നം, ഗർഭം, അല്ലെങ്കിൽ മരുന്ന് കഴിക്കുന്നുണ്ടെങ്കിൽ ഡോക്ടറെ സമീപിക്കുക.",btn:"മനസ്സിലായി — തുടങ്ങാം"},
+};
+function showWelcome(){
+ let done=false;try{done=localStorage.getItem("nh_welcomed")==="1";}catch(e){}
+ if(done||document.getElementById("welcomeOv"))return;
+ const w=WELCOME[lang]||WELCOME.en;
+ const el=document.createElement("div");el.className="welcome-ov";el.id="welcomeOv";
+ el.innerHTML=`<div class="welcome-card">
+   <div class="welcome-leaf">🌿</div>
+   <div class="welcome-tag">${esc(w.tag)}</div>
+   <h2 class="welcome-title">${esc(w.title)}</h2>
+   <p class="welcome-body">${esc(w.body)}</p>
+   <div class="welcome-note">${esc(w.note)}</div>
+   <button class="btn btn-primary" id="welcomeBtn" style="width:100%;margin-top:16px">${esc(w.btn)}</button>
+ </div>`;
+ document.body.appendChild(el);
+ $("welcomeBtn").onclick=()=>{try{localStorage.setItem("nh_welcomed","1");}catch(e){}el.remove();};
+}
 const OPT_LBL={
  hi:{more:"aur vikalp",yoga:"aur yoga",nashta:"nashte ke vikalp",lunch:"lunch ke vikalp",dinner:"dinner ke vikalp",tea:"chai ke vikalp"},
  hin:{more:"और विकल्प",yoga:"और योग",nashta:"नाश्ते के विकल्प",lunch:"लंच के विकल्प",dinner:"डिनर के विकल्प",tea:"हर्बल चाय के विकल्प"},
