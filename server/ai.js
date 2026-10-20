@@ -105,18 +105,17 @@ async function generatePlan(profile, opts = {}) {
       // Message content: text + (optional) attached lab report file (PDF/image) jise AI khud padhega
       const content = [{ type: "text", text: buildUserMessage(profile) }];
       const f = profile.report_file;
+      let isPdf = false;
       if (f && f.data) {
-        if (f.media_type === "application/pdf") content.push({ type: "document", source: { type: "base64", media_type: "application/pdf", data: f.data } });
+        if (f.media_type === "application/pdf") { content.push({ type: "document", source: { type: "base64", media_type: "application/pdf", data: f.data } }); isPdf = true; }
         else if (/^image\//.test(f.media_type || "")) content.push({ type: "image", source: { type: "base64", media_type: f.media_type, data: f.data } });
       }
+      // Headers: beta PDF header SIRF tab jab asli PDF bhej rahe ho (hamesha bhejne par API reject kar deta tha -> fallback)
+      const headers = { "content-type": "application/json", "x-api-key": KEY, "anthropic-version": "2023-06-01" };
+      if (isPdf) headers["anthropic-beta"] = "pdfs-2024-09-25";
       const resp = await fetch(API_URL, {
         method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "x-api-key": KEY,
-          "anthropic-version": "2023-06-01",
-          "anthropic-beta": "pdfs-2024-09-25",
-        },
+        headers,
         body: JSON.stringify({
           model: MODEL,
           max_tokens: 2500,
