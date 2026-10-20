@@ -136,6 +136,27 @@ async function generatePlan(profile, opts = {}) {
   return { plan: fallbackPlan(profile), source: "fallback" };
 }
 
+// ---- Live AI test (admin): asli API call karke batao sab theek hai ya exact galti ----
+async function testAI() {
+  if (!KEY) return { ok: false, model: MODEL, error: "ANTHROPIC_API_KEY set nahi hai (Render Environment me daalein)" };
+  try {
+    const resp = await fetch(API_URL, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-api-key": KEY, "anthropic-version": "2023-06-01" },
+      body: JSON.stringify({ model: MODEL, max_tokens: 16, messages: [{ role: "user", content: "Reply with just: OK" }] }),
+    });
+    const txt = await resp.text();
+    if (!resp.ok) {
+      let msg = txt.slice(0, 300);
+      try { const j = JSON.parse(txt); if (j.error && j.error.message) msg = j.error.message; } catch (_) {}
+      return { ok: false, model: MODEL, status: resp.status, error: msg };
+    }
+    return { ok: true, model: MODEL };
+  } catch (e) {
+    return { ok: false, model: MODEL, error: e.message };
+  }
+}
+
 // JSON ko tolerant tarike se nikaalo
 function parseJson(text) {
   if (!text) return null;
@@ -260,4 +281,4 @@ async function aiVision(prompt, image, maxTokens = 500) {
 // Key available hai? (frontend ko batane ke liye route use karta hai)
 function aiAvailable() { return !!KEY; }
 
-module.exports = { generatePlan, aiText, aiVision, aiAvailable, buildSystemPrompt, JSON_SHAPE };
+module.exports = { generatePlan, aiText, aiVision, aiAvailable, buildSystemPrompt, JSON_SHAPE, testAI, MODEL };

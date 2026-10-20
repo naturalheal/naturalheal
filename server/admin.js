@@ -161,6 +161,12 @@ async function notifyTest() {
   if (!r.ok) throw new HttpError(400, r.error || "Telegram message nahi gaya");
   return { ok: true };
 }
+// AI live test — asli Claude API call, exact natija (ok / error)
+async function aiTest() {
+  const { testAI } = require("./ai");
+  return await testAI();
+}
+
 function upiSet(ctx) {
   const p = db.upi_payments.get(ctx.params.id);
   if (!p) throw new HttpError(404, "Request nahi mili");
@@ -184,4 +190,4 @@ function resetData(ctx) {
   return { ok: true, kept_admin: ctx.user.id };
 }
 
-module.exports = { stats, listUsers, userDetail, setPremium, deleteUser, recentPayments, readSettings, writeSettings, plansReport, symptomsReport, membersReport, userMembers, adminUpdateMember, adminDeleteMember, resetData, backup, resetPassword, addConcern, deleteConcern, upiList, upiSet, notifyTest };
+module.exports = { stats, listUsers, userDetail, setPremium, deleteUser, recentPayments, readSettings, writeSettings, plansReport, symptomsReport, membersReport, userMembers, adminUpdateMember, adminDeleteMember, resetData, backup, resetPassword, addConcern, deleteConcern, upiList, upiSet, notifyTest, aiTest };

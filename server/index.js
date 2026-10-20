@@ -93,6 +93,7 @@ const R = [
   ["GET", "/api/admin/upi", admin.upiList, { admin: true }],
   ["POST", "/api/admin/upi/:id", admin.upiSet, { admin: true }],
   ["POST", "/api/admin/notify-test", admin.notifyTest, { admin: true }],
+  ["POST", "/api/admin/ai-test", admin.aiTest, { admin: true }],
   ["POST", "/api/concerns", routes.addConcernRoute, { auth: true }],
   ["GET", "/api/admin/report/plans", admin.plansReport, { admin: true }],
   ["GET", "/api/admin/report/symptoms", admin.symptomsReport, { admin: true }],

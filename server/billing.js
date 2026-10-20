@@ -144,9 +144,10 @@ function upiSubmit(ctx) {
   const user = ctx.user;
   const s = getSettings();
   if (!s.upi_id) throw new HttpError(400, "UPI payment abhi set nahi hai");
-  const utr = String((ctx.body || {}).utr || "").replace(/\s/g, "");
-  if (!/^\d{12}$/.test(utr)) throw new HttpError(400, "Sahi 12-ank ka transaction/UTR number daalein");
-  const dup = db.upi_payments.filter((p) => p.utr === utr && p.status !== "rejected")[0];
+  const utr = String((ctx.body || {}).utr || "").replace(/\s/g, "").toUpperCase();
+  // UTR/UPI reference app-dar-app alag hota hai: kuch 12 ank, kuch lambe/letters-waale.
+  if (!/^[A-Z0-9]{6,30}$/.test(utr)) throw new HttpError(400, "Sahi transaction / UTR / reference number daalein");
+  const dup = db.upi_payments.filter((p) => String(p.utr || "").toUpperCase() === utr && p.status !== "rejected")[0];
   if (dup) throw new HttpError(409, "Ye transaction ID pehle use ho chuka hai");
   const amount = Number(s.price_inr || 0);
   const auto = !!s.upi_auto_approve;
