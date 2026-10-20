@@ -1,5 +1,5 @@
 // NaturalHeal AI — simple offline service worker
-const CACHE = "nh-v15";
+const CACHE = "nh-v16";
 const SHELL = ["/", "/index.html", "/icon.svg", "/manifest.webmanifest"];
 
 self.addEventListener("install", (e) => {
