@@ -218,6 +218,8 @@ body.big{zoom:1.18}
 /* plan */
 .summary{background:var(--accent-soft);border:1px solid var(--accent);border-radius:var(--r);padding:18px 20px}
 .badge{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-ink);background:var(--surface);border:1px solid var(--accent);padding:3px 9px;border-radius:999px;margin-bottom:8px}
+.badge.badge-ai{color:#fff;background:var(--accent);border-color:var(--accent)}
+.badge.badge-fb{color:#7a5c00;background:#fff6db;border-color:#e6c200}
 .summary h2{font-family:var(--f-head);color:var(--accent-ink);margin:0 0 6px;font-size:21px}
 .summary p{margin:0}
 .stats{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}
@@ -621,7 +623,7 @@ const T={
   hist:"Mere purane plans",histSub:"Save kiye hue plans yahan dikhte hain.",noHist:"Abhi koi plan nahi.",
   errEmail:"Email aur password daalein",errName:"Naam, email, password daalein",
   errAgeHW:"Umar, lambai aur vazan sahi bharein",errConcern:"Kam se kam ek samasya chunein",
-  badgeAi:"AI personalized plan",badgeFb:"Offline plan",
+  badgeAi:"🌿 AI personalized plan",badgeFb:"Basic (offline) plan",
   sAge:"Umar",sBmi:"BMI",sRegion:"Location",sDosha:"Dosha",
   hDosha:"Ayurvedic dosha",hReport:"Report findings",hSupp:"Supplements",hRem:"Gharelu upay",hDiet:"Diet",hYoga:"Yoga / pranayam",hDay:"Din ka routine",hTip:"Lifestyle tips",
   prefer:"Zyada lein",avoid:"Bachein",seeDoc:"Doctor ko dikhayein:",del:"Delete",opened:"Plan khul gaya",deleted:"Plan delete hua",
@@ -672,7 +674,7 @@ const T={
   hist:"My past plans",histSub:"Saved plans appear here.",noHist:"No plans yet.",
   errEmail:"Enter email and password",errName:"Enter name, email, password",
   errAgeHW:"Enter valid age, height and weight",errConcern:"Pick at least one concern",
-  badgeAi:"AI personalized plan",badgeFb:"Offline plan",
+  badgeAi:"🌿 AI personalized plan",badgeFb:"Basic (offline) plan",
   sAge:"Age",sBmi:"BMI",sRegion:"Location",sDosha:"Dosha",
   hDosha:"Ayurvedic dosha",hReport:"Report findings",hSupp:"Supplements",hRem:"Home remedies",hDiet:"Diet",hYoga:"Yoga / breathing",hDay:"Daily routine",hTip:"Lifestyle tips",
   prefer:"Have more",avoid:"Avoid",seeDoc:"See a doctor:",del:"Delete",opened:"Plan opened",deleted:"Plan deleted",
@@ -718,7 +720,7 @@ const T={
   profSaved:"प्रोफाइल सेव हो गया ✓",generating:"प्लान बन रहा है…",
   hist:"मेरे पुराने प्लान",histSub:"सेव किए हुए प्लान यहां दिखते हैं।",noHist:"अभी कोई प्लान नहीं।",
   errEmail:"ईमेल और पासवर्ड डालें",errName:"नाम, ईमेल, पासवर्ड डालें",errAgeHW:"उम्र, लंबाई और वज़न सही भरें",errConcern:"कम से कम एक समस्या चुनें",
-  badgeAi:"AI पर्सनलाइज़्ड प्लान",badgeFb:"ऑफलाइन प्लान",sAge:"उम्र",sBmi:"BMI",sRegion:"जगह",sDosha:"दोष",
+  badgeAi:"🌿 AI पर्सनलाइज़्ड प्लान",badgeFb:"बेसिक (ऑफलाइन) प्लान",sAge:"उम्र",sBmi:"BMI",sRegion:"जगह",sDosha:"दोष",
   hDosha:"आयुर्वेदिक दोष",hReport:"रिपोर्ट के नतीजे",hSupp:"सप्लिमेंट",hRem:"घरेलू उपाय",hDiet:"आहार",hYoga:"योग / प्राणायाम",hDay:"दिन का रूटीन",hTip:"लाइफस्टाइल टिप्स",
   prefer:"ज़्यादा लें",avoid:"बचें",seeDoc:"डॉक्टर को दिखाएं:",del:"डिलीट",opened:"प्लान खुल गया",deleted:"प्लान डिलीट हुआ",
   planFree:"फ्री प्लान",planPremium:"प्रीमियम ✓",upgrade:"प्रीमियम लें",premiumWhy:"प्रीमियम में मिलता है: AI से गहरा प्लान + लैब रिपोर्ट एनालिसिस + अनलिमिटेड प्लान।",
@@ -1137,7 +1139,7 @@ function renderPlan(pl,source){
  const red=(pl.red_flags||[]).length||pl.see_doctor?`<div class="redflag"><b>${x.seeDoc}</b> ${(pl.red_flags||[]).map(esc).join(", ")||""}</div>`:"";
  const m=pl.meta||{};
  $("plan").innerHTML=`
-  <div class="summary"><span class="badge">${source==="ai"?x.badgeAi:x.badgeFb}</span>
+  <div class="summary"><span class="badge ${source==="ai"?"badge-ai":"badge-fb"}">${source==="ai"?x.badgeAi:x.badgeFb}</span>
    <h2>${esc(m.generated_for||"")}</h2><p>${esc(pl.summary||"")}</p>
    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">${TTS?`<button class="listen-btn" id="planSpk">🔊 ${x.listen}</button>`:""}<button class="listen-btn" id="planShareBtn">📤 ${x.shareBtn}</button><button class="listen-btn" id="planEditBtn">✎ ${x.planEdit}</button></div>
    <div class="stats">
@@ -1835,7 +1837,7 @@ async function submitPost(){
 async function loadHistory(){
  try{const d=await api("/plans");const x=t();
   if(!d.plans.length){$("histList").innerHTML=`<p class="sub" style="margin:0">${x.noHist}</p>`;return;}
-  $("histList").innerHTML=d.plans.map(p=>`<div class="pitem" data-id="${p.id}"><div style="flex:1;min-width:0"><div class="ti">${esc(p.title||"Plan")}</div><div class="dt">${p.source==="ai"?"AI":"offline"}</div></div><div class="dt" style="text-align:right;white-space:nowrap">${esc((p.created_at||"").replace("T"," ").slice(0,16))}</div><button class="link del" data-del="${p.id}">${x.del}</button></div>`).join("");
+  $("histList").innerHTML=d.plans.map(p=>`<div class="pitem" data-id="${p.id}"><div style="flex:1;min-width:0"><div class="ti">${esc(p.title||"Plan")}</div><div class="dt">${p.source==="ai"?"🌿 AI":"Basic"}</div></div><div class="dt" style="text-align:right;white-space:nowrap">${esc((p.created_at||"").replace("T"," ").slice(0,16))}</div><button class="link del" data-del="${p.id}">${x.del}</button></div>`).join("");
   $("histList").querySelectorAll(".pitem").forEach(el=>el.onclick=async(ev)=>{
    if(ev.target.dataset.del){ev.stopPropagation();await api("/plans/"+ev.target.dataset.del,{method:"DELETE"});toast(t().deleted);loadHistory();return;}
    const dd=await api("/plans/"+el.dataset.id);renderPlan(dd.plan,dd.source);toast(t().opened);
