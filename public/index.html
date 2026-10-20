@@ -322,14 +322,19 @@ ul.items li b{color:var(--accent-ink)}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:11px 18px;border-radius:12px;font-weight:700;font-size:14px;box-shadow:var(--shadow);z-index:50}
 .icon{width:32px;height:32px;border-radius:9px;background:var(--accent-soft);color:var(--accent-ink);display:grid;place-items:center;flex:none}
 .icon svg{width:18px;height:18px}
-.icon-report{background:#e6effc;color:#2563a6}
-.icon-pill{background:#e6f6ec;color:#1b7a46}
-.icon-leaf{background:#e4f7ec;color:#17936a}
-.icon-diet{background:#fff0df;color:#b5651d}
-.icon-yoga{background:#f0e9ff;color:#6b46c1}
-.icon-clock{background:#e7edfd;color:#3b55b0}
-.icon-bulb{background:#fff6d4;color:#947611}
-.icon-balance{background:#e6f6f0;color:#13795d}
+.icon-report{background:#c3dbfb;color:#1b56a6}
+.icon-pill{background:#bfe9cf;color:#126b3b}
+.icon-leaf{background:#b9ecd0;color:#0c8057}
+.icon-diet{background:#ffd9b0;color:#a1540f}
+.icon-yoga{background:#ddcdfc;color:#5a31b5}
+.icon-clock{background:#c9d8fb;color:#2b43a4}
+.icon-bulb{background:#ffe79e;color:#7f6108}
+.icon-balance{background:#c2ecda;color:#0d6c4f}
+@media(prefers-color-scheme:dark){
+.icon-report{background:#1c3350;color:#9cc4f5}.icon-pill{background:#143a26;color:#8fe0b1}
+.icon-leaf{background:#0f3d2b;color:#7fe4bf}.icon-diet{background:#4a3115;color:#f3c590}
+.icon-yoga{background:#2e2350;color:#c3a9f5}.icon-clock{background:#1b2a50;color:#a9bef5}
+.icon-bulb{background:#43390f;color:#e8ca6a}.icon-balance{background:#103d2d;color:#7fd9b8}}
 </style>
 </head>
 <body>
@@ -1212,9 +1217,9 @@ function renderPlan(pl,source){
  const supp=(pl.supplements||[]).length?`<div class="card"><div class="sec-h">${icn("pill")}${x.hSupp}</div><p class="sub" style="margin:0 0 10px">${x.tapOpen||""}</p>${pl.supplements.map(s=>`<details class="acc"><summary><span class="acc-nm">${esc(s.name)}</span>${s.region_availability?`<span class="pill">${esc(s.region_availability)}</span>`:""}</summary><div class="acc-body"><div>${esc(s.reason||"")}</div><div class="meta">${esc(s.common_form||"")} · ${esc(s.general_usage||"")}${s.caution?" · ⚠ "+esc(s.caution):""}</div><button class="why-btn" data-why="${esc(s.name)}" style="margin-top:9px">${x.whyBtn}</button></div></details>`).join("")}</div>`:"";
  const rem=(pl.home_remedies||[]).length?`<div class="card"><div class="sec-h">${icn("leaf")}${x.hRem}</div><p class="sub" style="margin:0 0 10px">${x.tapOpen||""}</p>${pl.home_remedies.map(r=>`<details class="acc"><summary><span class="acc-nm">${esc(r.name)}</span></summary><div class="acc-body"><div>${esc(r.how||"")}</div><button class="why-btn" data-why="${esc(r.name)}" style="margin-top:9px">${x.whyBtn}</button></div></details>`).join("")}</div>`:"";
  const diet=pl.diet?`<details class="acc card-acc"><summary><span class="acc-nm">${icn("diet")}${x.hDiet}</span></summary><div class="acc-body"><div class="two"><div class="dietbox p"><h4>${x.prefer}</h4><ul>${(pl.diet.prefer||[]).map(i=>`<li>${esc(i)}</li>`).join("")}</ul></div><div class="dietbox a"><h4>${x.avoid}</h4><ul>${(pl.diet.avoid||[]).map(i=>`<li>${esc(i)}</li>`).join("")}</ul></div></div>${pl.diet.dosha_note?`<p class="sub" style="margin:10px 0 0">${esc(pl.diet.dosha_note)}</p>`:""}</div></details>`:"";
- const yoga=(pl.yoga||[]).length?`<div class="card"><div class="sec-h">${icn("yoga")}${x.hYoga}</div><ul class="items">${pl.yoga.map(y=>`<li><b>${esc(y.name)}</b>${y.benefit?" — "+esc(y.benefit):""}</li>`).join("")}</ul></div>`:"";
- const day=(pl.daily_routine||[]).length?`<div class="card"><div class="sec-h">${icn("clock")}${x.hDay}</div>${pl.daily_routine.map(d=>`<div class="day"><div class="t">${esc(d.time)}</div><div>${esc(d.activity)}</div></div>`).join("")}</div>`:"";
- const tips=(pl.lifestyle_tips||[]).length?`<div class="card"><div class="sec-h">${icn("bulb")}${x.hTip}</div><ul class="items">${pl.lifestyle_tips.map(i=>`<li>${esc(i)}</li>`).join("")}</ul></div>`:"";
+ const yoga=(pl.yoga||[]).length?`<details class="acc card-acc"><summary><span class="acc-nm">${icn("yoga")}${x.hYoga}</span></summary><div class="acc-body"><ul class="items">${pl.yoga.map(y=>`<li><b>${esc(y.name)}</b>${y.benefit?" — "+esc(y.benefit):""}</li>`).join("")}</ul></div></details>`:"";
+ const day=(pl.daily_routine||[]).length?`<details class="acc card-acc"><summary><span class="acc-nm">${icn("clock")}${x.hDay}</span></summary><div class="acc-body">${pl.daily_routine.map(d=>`<div class="day"><div class="t">${esc(d.time)}</div><div>${esc(d.activity)}</div></div>`).join("")}</div></details>`:"";
+ const tips=(pl.lifestyle_tips||[]).length?`<details class="acc card-acc"><summary><span class="acc-nm">${icn("bulb")}${x.hTip}</span></summary><div class="acc-body"><ul class="items">${pl.lifestyle_tips.map(i=>`<li>${esc(i)}</li>`).join("")}</ul></div></details>`:"";
  const red=(pl.red_flags||[]).length||pl.see_doctor?`<div class="redflag"><b>${x.seeDoc}</b> ${(pl.red_flags||[]).map(esc).join(", ")||""}</div>`:"";
  const wpd=pl.weight_plan&&pl.weight_plan.target_kg?pl.weight_plan:null;
  const wplan=wpd?`<div class="wplan">
