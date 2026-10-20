@@ -11,6 +11,17 @@ const KEY = process.env.ANTHROPIC_API_KEY || "";
 const API_URL = "https://api.anthropic.com/v1/messages";
 let lastAI = null; // aakhri AI plan-call ka natija (admin diagnostics ke liye)
 
+// Bhasha code -> AI ko batane ke liye naam + script
+const LANGS = {
+  en: "English", hi: "Hinglish (Hindi written in Roman/English letters, e.g. 'subah khaali pet jeera paani peeyein')",
+  hin: "Hindi (हिन्दी) in Devanagari script", bn: "Bengali (বাংলা) in Bengali script",
+  mr: "Marathi (मराठी) in Devanagari script", gu: "Gujarati (ગુજરાતી) in Gujarati script",
+  ta: "Tamil (தமிழ்) in Tamil script", te: "Telugu (తెలుగు) in Telugu script",
+  kn: "Kannada (ಕನ್ನಡ) in Kannada script", pa: "Punjabi (ਪੰਜਾਬੀ) in Gurmukhi script",
+  ml: "Malayalam (മലയാളം) in Malayalam script",
+};
+function langName(c) { return LANGS[c] || LANGS.hi; }
+
 // ---- JSON output ka exact shape (prompt mein diya jaata hai) ----
 const JSON_SHAPE = `{
   "meta": { "language": "hi|en", "region": "IN|GLOBAL", "generated_for": "name", "confidence": "high|medium|low" },
@@ -79,7 +90,7 @@ From the user's profile, their region, and any lab-report values, produce ONE pe
 - Always fill "disclaimer". Be extra cautious for pregnancy, children, and people on regular medication.
 
 === OUTPUT RULES ===
-- Write ALL human-readable text in the requested language: "hi" = Hinglish (Roman Hindi), "en" = English.
+- Write EVERY human-readable value (summary, reasons, remedies, diet items, notes, tips, disclaimer — everything the user reads) in the exact language named on the "Output language:" line of the user message, using that language's native script. Do NOT mix in another language or script. The only things that may stay in English are the JSON keys themselves and well-known supplement/marker names if no common local word exists.
 - Reply with ONLY one valid JSON object matching the schema. No markdown, no text before/after. Use [] for empty arrays, never null.
 
 === REQUIRED JSON SHAPE ===
@@ -92,7 +103,7 @@ function buildUserMessage(p) {
     ? "\nIMPORTANT: A lab report FILE is attached (PDF or image). READ every value from that file yourself, fill \"report_findings\" from it (marker, value, status low/normal/high, short note), and let those findings drive the supplement and diet choices. The typed report list below may be empty — trust the attached file.\n"
     : "";
   return `${fileNote}Region: ${p.region || "IN"}
-Language: ${p.language || "hi"}
+Output language: ${langName(p.language)} — write ALL human-readable text in THIS language and script only.
 User profile:
 - Name: ${p.name}
 - Age: ${p.age}, Gender: ${p.gender || "not said"}
@@ -225,7 +236,8 @@ function weightPlanFor(p, lang) {
 }
 
 function fallbackPlan(p) {
-  const lang = p.language || "hi";
+  const lang = p.language === "en" ? "en" : "hi"; // fallback text sirf en/hi me; non-en ko Hinglish
+
   const bmi = p.height_cm ? +(p.weight_kg / Math.pow(p.height_cm / 100, 2)).toFixed(1) : null;
   const cat = !bmi ? "n/a" : bmi < 18.5 ? "Underweight" : bmi < 25 ? "Normal" : bmi < 30 ? "Overweight" : "Obese";
   const region = p.region || "IN";
@@ -327,4 +339,4 @@ async function aiVision(prompt, image, maxTokens = 500) {
 // Key available hai? (frontend ko batane ke liye route use karta hai)
 function aiAvailable() { return !!KEY; }
 
-module.exports = { generatePlan, aiText, aiVision, aiAvailable, buildSystemPrompt, JSON_SHAPE, testAI, aiLast, MODEL };
+module.exports = { generatePlan, aiText, aiVision, aiAvailable, buildSystemPrompt, JSON_SHAPE, testAI, aiLast, MODEL, langName };

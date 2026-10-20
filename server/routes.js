@@ -4,7 +4,7 @@
 const db = require("./store");
 const { HttpError, uid } = require("./util");
 const { hashPassword, checkPassword, signToken } = require("./auth");
-const { generatePlan, aiText } = require("./ai");
+const { generatePlan, aiText, langName } = require("./ai");
 const { featuresFor, isPremium } = require("./plans");
 const { getSettings } = require("./settings");
 const { findReferrer } = require("./share");
@@ -172,7 +172,7 @@ async function generate(ctx) {
     report_file = { media_type: b.report_file.media_type || "application/pdf", data: b.report_file.data };
   }
   const profile = {
-    name: user.name, region: b.region || user.region || "IN", language: b.language === "en" ? "en" : "hi",
+    name: user.name, region: b.region || user.region || "IN", language: ["en", "hi", "hin", "bn", "mr", "gu", "ta", "te", "kn", "pa", "ml"].includes(b.language) ? b.language : "hi",
     age: b.age, gender: b.gender, height_cm: b.height_cm, weight_kg: b.weight_kg,
     lifestyle: b.lifestyle, conditions: b.conditions || [], allergies: b.allergies || [],
     report: feat.report_analysis ? (b.report || []) : [],
@@ -385,12 +385,12 @@ function dashboard(ctx) {
 // ---- AI insight (F1 core: symptom trend -> nudge) ----
 async function insight(ctx) {
   const user = ctx.user;
-  const lang = (ctx.body && ctx.body.language) === "en" ? "en" : "hi";
+  const rawLang = (ctx.body && ctx.body.language) || "hi";
+  const lang = rawLang === "en" ? "en" : "hi";
   const mem = resolveMemberId(ctx);
   const summary = symptomSummary(user.id, mem.id, mem.isSelf, 15);
   if (isPremium(user)) {
-    const langName = lang === "hi" ? "Hinglish (Roman Hindi)" : "English";
-    const prompt = `You are a caring natural-wellness coach. Based ONLY on these recent symptom logs, write ONE short, warm, practical insight (max 2 sentences) in ${langName}. Mention the trend and ONE gentle home/ayurvedic suggestion. No medicines, no diagnosis.\n\nRecent symptoms: ${summary || "no logs yet"}.\nName: ${user.name}.`;
+    const prompt = `You are a caring natural-wellness coach. Based ONLY on these recent symptom logs, write ONE short, warm, practical insight (max 2 sentences) in ${langName(rawLang)}, using that language's native script. Mention the trend and ONE gentle home/ayurvedic suggestion. No medicines, no diagnosis.\n\nRecent symptoms: ${summary || "no logs yet"}.\nName: ${user.name}.`;
     const txt = await aiText(prompt, 160);
     if (txt) return { insight: txt, source: "ai" };
   }
@@ -408,14 +408,14 @@ async function explain(ctx) {
   const user = ctx.user;
   const b = ctx.body || {};
   const text = String(b.text || "").trim().slice(0, 120);
-  const lang = b.language === "en" ? "en" : "hi";
+  const rawLang = b.language || "hi";
+  const lang = rawLang === "en" ? "en" : "hi";
   if (!text) throw new HttpError(400, "Kya samjhana hai?");
   const mem = resolveMemberId(ctx);
   const latest = db.plans.filter((p) => p.user_id === user.id && belongsTo(p, mem.id, mem.isSelf)).sort((a, b2) => (b2.created_at || "").localeCompare(a.created_at || ""))[0];
   const dosha = latest && latest.plan && latest.plan.dosha_analysis ? latest.plan.dosha_analysis.primary_dosha : "";
   if (isPremium(user)) {
-    const langName = lang === "hi" ? "Hinglish (Roman Hindi)" : "English";
-    const prompt = `In ${langName}, explain in 2 short sentences WHY this wellness item helps THIS user. Be warm and simple. No medicines, no diagnosis.\nItem: "${text}"\nUser's primary dosha: ${dosha || "not known"}.`;
+    const prompt = `In ${langName(rawLang)} (use that language's native script), explain in 2 short sentences WHY this wellness item helps THIS user. Be warm and simple. No medicines, no diagnosis.\nItem: "${text}"\nUser's primary dosha: ${dosha || "not known"}.`;
     const txt = await aiText(prompt, 140);
     if (txt) return { text, explanation: txt, source: "ai" };
   }
@@ -445,7 +445,8 @@ async function explain(ctx) {
 async function chat(ctx) {
   const user = ctx.user;
   const b = ctx.body || {};
-  const lang = b.language === "en" ? "en" : "hi";
+  const rawLang = b.language || "hi";
+  const lang = rawLang === "en" ? "en" : "hi";
   const msgs = Array.isArray(b.messages) ? b.messages.slice(-6) : [];
   const lastUser = [...msgs].reverse().find((m) => m.role === "user");
   if (!lastUser) throw new HttpError(400, "Message daalein");
@@ -453,9 +454,8 @@ async function chat(ctx) {
   const mem = resolveMemberId(ctx);
   const latest = db.plans.filter((p) => p.user_id === user.id && belongsTo(p, mem.id, mem.isSelf)).sort((a, b2) => (b2.created_at || "").localeCompare(a.created_at || ""))[0];
   const planCtx = latest && latest.plan ? JSON.stringify({ summary: latest.plan.summary, dosha: latest.plan.dosha_analysis, diet: latest.plan.diet }).slice(0, 1500) : "no plan yet";
-  const langName = lang === "hi" ? "Hinglish (Roman Hindi)" : "English";
   const convo = msgs.map((m) => `${m.role === "user" ? "User" : "Coach"}: ${String(m.content).slice(0, 500)}`).join("\n");
-  const prompt = `You are "NaturalHeal", a warm natural-wellness coach. Answer the user's question in ${langName}, short and practical (2-4 sentences). Base answers on their plan context. No medicines, no diagnosis; for anything serious tell them to see a doctor.\n\nUser's plan context: ${planCtx}\n\nConversation:\n${convo}\nCoach:`;
+  const prompt = `You are "NaturalHeal", a warm natural-wellness coach. Answer the user's question in ${langName(rawLang)} (use that language's native script), short and practical (2-4 sentences). Base answers on their plan context. No medicines, no diagnosis; for anything serious tell them to see a doctor.\n\nUser's plan context: ${planCtx}\n\nConversation:\n${convo}\nCoach:`;
   const txt = await aiText(prompt, 320);
   return { reply: txt || (lang === "hi" ? "Abhi jawab nahi mil paaya, dobara koshish karein." : "Couldn't answer right now, please try again."), source: txt ? "ai" : "basic" };
 }
