@@ -6,7 +6,7 @@
 // ---------------------------------------------------------------------------
 // Note: Anthropic API ko seedha fetch se call karte hain (koi SDK package nahi chahiye).
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-haiku-4-5";
-const MAX_TOKENS = Number(process.env.ANTHROPIC_MAX_TOKENS) || 6000; // poora plan JSON kat na jaaye
+const MAX_TOKENS = Number(process.env.ANTHROPIC_MAX_TOKENS) || 8000; // poora plan JSON kat na jaaye (Devanagari/regional script tokens zyada lete hain)
 const KEY = process.env.ANTHROPIC_API_KEY || "";
 const API_URL = "https://api.anthropic.com/v1/messages";
 let lastAI = null; // aakhri AI plan-call ka natija (admin diagnostics ke liye)
@@ -165,7 +165,8 @@ async function generatePlan(profile, opts = {}) {
 // ---- Live AI test (admin): asli plan-call jaisa test — poora system prompt + parse ----
 async function testAI() {
   if (!KEY) return { ok: false, model: MODEL, error: "ANTHROPIC_API_KEY set nahi hai (Render Environment me daalein)" };
-  const profile = { name: "Test", region: "IN", language: "hi", age: 35, gender: "male", height_cm: 170, weight_kg: 85, conditions: ["weight"], allergies: [], report: [], notes: "", wake: "06:30", weight_goal: { target_kg: 5, days: 30 } };
+  // Devanagari (hin) sabse bhaari script hai — isi se test karo taaki truncation pakda jaaye
+  const profile = { name: "Test", region: "IN", language: "hin", age: 35, gender: "male", height_cm: 170, weight_kg: 85, conditions: ["weight", "acidity"], allergies: [], report: [], notes: "", wake: "06:30", weight_goal: { target_kg: 5, days: 30 } };
   try {
     const content = [{ type: "text", text: buildUserMessage(profile) }];
     const resp = await fetch(API_URL, {
@@ -194,8 +195,33 @@ function aiLast() { return lastAI; }
 function parseJson(text) {
   if (!text) return null;
   try { return JSON.parse(text); } catch (_) {}
-  const m = text.match(/\{[\s\S]*\}/);
+  const start = text.indexOf("{");
+  if (start < 0) return null;
+  const s = text.slice(start);
+  const m = s.match(/\{[\s\S]*\}/);
   if (m) { try { return JSON.parse(m[0]); } catch (_) {} }
+  // Salvage: jawab beech me kat gaya ho to khuli strings/brackets band karke best-effort parse
+  const closeAndParse = (body) => {
+    const stack = []; let inStr = false, esc = false;
+    for (let i = 0; i < body.length; i++) {
+      const ch = body[i];
+      if (inStr) { if (esc) esc = false; else if (ch === "\\") esc = true; else if (ch === '"') inStr = false; continue; }
+      if (ch === '"') inStr = true;
+      else if (ch === "{" || ch === "[") stack.push(ch === "{" ? "}" : "]");
+      else if (ch === "}" || ch === "]") stack.pop();
+    }
+    let cand = body + (inStr ? '"' : "");
+    for (let i = stack.length - 1; i >= 0; i--) cand += stack[i];
+    try { return JSON.parse(cand); } catch (_) { return null; }
+  };
+  let body = s;
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const r = closeAndParse(body);
+    if (r) return r;
+    const lc = body.lastIndexOf(",");
+    if (lc < 0) break;
+    body = body.slice(0, lc);
+  }
   return null;
 }
 
