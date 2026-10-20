@@ -23,6 +23,22 @@ try {
 } catch (e) { console.error("data file padhne mein dikkat, naya banayenge:", e.message); }
 for (const k of KEYS) if (!data[k]) data[k] = [];
 
+// ---- One-time fresh wipe (launch se pehle) ----
+// Render me env FRESH_WIPE=<koi bhi value> set karo -> ek baar SAARA data saaf.
+// Marker save ho jaata hai, isliye dobara deploy par wapas-wapas nahi udta.
+// Phir se wipe chahiye to value badal do (jaise go1 -> go2).
+const FW = process.env.FRESH_WIPE || "";
+if (FW && data._fresh_wipe !== FW) {
+  for (const k of KEYS) data[k] = [];
+  data._fresh_wipe = FW;
+  try {
+    const tmp = FILE + ".tmp";
+    fs.writeFileSync(tmp, JSON.stringify(data, null, 0));
+    fs.renameSync(tmp, FILE);
+  } catch (e) { /* read-only FS */ }
+  console.log("  Data: FRESH_WIPE chala — sab data saaf, bilkul naya ✓ (marker=" + FW + ")");
+}
+
 // ---- Upstash (free permanent backup) ----
 const UP_URL = process.env.UPSTASH_REDIS_REST_URL || "";
 const UP_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || "";
