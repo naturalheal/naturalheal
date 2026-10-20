@@ -75,6 +75,7 @@ function profileSig(p) {
     a: p.age, g: p.gender, h: p.height_cm, w: p.weight_kg, l: p.lifestyle,
     c: (p.conditions || []).slice().sort(), al: (p.allergies || []).slice().sort(),
     r: p.report || [], n: p.notes || "", wk: p.wake || "", lang: p.language,
+    wg: p.weight_goal || null,
   });
 }
 
@@ -177,6 +178,11 @@ async function generate(ctx) {
     report: feat.report_analysis ? (b.report || []) : [],
     report_file,
     notes: b.notes || "", wake: b.wake || "06:30",
+    // Motapa / weight-loss target (sirf jab user ne "weight" chuna + target diya)
+    weight_goal: (b.conditions || []).includes("weight") && b.weight_goal ? {
+      target_kg: Math.max(1, Math.min(50, Number(b.weight_goal.target_kg) || 0)),
+      days: Math.max(7, Math.min(365, Number(b.weight_goal.days) || 30)),
+    } : null,
   };
   // UNIQUE: recent symptoms + season context (AI plan ko behtar/adjust karta hai)
   const mem = resolveMemberId(ctx);

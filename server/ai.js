@@ -31,6 +31,7 @@ const JSON_SHAPE = `{
   "diet": { "prefer": ["..."], "avoid": ["..."], "dosha_note": "..." },
   "yoga": [ { "name": "...", "benefit": "..." } ],
   "daily_routine": [ { "time": "7:00 AM", "activity": "..." } ],
+  "weight_plan": { "target_kg": 0, "days": 0, "safe_pace": "0.5-1 kg/week", "expected_loss_kg": "low-high", "milestones": [ { "day": 15, "expect_kg": "1-2" } ], "focus": ["..."], "note": "gentle, realistic" },
   "lifestyle_tips": ["..."],
   "red_flags": [],
   "see_doctor": false,
@@ -58,6 +59,15 @@ From the user's profile, their region, and any lab-report values, produce ONE pe
 - Give 1-2 EASY SWAPS (e.g. "white rice ki jagah daliya/brown rice").
 - home_remedies and routine: cheap, at-home, doable; each step tiny and clear.
 - lifestyle_tips: 3-5 small daily habits (water, walk, sleep time, screen-off), practical for their life.
+
+=== WEIGHT-LOSS GOAL (only if a weight_goal with target_kg + days is given) ===
+- This is the app's flagship concern. Make the BEST, most practical combined plan: targeted diet + simple herbs/supplements + daily yoga/movement, all tuned to lose fat gradually and safely.
+- Fill "weight_plan": set target_kg and days from the goal. SAFE pace is 0.5-1 kg per week (about 2-4 kg/month) — NEVER promise or plan faster. Put a realistic "expected_loss_kg" range for the whole period at this safe pace (e.g. 30 days -> "2-4").
+- "milestones": 2-4 checkpoints with the day number and expected cumulative loss range at that day (e.g. day 15 -> "1-2 kg"). Keep numbers within the safe pace.
+- If the user's target_kg is more than the safe range allows in their days, keep the plan safe and gently say in "note" that reaching the full target will take a little longer — the healthy way. NEVER suggest starvation, skipping meals, crash/very-low-calorie diets, or extreme workouts.
+- "focus": 3-5 highest-impact daily habits for fat loss (e.g. protein in every meal, 30-40 min brisk walk, cut sugar/fried, 7-8h sleep, more water).
+- The diet example day MUST support the goal (filling, high-fibre, protein-rich, portion-aware) while staying affordable and local.
+- If no weight_goal is given, use [] / omit weight_plan.
 
 === SAFETY RULES (non-negotiable) ===
 - NEVER prescribe prescription medicines or give pharmaceutical drug dosages.
@@ -90,6 +100,7 @@ User profile:
 - Allergies: ${(p.allergies || []).join(", ") || "none"}
 - Extra notes: ${p.notes || "none"}
 - Wake-up time: ${p.wake || "06:30"}
+${p.weight_goal ? `- WEIGHT-LOSS GOAL: lose ${p.weight_goal.target_kg} kg in ${p.weight_goal.days} days. Build the best safe diet+herbs+yoga plan for this and FILL weight_plan with a realistic safe schedule and milestones.` : ""}
 Lab report: ${JSON.stringify(p.report || [])}
 ${p.symptom_context ? "- Recent symptom logs (use these to tailor/adjust the plan): " + p.symptom_context : ""}
 ${p.season ? "- Current season (ritu): " + p.season + " — include season-appropriate (ritucharya) suggestions." : ""}
@@ -178,6 +189,29 @@ const KB = {
   immunity:{rem:[["Giloy/tulsi kaadha","hafte mein kuch baar"],["Haldi doodh","raat ko"]],pref:["Nimbu","Amla","Adrak-lahsun"],avoid:["Processed food","Kam neend"],yoga:[["Bhastrika","phephde mazboot"],["Anulom-vilom","rog pratirodhak shakti"],["Surya namaskar","poora sharir active"],["Matsyasana","chhati khule, saans gehri"]],supp:[["Vitamin C","vitamin","immunity","BOTH"],["Giloy","ayurvedic_herb","rog pratirodhak","IN"]]},
 };
 
+// Safe weight-loss estimate (0.5-1 kg/week) — fallback ke liye
+function weightPlanFor(p, lang) {
+  const g = p.weight_goal;
+  if (!g || !g.target_kg || !g.days) return null;
+  const D = g.days, T = g.target_kg;
+  const r1 = (n) => Math.round(n * 10) / 10;
+  const lo = Math.min(T, r1((D / 7) * 0.5)), hi = Math.min(T, r1((D / 7) * 1));
+  const milestone = (day) => ({ day, expect_kg: `${Math.min(T, r1((day / 7) * 0.5))}-${Math.min(T, r1((day / 7) * 1))}` });
+  const ms = [milestone(15)]; if (D > 20) ms.push(milestone(30)); if (D > 35) ms.push(milestone(D));
+  const slow = hi < T;
+  return {
+    target_kg: T, days: D, safe_pace: "0.5-1 kg/week",
+    expected_loss_kg: `${lo}-${hi}`,
+    milestones: ms.filter((m) => m.day <= D || m.day === D),
+    focus: lang === "hi"
+      ? ["Har khaane me protein (dal/ande/paneer)", "Roz 30-40 min tez chaal", "Cheeni + tali cheezein band", "7-8 ghante neend", "Zyada paani + fibre (salad, sabzi)"]
+      : ["Protein in every meal", "30-40 min brisk walk daily", "Cut sugar + fried food", "7-8 hours sleep", "More water + fibre"],
+    note: lang === "hi"
+      ? (slow ? `Safe tarika: ~${D} din me lagbhag ${lo}-${hi} kg. Poora ${T} kg thoda zyada samay lega — par sehat ke saath, wapas nahi aayega.` : `~${D} din me safe taur par lagbhag ${lo}-${hi} kg — dheere-dheere, bina kamzori.`)
+      : (slow ? `Safe pace: about ${lo}-${hi} kg in ~${D} days. The full ${T} kg will take a little longer — but the healthy way, and it stays off.` : `About ${lo}-${hi} kg in ~${D} days, safely and gradually.`),
+  };
+}
+
 function fallbackPlan(p) {
   const lang = p.language || "hi";
   const bmi = p.height_cm ? +(p.weight_kg / Math.pow(p.height_cm / 100, 2)).toFixed(1) : null;
@@ -235,6 +269,7 @@ function fallbackPlan(p) {
     yoga: uniq(yoga.map((y) => JSON.stringify(y))).map((s) => { const y = JSON.parse(s); return { name: y[0], benefit: y[1] }; }),
     daily_routine: rt.map(([off, act]) => ({ time: fmt(start + off), activity: act })),
     lifestyle_tips: [lang === "hi" ? "Roz 7-8 glass paani" : "7-8 glasses of water daily"],
+    weight_plan: weightPlanFor(p, lang),
     red_flags: [],
     see_doctor: false,
     disclaimer: lang === "hi"
