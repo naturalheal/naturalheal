@@ -5,7 +5,9 @@ const { getSettings } = require("./settings");
 
 // kya user premium hai (abhi tak valid)?
 function isPremium(user) {
-  if (!user || user.plan !== "premium") return false;
+  if (!user) return false;
+  if (user.is_admin) return true; // owner/admin ko hamesha full AI access
+  if (user.plan !== "premium") return false;
   if (user.plan_status !== "active") return false;
   if (user.plan_expires && new Date(user.plan_expires) < new Date()) return false;
   return true;

@@ -6,8 +6,10 @@
 // ---------------------------------------------------------------------------
 // Note: Anthropic API ko seedha fetch se call karte hain (koi SDK package nahi chahiye).
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-haiku-4-5";
+const MAX_TOKENS = Number(process.env.ANTHROPIC_MAX_TOKENS) || 6000; // poora plan JSON kat na jaaye
 const KEY = process.env.ANTHROPIC_API_KEY || "";
 const API_URL = "https://api.anthropic.com/v1/messages";
+let lastAI = null; // aakhri AI plan-call ka natija (admin diagnostics ke liye)
 
 // ---- JSON output ka exact shape (prompt mein diya jaata hai) ----
 const JSON_SHAPE = `{
@@ -129,7 +131,7 @@ async function generatePlan(profile, opts = {}) {
         headers,
         body: JSON.stringify({
           model: MODEL,
-          max_tokens: 2500,
+          max_tokens: MAX_TOKENS,
           system: buildSystemPrompt(),
           messages: [{ role: "user", content }],
         }),
@@ -138,22 +140,27 @@ async function generatePlan(profile, opts = {}) {
       const data = await resp.json();
       const text = (data.content || []).map((c) => c.text || "").join("");
       const plan = parseJson(text);
-      if (plan) return { plan, source: "ai" };
+      if (plan) { lastAI = { at: new Date().toISOString(), ok: true, stop_reason: data.stop_reason }; return { plan, source: "ai" }; }
+      lastAI = { at: new Date().toISOString(), ok: false, stop_reason: data.stop_reason, error: "JSON parse fail (stop=" + data.stop_reason + ", len=" + text.length + ")" };
+      console.error("AI parse fail, using fallback. stop_reason:", data.stop_reason, "len:", text.length);
     } catch (e) {
+      lastAI = { at: new Date().toISOString(), ok: false, error: e.message };
       console.error("AI error, using fallback:", e.message);
     }
   }
   return { plan: fallbackPlan(profile), source: "fallback" };
 }
 
-// ---- Live AI test (admin): asli API call karke batao sab theek hai ya exact galti ----
+// ---- Live AI test (admin): asli plan-call jaisa test — poora system prompt + parse ----
 async function testAI() {
   if (!KEY) return { ok: false, model: MODEL, error: "ANTHROPIC_API_KEY set nahi hai (Render Environment me daalein)" };
+  const profile = { name: "Test", region: "IN", language: "hi", age: 35, gender: "male", height_cm: 170, weight_kg: 85, conditions: ["weight"], allergies: [], report: [], notes: "", wake: "06:30", weight_goal: { target_kg: 5, days: 30 } };
   try {
+    const content = [{ type: "text", text: buildUserMessage(profile) }];
     const resp = await fetch(API_URL, {
       method: "POST",
       headers: { "content-type": "application/json", "x-api-key": KEY, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify({ model: MODEL, max_tokens: 16, messages: [{ role: "user", content: "Reply with just: OK" }] }),
+      body: JSON.stringify({ model: MODEL, max_tokens: MAX_TOKENS, system: buildSystemPrompt(), messages: [{ role: "user", content }] }),
     });
     const txt = await resp.text();
     if (!resp.ok) {
@@ -161,11 +168,16 @@ async function testAI() {
       try { const j = JSON.parse(txt); if (j.error && j.error.message) msg = j.error.message; } catch (_) {}
       return { ok: false, model: MODEL, status: resp.status, error: msg };
     }
-    return { ok: true, model: MODEL };
+    const data = JSON.parse(txt);
+    const text = (data.content || []).map((c) => c.text || "").join("");
+    const plan = parseJson(text);
+    if (plan) return { ok: true, model: MODEL, stop_reason: data.stop_reason, summary: (plan.summary || "").slice(0, 90) };
+    return { ok: false, model: MODEL, stop_reason: data.stop_reason, error: "AI ne jawab to diya par JSON parse nahi hua (stop=" + data.stop_reason + ", length=" + text.length + "). Shayad jawab bada/kat gaya." };
   } catch (e) {
     return { ok: false, model: MODEL, error: e.message };
   }
 }
+function aiLast() { return lastAI; }
 
 // JSON ko tolerant tarike se nikaalo
 function parseJson(text) {
@@ -315,4 +327,4 @@ async function aiVision(prompt, image, maxTokens = 500) {
 // Key available hai? (frontend ko batane ke liye route use karta hai)
 function aiAvailable() { return !!KEY; }
 
-module.exports = { generatePlan, aiText, aiVision, aiAvailable, buildSystemPrompt, JSON_SHAPE, testAI, MODEL };
+module.exports = { generatePlan, aiText, aiVision, aiAvailable, buildSystemPrompt, JSON_SHAPE, testAI, aiLast, MODEL };
