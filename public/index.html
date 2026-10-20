@@ -316,6 +316,7 @@ ul.items li b{color:var(--accent-ink)}
       <div id="regRegion" style="margin-bottom:13px"><label id="aRegion"></label>
         <select id="rRegion"><option value="IN">India</option><option value="GLOBAL">Global / Other</option></select>
       </div>
+      <p id="forgotWrap" style="text-align:right;margin:2px 0 0"><button type="button" class="link" id="forgotLink" style="font-size:12.5px"></button></p>
       <div class="err" id="authErr"></div>
       <button class="btn btn-primary" id="authGo"></button>
       <p style="text-align:center;margin:14px 0 0;font-size:14px"><span id="authSwitchTxt"></span> <button class="link" id="authSwitch"></button></p>
@@ -361,7 +362,12 @@ ul.items li b{color:var(--accent-ink)}
         <div><label id="pLife"></label><select id="lifestyle"><option value=""></option><option value="sedentary"></option><option value="moderate"></option><option value="active"></option></select></div>
         <div><label id="pRegion"></label><select id="region"><option value="IN">India</option><option value="GLOBAL">Global</option></select></div>
       </div>
-      <div style="margin-top:14px"><label id="pConcern"></label><div class="chips" id="chips"></div></div>
+      <div style="margin-top:14px"><label id="pConcern"></label><div class="chips" id="chips"></div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <input id="newConcern" style="flex:1" maxlength="40">
+          <button type="button" class="btn btn-ghost" id="newConcernBtn" style="min-width:86px"></button>
+        </div>
+      </div>
       <div class="grid" style="margin-top:14px">
         <div><label id="pWake"></label><input id="wake" type="time" value="06:30"></div>
         <div><label id="pAllergy"></label><input id="allergy"></div>
@@ -423,7 +429,7 @@ const LANGS=[["hin","हिन्दी","hi-IN"],["en","English","en-IN"],["hi"
 const LOCALE={};LANGS.forEach(l=>LOCALE[l[0]]=l[2]);
 function langLocale(){return LOCALE[lang]||"hi-IN";}
 let token=localStorage.getItem("nh_token")||null;
-let me=null, authMode="login", feats=null, pricing=null, member=null, membersList=[];
+let me=null, authMode="login", feats=null, pricing=null, member=null, membersList=[], customConcerns=[];
 const $=id=>document.getElementById(id);
 function memberQ(){return member?("&member="+encodeURIComponent(member)):"";}
 
@@ -627,6 +633,7 @@ const T={
   dRoutine:"Aaj ka routine",dTrend:"Symptom trend (7 din)",dInsightT:"AI insight",
   trkTitle:"Symptom tracker",trkSub:"Roz log karein — AI aapke plan ko behtar banata hai.",
   trkWhich:"Kaunsa symptom?",trkSev:"Kitna tez?",trkNote:"Note (optional)",trkNotePh:"jaise: khaane ke baad…",trkSave:"Log save karo",trkSaved:"Save ho gaya ✓",trkRecent:"Recent logs",trkNone:"Abhi koi log nahi.",trkPick:"Pehle symptom chunein",
+  addConcernBtn:"+ Jodo",addConcernPh:"Apni samasya likhein…",addConcernOk:"Jud gaya ✓",forgotLink:"Password bhool gaye?",forgotTitle:"Password bhool gaye?",forgotBody:"Koi baat nahi. Apna registered email admin/support ko bhejein — vo aapka naya password set kar denge. (Email se khud reset jald aa raha hai.)",
   sevLabels:["Halka","Theek","Madhyam","Zyada","Bahut zyada"],
   mAdd:"+ Family member jodo",mAddName:"Naam",mAddRel:"Rishta (jaise beta, maa)",mAddBtn:"Member jodo",mMine:"Mera",
   seasonT:"Mausam ki tip (ritucharya)",progressT:"Progress",adjustBtn:"Plan update karein",
@@ -676,6 +683,7 @@ const T={
   dRoutine:"Today's routine",dTrend:"Symptom trend (7 days)",dInsightT:"AI insight",
   trkTitle:"Symptom tracker",trkSub:"Log daily — the AI improves your plan.",
   trkWhich:"Which symptom?",trkSev:"How strong?",trkNote:"Note (optional)",trkNotePh:"e.g. after meals…",trkSave:"Save log",trkSaved:"Saved ✓",trkRecent:"Recent logs",trkNone:"No logs yet.",trkPick:"Pick a symptom first",
+  addConcernBtn:"+ Add",addConcernPh:"Add your own problem…",addConcernOk:"Added ✓",forgotLink:"Forgot password?",forgotTitle:"Forgot password?",forgotBody:"No problem. Send your registered email to your admin/support and they'll set a new password for you. (Email-based self-reset is coming soon.)",
   sevLabels:["Mild","Okay","Medium","High","Very high"],
   mAdd:"+ Add family member",mAddName:"Name",mAddRel:"Relation (e.g. son, mother)",mAddBtn:"Add member",mMine:"Mine",
   seasonT:"Seasonal tip (ritucharya)",progressT:"Progress",adjustBtn:"Update plan",
@@ -717,6 +725,7 @@ const T={
   dRoutine:"आज का रूटीन",dTrend:"सिम्टम ट्रेंड (7 दिन)",dInsightT:"AI इनसाइट",
   trkTitle:"सिम्टम ट्रैकर",trkSub:"रोज़ लॉग करें — AI आपके प्लान को बेहतर बनाता है।",
   trkWhich:"कौनसा सिम्टम?",trkSev:"कितना तेज़?",trkNote:"नोट (optional)",trkNotePh:"जैसे: खाने के बाद…",trkSave:"लॉग सेव करो",trkSaved:"सेव हो गया ✓",trkRecent:"हाल के लॉग",trkNone:"अभी कोई लॉग नहीं।",trkPick:"पहले सिम्टम चुनें",
+  addConcernBtn:"+ जोड़ो",addConcernPh:"अपनी समस्या लिखें…",addConcernOk:"जुड़ गया ✓",forgotLink:"पासवर्ड भूल गए?",forgotTitle:"पासवर्ड भूल गए?",forgotBody:"कोई बात नहीं। अपना रजिस्टर्ड ईमेल एडमिन/सपोर्ट को भेजें — वो आपका नया पासवर्ड सेट कर देंगे। (ईमेल से खुद रीसेट जल्द आ रहा है।)",
   sevLabels:["हल्का","ठीक","मध्यम","ज़्यादा","बहुत ज़्यादा"],
   mAdd:"+ फैमिली मेंबर जोड़ो",mAddName:"नाम",mAddRel:"रिश्ता (जैसे बेटा, मां)",mAddBtn:"मेंबर जोड़ो",mMine:"मेरा",
   seasonT:"मौसम की टिप (ऋतुचर्या)",progressT:"प्रोग्रेस",adjustBtn:"प्लान अपडेट करें",
@@ -875,7 +884,14 @@ async function api(path,opts={}){
 function toast(m){const e=document.createElement("div");e.className="toast";e.textContent=m;document.body.appendChild(e);setTimeout(()=>e.remove(),2200);}
 
 /* ---- chips & report rows ---- */
-CONCERNS.forEach(c=>{const l=document.createElement("label");l.className="chip";l.innerHTML=`<input type="checkbox" value="${c[0]}" name="c"><span class="lbl" data-id="${c[0]}"></span>`;$("chips").appendChild(l);});
+function buildChips(){
+ const wrap=$("chips");if(!wrap)return;
+ const sel=new Set([...wrap.querySelectorAll('input[name="c"]:checked')].map(c=>c.value));
+ wrap.innerHTML="";
+ CONCERNS.forEach(c=>{const l=document.createElement("label");l.className="chip";l.innerHTML=`<input type="checkbox" value="${c[0]}" name="c" ${sel.has(c[0])?"checked":""}><span class="lbl" data-id="${c[0]}"></span>`;wrap.appendChild(l);});
+ (customConcerns||[]).forEach(cc=>{const l=document.createElement("label");l.className="chip";l.innerHTML=`<input type="checkbox" value="${esc(cc.label)}" name="c" ${sel.has(cc.label)?"checked":""}><span>${CEMO.other||"➕"} ${esc(cc.label)}</span>`;wrap.appendChild(l);});
+}
+buildChips();
 function addReportRow(marker="",value=""){
  const d=document.createElement("div");d.className="grid";d.style.marginBottom="8px";
  d.innerHTML=`<input class="rm" placeholder="${t().markerPh}" value="${marker}"><input class="rv" placeholder="${t().valuePh}" value="${value}">`;
@@ -909,7 +925,11 @@ function renderStatic(){
  $("pReportFileHint").textContent=x.reportFileHint;$("pReportOr").textContent=x.reportOr;
  $("pNotes").textContent=x.notes;$("genBtn").textContent=x.gen;$("saveProfBtn").textContent=x.saveProf;
  $("histTitle").textContent=x.hist;$("histSub").textContent=x.histSub;
- {const cc=t().cc;document.querySelectorAll(".lbl").forEach(el=>{const c=CONCERNS.find(c=>c[0]===el.dataset.id);const label=(cc&&cc[c[0]])?cc[c[0]]:(lang==="hi"?c[1]:c[2]);el.textContent=(CEMO[c[0]]?CEMO[c[0]]+" ":"")+label;});}
+ {const cc=t().cc;document.querySelectorAll(".lbl").forEach(el=>{const c=CONCERNS.find(c=>c[0]===el.dataset.id);if(!c)return;const label=(cc&&cc[c[0]])?cc[c[0]]:(lang==="hi"?c[1]:c[2]);el.textContent=(CEMO[c[0]]?CEMO[c[0]]+" ":"")+label;});}
+ if($("newConcernBtn"))$("newConcernBtn").textContent=t().addConcernBtn||"+ Jodo";
+ if($("newConcern"))$("newConcern").placeholder=t().addConcernPh||"Apni samasya likhein…";
+ if($("forgotLink"))$("forgotLink").textContent=t().forgotLink||"Password bhool gaye?";
+ if($("forgotWrap"))$("forgotWrap").style.display=authMode==="login"?"block":"none";
  
  // upgrade panel static
  $("upTitle").textContent=x.upgrade;$("upWhy").textContent=pwhy();$("upChoose").textContent=x.choosePay;
@@ -980,6 +1000,7 @@ $("logoutBtn").onclick=()=>{token=null;me=null;localStorage.removeItem("nh_token
 async function loadMe(){
  try{
   const d=await api("/me");me=d.user;feats=d.features;
+  customConcerns=d.custom_concerns||[];buildChips();renderStatic();
   $("region").value=me.region||"IN";
   if(d.profile)fillProfile(d.profile);
   try{pricing=await api("/billing/pricing");applyBranding();}catch(_){}
@@ -1019,6 +1040,22 @@ function gather(){
  };
 }
 $("addReport").onclick=()=>addReportRow();
+/* User apni samasya/bimari add kare -> sabki list me aa jaati hai */
+async function addMyConcern(){
+ const inp=$("newConcern");if(!inp)return;const label=(inp.value||"").trim();if(!label)return;
+ inp.disabled=true;
+ try{
+   const r=await api("/concerns",{method:"POST",body:JSON.stringify({label})});
+   customConcerns=r.custom_concerns||customConcerns;buildChips();renderStatic();
+   const box=[...document.querySelectorAll('#chips input[name="c"]')].find(c=>c.value===r.concern.label);
+   if(box)box.checked=true;
+   inp.value="";toast(t().addConcernOk||"Jud gaya ✓");
+ }catch(e){toast(e.message);}
+ inp.disabled=false;
+}
+if($("newConcernBtn"))$("newConcernBtn").onclick=addMyConcern;
+if($("newConcern"))$("newConcern").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addMyConcern();}});
+if($("forgotLink"))$("forgotLink").onclick=()=>{const x=t();openSheet(`<h3 style="font-family:var(--f-head);font-size:19px;margin:0 0 8px">${esc(x.forgotTitle||"Password?")}</h3><p class="sub" style="margin:0;line-height:1.65">${esc(x.forgotBody||"")}</p>`);};
 $("saveProfBtn").onclick=async()=>{try{await api("/profile",{method:"PUT",body:JSON.stringify(gather())});toast(t().profSaved);}catch(e){toast(e.message);}};
 
 /* ---- generate ---- */

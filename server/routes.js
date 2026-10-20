@@ -128,7 +128,13 @@ function pubUser(u) { return { id: u.id, name: u.name, email: u.email, region: u
 function me(ctx) {
   const u = ctx.user;
   const prof = db.profiles.findBy("user_id", u.id);
-  return { user: pubUser(u), profile: prof ? unpackProfile(prof) : null, features: featuresFor(u) };
+  return { user: pubUser(u), profile: prof ? unpackProfile(prof) : null, features: featuresFor(u), custom_concerns: getSettings().custom_concerns || [] };
+}
+// User apni samasya/bimari add kare -> sabki list me aa jaati hai
+function addConcernRoute(ctx) {
+  const item = require("./settings").addConcern((ctx.body || {}).label);
+  if (!item) throw new HttpError(400, "Samasya likhein (kam se kam 2 akshar)");
+  return { concern: item, custom_concerns: getSettings().custom_concerns || [] };
 }
 function unpackProfile(p) {
   return { age: p.age, gender: p.gender, height_cm: p.height_cm, weight_kg: p.weight_kg, lifestyle: p.lifestyle, conditions: p.conditions || [], allergies: p.allergies || [], report: p.report || [], notes: p.notes };
@@ -448,4 +454,4 @@ async function chat(ctx) {
   return { reply: txt || (lang === "hi" ? "Abhi jawab nahi mil paaya, dobara koshish karein." : "Couldn't answer right now, please try again."), source: txt ? "ai" : "basic" };
 }
 
-module.exports = { health, publicStats, register, login, me, putProfile, generate, listPlans, getPlan, deletePlan, logSymptom, listSymptoms, deleteSymptom, dashboard, insight, listMembers, addMember, updateMember, deleteMember, season, progress, explain, chat };
+module.exports = { health, publicStats, register, login, me, putProfile, generate, listPlans, getPlan, deletePlan, logSymptom, listSymptoms, deleteSymptom, dashboard, insight, listMembers, addMember, updateMember, deleteMember, season, progress, explain, chat, addConcernRoute };

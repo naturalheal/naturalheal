@@ -3,6 +3,7 @@
 // DB mein store hote hain; na ho to .env / default se.
 // ---------------------------------------------------------------------------
 const db = require("./store");
+const { uid } = require("./util");
 const num = (k, d) => Number(process.env[k] || d);
 
 function defaults() {
@@ -40,6 +41,8 @@ function defaults() {
       product_min_points: 100,   // product/coupon redeem ke liye min points
     },
     coupon_enabled: false,       // product coupon abhi band; admin jab chahe ON kare
+    // Extra bimariyan/samasyaein — admin ya user add karte hain, sabko chip ke roop me dikhti hain
+    custom_concerns: [],         // [{id, label}]
   };
 }
 function getSettings() {
@@ -77,4 +80,29 @@ function saveSettings(patch) {
   else db.settings.insert({ id: "app", data });
   return getSettings();
 }
-module.exports = { getSettings, saveSettings, defaults };
+function persistConcerns(list) {
+  const cur = db.settings.get("app");
+  const data = { ...(cur && cur.data ? cur.data : {}), custom_concerns: list.slice(0, 300) };
+  if (cur) db.settings.update("app", { data }); else db.settings.insert({ id: "app", data });
+}
+// Nayi samasya/bimari jodo (user ya admin). De-dupe (case-insensitive). Lauta deta hai item.
+function addConcern(label) {
+  const text = String(label || "").trim().replace(/\s+/g, " ").slice(0, 40);
+  if (text.length < 2) return null;
+  const s = getSettings();
+  const list = Array.isArray(s.custom_concerns) ? s.custom_concerns.slice() : [];
+  const low = text.toLowerCase();
+  const exist = list.find((c) => (c.label || "").toLowerCase() === low);
+  if (exist) return exist;
+  const item = { id: "c_" + uid().slice(0, 8), label: text };
+  list.push(item);
+  persistConcerns(list);
+  return item;
+}
+function removeConcern(id) {
+  const s = getSettings();
+  persistConcerns((s.custom_concerns || []).filter((c) => c.id !== id));
+  return getSettings().custom_concerns;
+}
+
+module.exports = { getSettings, saveSettings, defaults, addConcern, removeConcern };

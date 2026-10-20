@@ -183,7 +183,8 @@ async function secUsers(){
  const d=await api("/admin/users");
  $("secBody").innerHTML=`<div class="row" style="margin-bottom:12px"><input id="uq" placeholder="Search naam/email…" style="max-width:260px"></div><div class="scroll"><table><thead><tr><th>Name</th><th>Email</th><th>Region</th><th>Plan</th><th>Joined</th><th>Expires</th><th>Action</th></tr></thead><tbody id="ur"></tbody></table></div>`;
  const draw=(users)=>{$("ur").innerHTML=users.map(u=>{const prem=u.plan==="premium"&&u.plan_status==="active";
-  return `<tr><td>${esc(u.name)}${u.is_admin?' <span class="pill premium">admin</span>':''}</td><td>${esc(u.email)}</td><td>${esc(u.region||"")}</td><td><span class="pill ${prem?"premium":"free"}">${prem?"premium":"free"}</span></td><td>${esc((u.created_at||"").slice(0,10))||"—"}</td><td>${esc((u.plan_expires||"").slice(0,10))||"—"}</td><td><div class="row">${prem?`<button class="btn ghost sm" data-off="${u.id}">Remove premium</button>`:`<button class="btn sm" data-on="${u.id}">Give premium</button>`}<button class="btn ghost sm" data-mem="${u.id}" data-mn="${esc(u.name)}">Members</button>${u.is_admin?"":`<button class="btn danger sm" data-del="${u.id}">Delete</button>`}</div></td></tr>`;}).join("")||`<tr><td colspan="7" class="sub">Koi user nahi</td></tr>`;
+  return `<tr><td>${esc(u.name)}${u.is_admin?' <span class="pill premium">admin</span>':''}</td><td>${esc(u.email)}</td><td>${esc(u.region||"")}</td><td><span class="pill ${prem?"premium":"free"}">${prem?"premium":"free"}</span></td><td>${esc((u.created_at||"").slice(0,10))||"—"}</td><td>${esc((u.plan_expires||"").slice(0,10))||"—"}</td><td><div class="row">${prem?`<button class="btn ghost sm" data-off="${u.id}">Remove premium</button>`:`<button class="btn sm" data-on="${u.id}">Give premium</button>`}<button class="btn ghost sm" data-mem="${u.id}" data-mn="${esc(u.name)}">Members</button><button class="btn ghost sm" data-pw="${u.id}">Password</button>${u.is_admin?"":`<button class="btn danger sm" data-del="${u.id}">Delete</button>`}</div></td></tr>`;}).join("")||`<tr><td colspan="7" class="sub">Koi user nahi</td></tr>`;
+  $("ur").querySelectorAll("[data-pw]").forEach(b=>b.onclick=()=>setPw(b.dataset.pw));
   $("ur").querySelectorAll("[data-on]").forEach(b=>b.onclick=()=>setPrem(b.dataset.on,true));
   $("ur").querySelectorAll("[data-off]").forEach(b=>b.onclick=()=>setPrem(b.dataset.off,false));
   $("ur").querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>delUser(b.dataset.del));
@@ -192,6 +193,13 @@ async function secUsers(){
  let tmr;$("uq").oninput=e=>{clearTimeout(tmr);tmr=setTimeout(async()=>{const r=await api("/admin/users?q="+encodeURIComponent(e.target.value));draw(r.users);},300);};
 }
 async function setPrem(id,on){await api("/admin/users/"+id+"/premium",{method:"POST",body:JSON.stringify({on,days:31})});toast(on?"Premium diya ✓":"Premium hataya");secUsers();}
+async function setPw(id){
+ const pw=prompt("Is user ke liye NAYA password (kam se kam 6 akshar). Ye user ko bata dein:");
+ if(pw===null)return;
+ if(pw.length<6){toast("Password 6 akshar se bada ho");return;}
+ try{await api("/admin/users/"+id+"/password",{method:"POST",body:JSON.stringify({password:pw})});toast("Naya password set ho gaya ✓ User ko bata dein");}
+ catch(e){toast(e.message);}
+}
 async function delUser(id){if(!confirm("Pakka is user ko delete karna hai? Uska saara data (plans, symptoms, members) mit jaayega."))return;try{await api("/admin/users/"+id,{method:"DELETE"});toast("User delete ho gaya");secUsers();}catch(e){toast(e.message);}}
 function openModal(html){$("modalRoot").innerHTML=`<div class="modal-bg" id="mbg"><div class="modal">${html}</div></div>`;$("mbg").onclick=e=>{if(e.target.id==="mbg")closeModal();};}
 function closeModal(){$("modalRoot").innerHTML="";}
@@ -344,6 +352,15 @@ async function secSettings(){
   <p class="sub" style="margin-top:10px">Save karte hi ye changes app mein live ho jaate hain.</p>
  </div>
  <div class="card" style="max-width:560px;margin-top:16px">
+  <h3 style="font-family:var(--f-head);font-weight:600;font-size:16px;margin:0 0 6px">🩺 Bimariyan / Samasyaein</h3>
+  <p class="sub" style="margin:0 0 10px">Nayi samasya add karo — sabhi users ko chip ke roop me dikhegi. Jab koi user apni alag samasya likhega, vo bhi yahin aa jayegi. AI usi samasya ko samajh kar holistic salah deta hai.</p>
+  <div id="concList"></div>
+  <div style="display:flex;gap:8px;margin-top:10px">
+    <input id="newConc" placeholder="Nayi samasya (jaise: Migraine)" maxlength="40" style="flex:1">
+    <button class="btn" id="addConc" style="min-width:86px">+ Add</button>
+  </div>
+ </div>
+ <div class="card" style="max-width:560px;margin-top:16px">
   <h3 style="font-family:var(--f-head);font-weight:600;font-size:16px;margin:0 0 6px">💾 Backup (poora data)</h3>
   <p class="sub" style="margin:0 0 10px">Poora data ek file me download karke apne paas rakhein. Hafte me ek baar ya launch se pehle le lein — kabhi zaroorat padi to isi se wapas aa jayega.</p>
   <button class="btn" id="rBackup" style="width:100%">Backup download karo</button>
@@ -369,6 +386,13 @@ async function secSettings(){
    try{await api("/admin/reset-data",{method:"POST",body:JSON.stringify({confirm:"RESET"})});toast("Saaf ho gaya ✓ Ab fresh start!");}
    catch(e){$("rErr").textContent=e.message;}
  };
+ let concs=(s.custom_concerns||[]);
+ function renderConc(){const el=$("concList");if(!el)return;
+   el.innerHTML=concs.length?concs.map(c=>`<span class="pill" style="display:inline-flex;align-items:center;gap:6px;margin:3px 5px 3px 0">${esc(c.label)} <button data-cdel="${c.id}" class="link" style="color:#c0392b;font-weight:800;padding:0">✕</button></span>`).join(""):`<p class="sub" style="margin:0">Abhi koi extra samasya nahi.</p>`;
+   el.querySelectorAll("[data-cdel]").forEach(b=>b.onclick=async()=>{try{const r=await api("/admin/concerns/"+b.dataset.cdel,{method:"DELETE"});concs=r.custom_concerns||[];renderConc();}catch(e){toast(e.message);}});
+ }
+ renderConc();
+ if($("addConc"))$("addConc").onclick=async()=>{const v=($("newConc").value||"").trim();if(!v)return;try{const r=await api("/admin/concerns",{method:"POST",body:JSON.stringify({label:v})});concs=r.custom_concerns||concs;$("newConc").value="";renderConc();toast("Add ho gaya ✓");}catch(e){toast(e.message);}};
  $("sSave").onclick=async()=>{try{
    const pk=["referral","plan","profile","post","log","share","like","member","member_max_awards","share_daily_cap","like_daily_cap","redeem_premium_month","rupee_per_point","product_min_points"];
    const points={};pk.forEach(k=>{const el=$("pt_"+k);if(el)points[k]=el.value;});

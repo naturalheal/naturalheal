@@ -129,6 +129,28 @@ function recentPayments() {
 // Poora data backup (admin download) — apne paas copy rakhne ke liye
 function backup() { return db._raw(); }
 
+// User ka naya password set karo (password dikhte nahi — reset hi hota hai)
+function resetPassword(ctx) {
+  const u = db.users.get(ctx.params.id);
+  if (!u) throw new HttpError(404, "User nahi mila");
+  const pw = String((ctx.body || {}).password || "");
+  if (pw.length < 6) throw new HttpError(400, "Naya password kam se kam 6 akshar ka ho");
+  const { hashPassword } = require("./auth");
+  db.users.update(u.id, { password_hash: hashPassword(pw) });
+  return { ok: true };
+}
+// Bimari/samasya add ya hatao (admin)
+function addConcern(ctx) {
+  const { addConcern } = require("./settings");
+  const item = addConcern((ctx.body || {}).label);
+  if (!item) throw new HttpError(400, "Samasya ka naam likhein");
+  return { concern: item, custom_concerns: getSettings().custom_concerns || [] };
+}
+function deleteConcern(ctx) {
+  const { removeConcern } = require("./settings");
+  return { custom_concerns: removeConcern(ctx.params.id) };
+}
+
 // Fresh start (launch se pehle): sab test data saaf, admin account bacha rehta hai
 function resetData(ctx) {
   const b = ctx.body || {};
@@ -137,4 +159,4 @@ function resetData(ctx) {
   return { ok: true, kept_admin: ctx.user.id };
 }
 
-module.exports = { stats, listUsers, userDetail, setPremium, deleteUser, recentPayments, readSettings, writeSettings, plansReport, symptomsReport, membersReport, userMembers, adminUpdateMember, adminDeleteMember, resetData, backup };
+module.exports = { stats, listUsers, userDetail, setPremium, deleteUser, recentPayments, readSettings, writeSettings, plansReport, symptomsReport, membersReport, userMembers, adminUpdateMember, adminDeleteMember, resetData, backup, resetPassword, addConcern, deleteConcern };
