@@ -6,6 +6,7 @@ const { HttpError, uid } = require("./util");
 const { hashPassword, checkPassword, signToken } = require("./auth");
 const { generatePlan, aiText } = require("./ai");
 const { featuresFor, isPremium } = require("./plans");
+const { getSettings } = require("./settings");
 const { findReferrer } = require("./share");
 const points = require("./points");
 
@@ -65,6 +66,17 @@ function symptomSummary(userId, memberId, isSelf, n = 12) {
 
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "").toLowerCase();
 const now = () => new Date().toISOString();
+// India time (IST) ka din — daily cap isi hisaab se reset hota hai
+const istDay = (iso) => { try { return new Date(new Date(iso).getTime() + 19800000).toISOString().slice(0, 10); } catch (_) { return ""; } };
+const istToday = () => istDay(new Date().toISOString());
+// Profile ka signature — isse pata chale ki user ne kuch badla ya same hai (same -> dobara AI call nahi)
+function profileSig(p) {
+  return JSON.stringify({
+    a: p.age, g: p.gender, h: p.height_cm, w: p.weight_kg, l: p.lifestyle,
+    c: (p.conditions || []).slice().sort(), al: (p.allergies || []).slice().sort(),
+    r: p.report || [], n: p.notes || "", wk: p.wake || "", lang: p.language,
+  });
+}
 
 // System mein koi admin na ho to sabse purane user ko admin bana do (hamesha ek admin rahe)
 function ensureAdminExists() {
@@ -163,7 +175,23 @@ async function generate(ctx) {
   // UNIQUE: recent symptoms + season context (AI plan ko behtar/adjust karta hai)
   const mem = resolveMemberId(ctx);
   const lang = profile.language;
+  const sig = profileSig(profile);
   if (feat.ai_plan) {
+    // 1) Cache: profile me kuch nahi badla -> purana AI plan hi lautao (koi naya AI call/kharcha nahi, cap bhi nahi katta)
+    const last = db.plans.filter((p) => p.user_id === user.id && p.member_id === mem.id)
+      .sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""))[0];
+    if (last && last.sig === sig && last.source === "ai" && last.plan) {
+      return { id: last.id, source: "ai", plan: last.plan, cached: true, points_awarded: 0 };
+    }
+    // 2) Daily cap (normal + emergency) — roz itne hi AI plan-update
+    const s = getSettings();
+    const cap = (Number(s.premium_plans_per_day) || 0) + (Number(s.premium_emergency_per_day) || 0);
+    const usedToday = db.plans.count((p) => p.user_id === user.id && p.source === "ai" && istDay(p.created_at) === istToday());
+    if (cap > 0 && usedToday >= cap) {
+      throw new HttpError(429, lang === "en"
+        ? `Today's plan updates are used up (${cap}/day). Please try again tomorrow.`
+        : `Aaj ke plan updates poore ho gaye (${cap}/din). Kal phir update kar sakte hain.`, { capped: true });
+    }
     const ss = symptomSummary(user.id, mem.id, mem.isSelf);
     if (ss) profile.symptom_context = ss;
     profile.season = seasonInfo(lang).ritu;
@@ -171,7 +199,7 @@ async function generate(ctx) {
   const priorPlans = db.plans.count((p) => p.user_id === user.id);
   const { plan, source } = await generatePlan(profile, { forceFallback: !feat.ai_plan });
   const id = uid();
-  db.plans.insert({ id, user_id: user.id, member_id: mem.id, title: plan && plan.summary ? plan.summary.slice(0, 60) : "Wellness plan", plan, source, created_at: now() });
+  db.plans.insert({ id, user_id: user.id, member_id: mem.id, sig, title: plan && plan.summary ? plan.summary.slice(0, 60) : "Wellness plan", plan, source, created_at: now() });
   // Healing Points: pehla plan banane par, aur referral wale ko bhi (jab referred-user active ho)
   const awarded = points.award(user.id, "plan").awarded;
   if (priorPlans === 0 && user.referred_by) points.award(user.referred_by, "referral", { ref: user.id, note: "referral active" });

@@ -11,6 +11,9 @@ function defaults() {
     price_inr: num("PRICE_INR", 199),
     price_usd: num("PRICE_USD", 5),
     free_plan_limit: num("FREE_PLAN_LIMIT", 3),
+    // Premium user roz kitne AI plan-update kar sakta hai (cost control). Total = normal + emergency.
+    premium_plans_per_day: num("PREMIUM_PLANS_PER_DAY", 2),
+    premium_emergency_per_day: num("PREMIUM_EMERGENCY_PER_DAY", 2),
     premium_blurb_hi: "Premium mein: AI gehra plan + report analysis + unlimited plans + AI chat.",
     premium_blurb_en: "Premium unlocks: deeper AI plan + report analysis + unlimited plans + AI chat.",
     app_url: process.env.APP_URL || "",
@@ -48,6 +51,8 @@ function saveSettings(patch) {
   if (patch.price_inr != null) clean.price_inr = Math.max(0, Number(patch.price_inr) || 0);
   if (patch.price_usd != null) clean.price_usd = Math.max(0, Number(patch.price_usd) || 0);
   if (patch.free_plan_limit != null) clean.free_plan_limit = Math.max(0, parseInt(patch.free_plan_limit, 10) || 0);
+  if (patch.premium_plans_per_day != null) clean.premium_plans_per_day = Math.max(0, parseInt(patch.premium_plans_per_day, 10) || 0);
+  if (patch.premium_emergency_per_day != null) clean.premium_emergency_per_day = Math.max(0, parseInt(patch.premium_emergency_per_day, 10) || 0);
   if (patch.premium_blurb_hi != null) clean.premium_blurb_hi = String(patch.premium_blurb_hi).slice(0, 200);
   if (patch.premium_blurb_en != null) clean.premium_blurb_en = String(patch.premium_blurb_en).slice(0, 200);
   if (patch.app_url != null) clean.app_url = String(patch.app_url).trim().replace(/\/+$/, "").slice(0, 200);

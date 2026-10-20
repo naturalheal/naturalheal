@@ -313,6 +313,11 @@ async function secSettings(){
   <div class="field"><label>App ka naam</label><input id="sName" value="${esc(s.app_name)}"></div>
   <div class="two"><div class="field"><label>Price (₹ / mahina)</label><input id="sInr" type="number" value="${s.price_inr}"></div><div class="field"><label>Price ($ / month)</label><input id="sUsd" type="number" value="${s.price_usd}"></div></div>
   <div class="field"><label>Free plan limit (kitne plan save)</label><input id="sLimit" type="number" value="${s.free_plan_limit}"></div>
+  <div class="two">
+    <div class="field"><label>Premium: normal plan/din</label><input id="sPpd" type="number" value="${s.premium_plans_per_day!=null?s.premium_plans_per_day:2}"></div>
+    <div class="field"><label>Premium: emergency plan/din</label><input id="sPem" type="number" value="${s.premium_emergency_per_day!=null?s.premium_emergency_per_day:2}"></div>
+  </div>
+  <p class="sub" style="margin:-4px 0 10px;font-size:12px">Premium user roz itne AI plan-update kar sakta hai = normal + emergency (abhi 2+2 = 4/din). Agar user kuch na badle to dobara "update" karne par purana plan hi aata hai — tab kharcha nahi hota.</p>
   <div class="field"><label>App ka public URL (sharing link ke liye)</label><input id="sUrl" value="${esc(s.app_url||"")}" placeholder="https://yourapp.com"><p class="sub" style="margin:4px 0 0;font-size:12px">Jab app online ho, yahan uska address daalein — share links isi se banenge. Khali chhodne par abhi wale address se.</p></div>
   <h3 style="font-family:var(--f-head);font-weight:600;font-size:16px;margin:18px 0 8px">Share / Invite content</h3>
   <p class="sub" style="margin:0 0 10px">Ye line sab share-cards aur invite message me jaati hai.</p>
@@ -366,7 +371,7 @@ async function secSettings(){
  $("sSave").onclick=async()=>{try{
    const pk=["referral","plan","profile","post","log","share","like","member","member_max_awards","share_daily_cap","like_daily_cap","redeem_premium_month","rupee_per_point","product_min_points"];
    const points={};pk.forEach(k=>{const el=$("pt_"+k);if(el)points[k]=el.value;});
-   await api("/admin/settings",{method:"PUT",body:JSON.stringify({app_name:$("sName").value,price_inr:$("sInr").value,price_usd:$("sUsd").value,free_plan_limit:$("sLimit").value,premium_blurb_hi:$("sBhi").value,premium_blurb_en:$("sBen").value,app_url:$("sUrl").value,share_tagline_hi:$("sTagHi").value,share_tagline_en:$("sTagEn").value,invite_video:$("sVid").value,points,coupon_enabled:$("sCoupon").checked})});
+   await api("/admin/settings",{method:"PUT",body:JSON.stringify({app_name:$("sName").value,price_inr:$("sInr").value,price_usd:$("sUsd").value,free_plan_limit:$("sLimit").value,premium_plans_per_day:$("sPpd").value,premium_emergency_per_day:$("sPem").value,premium_blurb_hi:$("sBhi").value,premium_blurb_en:$("sBen").value,app_url:$("sUrl").value,share_tagline_hi:$("sTagHi").value,share_tagline_en:$("sTagEn").value,invite_video:$("sVid").value,points,coupon_enabled:$("sCoupon").checked})});
    toast("Settings save ho gayi ✓");
   }catch(e){$("sErr").textContent=e.message;}};
 }
