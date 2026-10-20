@@ -340,9 +340,11 @@ ul.items li b{color:var(--accent-ink)}
       <p style="font-family:var(--f-head);font-size:28px;margin:0 0 14px"><span id="upPrice"></span> <span class="sub" style="font-size:15px" id="upPer"></span></p>
       <p class="sub" id="upChoose"></p>
       <div class="row">
-        <button class="btn btn-primary" id="payRzpBtn"></button>
+        <button class="btn btn-primary" id="payUpiBtn"></button>
+        <button class="btn btn-ghost" id="payRzpBtn"></button>
         <button class="btn btn-ghost" id="payStripeBtn"></button>
       </div>
+      <div id="upiPanel" class="hidden" style="margin-top:14px"></div>
       <button class="link" id="upCancel" style="margin-top:12px;font-size:14px"></button>
     </div>
 
@@ -626,6 +628,7 @@ const T={
   planFree:"Free plan",planPremium:"Premium ✓",upgrade:"Premium lein",
   premiumWhy:"Premium mein milta hai: AI se gehra plan + lab report analysis + unlimited plans.",
   choosePay:"Payment ka tarika chunein:",payRzp:"Razorpay (India) se",payStripe:"Card (Global) se",perMonth:"/mahina",
+  payUpi:"UPI se pay karein (QR scan)",upiScanHint:"Kisi bhi UPI app (PhonePe/GPay/Paytm) se QR scan karke pay karein.",upiOpenApp:"UPI app me kholo",upiAfter:"Pay karne ke baad transaction (UTR) number yahan daalein:",upiUtrPh:"12-ank ka UTR / reference no.",upiSubmitBtn:"Maine pay kar diya",upiPending:"Dhanyavaad! Payment verify ho rahi hai — jald Premium chalu ho jayega.",upiDone:"Premium chalu ho gaya 🌿",upiPayTo:"Inhe pay karein",
   limitHit:"Free limit poori ho gayi — Premium lein ya purana plan delete karein.",aiLocked:"AI plan Premium feature hai. Abhi aapko basic plan mila hai.",cancel:"Band karo",redirecting:"Payment page khul raha hai…",
   tabHome:"Home",tabPlan:"Plan",tabTrack:"Tracker",
   dScore:"wellness",dStreak:"Day streak",dPlans:"Plans",dLogs:"Logs",
@@ -676,6 +679,7 @@ const T={
   planFree:"Free plan",planPremium:"Premium ✓",upgrade:"Go Premium",
   premiumWhy:"Premium unlocks: deeper AI plan + lab report analysis + unlimited plans.",
   choosePay:"Choose a payment method:",payRzp:"Razorpay (India)",payStripe:"Card (Global)",perMonth:"/month",
+  payUpi:"Pay by UPI (scan QR)",upiScanHint:"Scan the QR with any UPI app (PhonePe/GPay/Paytm) and pay.",upiOpenApp:"Open UPI app",upiAfter:"After paying, enter the transaction (UTR) number below:",upiUtrPh:"12-digit UTR / reference no.",upiSubmitBtn:"I have paid",upiPending:"Thank you! We're verifying your payment — Premium will start soon.",upiDone:"Premium activated 🌿",upiPayTo:"Pay to",
   limitHit:"Free limit reached — go Premium or delete an old plan.",aiLocked:"The AI plan is a Premium feature. You got the basic plan for now.",cancel:"Close",redirecting:"Opening payment page…",
   tabHome:"Home",tabPlan:"Plan",tabTrack:"Tracker",
   dScore:"wellness",dStreak:"Day streak",dPlans:"Plans",dLogs:"Logs",
@@ -719,6 +723,7 @@ const T={
   prefer:"ज़्यादा लें",avoid:"बचें",seeDoc:"डॉक्टर को दिखाएं:",del:"डिलीट",opened:"प्लान खुल गया",deleted:"प्लान डिलीट हुआ",
   planFree:"फ्री प्लान",planPremium:"प्रीमियम ✓",upgrade:"प्रीमियम लें",premiumWhy:"प्रीमियम में मिलता है: AI से गहरा प्लान + लैब रिपोर्ट एनालिसिस + अनलिमिटेड प्लान।",
   choosePay:"पेमेंट का तरीका चुनें:",payRzp:"Razorpay (India) से",payStripe:"कार्ड (Global) से",perMonth:"/महीना",
+  payUpi:"UPI से पे करें (QR स्कैन)",upiScanHint:"किसी भी UPI ऐप (PhonePe/GPay/Paytm) से QR स्कैन करके पे करें।",upiOpenApp:"UPI ऐप में खोलो",upiAfter:"पे करने के बाद ट्रांज़ैक्शन (UTR) नंबर यहां डालें:",upiUtrPh:"12-अंक का UTR / reference no.",upiSubmitBtn:"मैंने पे कर दिया",upiPending:"धन्यवाद! पेमेंट वेरिफाई हो रही है — जल्द प्रीमियम चालू हो जाएगा।",upiDone:"प्रीमियम चालू हो गया 🌿",upiPayTo:"इन्हें पे करें",
   limitHit:"फ्री लिमिट पूरी हो गई — प्रीमियम लें या पुराना प्लान डिलीट करें।",aiLocked:"AI प्लान प्रीमियम फीचर है। अभी आपको बेसिक प्लान मिला है।",cancel:"बंद करो",redirecting:"पेमेंट पेज खुल रहा है…",
   tabHome:"होम",tabPlan:"प्लान",tabTrack:"ट्रैकर",dScore:"wellness",dStreak:"दिन स्ट्रीक",dPlans:"प्लान",dLogs:"लॉग",
   dActive:"एक्टिव प्लान",dNoPlan:"अभी कोई प्लान नहीं — प्लान टैब से एक बनाएं।",dNewPlan:"नया AI प्लान",dLogSym:"सिम्टम लॉग",
@@ -933,7 +938,9 @@ function renderStatic(){
  
  // upgrade panel static
  $("upTitle").textContent=x.upgrade;$("upWhy").textContent=pwhy();$("upChoose").textContent=x.choosePay;
- $("payRzpBtn").textContent=x.payRzp;$("payStripeBtn").textContent=x.payStripe;$("upCancel").textContent=x.cancel;
+ $("payUpiBtn").textContent=x.payUpi;$("payRzpBtn").textContent=x.payRzp;$("payStripeBtn").textContent=x.payStripe;$("upCancel").textContent=x.cancel;
+ if(pricing){const up=pricing.upi&&pricing.upi.enabled,rz=pricing.providers&&pricing.providers.razorpay,st=pricing.providers&&pricing.providers.stripe;
+  $("payUpiBtn").style.display=up?"inline-flex":"none";$("payRzpBtn").style.display=rz?"inline-flex":"none";$("payStripeBtn").style.display=st?"inline-flex":"none";}
  $("tabHome").textContent=x.tabHome;$("tabPlan").textContent=x.tabPlan;$("tabTrack").textContent=x.tabTrack;$("tabKitchen").textContent=x.tabKitchen;$("tabComm").textContent=x.tabComm;
  $("chatFabTxt").textContent=x.chatOpen;
  renderPlanStrip();
@@ -1018,6 +1025,39 @@ async function startCheckout(path){
 }
 $("payRzpBtn").onclick=()=>startCheckout("/billing/razorpay/subscribe");
 $("payStripeBtn").onclick=()=>startCheckout("/billing/stripe/checkout");
+$("payUpiBtn").onclick=openUpiPay;
+function openUpiPay(){
+ const x=t();if(!pricing||!pricing.upi||!pricing.upi.enabled){toast("UPI abhi set nahi");return;}
+ const rs=pricing.inr,upi=pricing.upi.id,nm=pricing.upi.name||appName();
+ const uri="upi://pay?pa="+encodeURIComponent(upi)+"&pn="+encodeURIComponent(nm)+"&am="+rs+"&cu=INR&tn="+encodeURIComponent("Premium");
+ const qr="https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&color=1C5A3E&data="+encodeURIComponent(uri);
+ const p=$("upiPanel");p.classList.remove("hidden");
+ p.innerHTML=`<div class="qr-poster">
+   <div class="qr-badge">₹${rs} ${x.perMonth}</div>
+   <p class="sub" style="margin:10px 0 8px">${x.upiScanHint}</p>
+   <div class="qr-box"><img src="${qr}" alt="UPI QR" style="width:220px;height:220px"></div>
+   <div style="margin-top:10px;font-weight:800;font-size:14px">${x.upiPayTo}: ${esc(upi)}</div>
+   <a href="${uri}" class="qr-cta" style="text-decoration:none;margin-top:10px">${x.upiOpenApp}</a>
+ </div>
+ <label style="display:block;margin-top:14px;font-weight:700">${x.upiAfter}</label>
+ <div style="display:flex;gap:8px;margin-top:6px">
+   <input id="upiUtr" inputmode="numeric" maxlength="12" placeholder="${esc(x.upiUtrPh)}" style="flex:1">
+   <button class="btn btn-primary" id="upiSubmitBtn" style="min-width:120px">${x.upiSubmitBtn}</button>
+ </div>
+ <div class="err" id="upiErr"></div>`;
+ $("upiSubmitBtn").onclick=submitUpi;
+ p.scrollIntoView({behavior:"smooth",block:"center"});
+}
+async function submitUpi(){
+ const x=t();const utr=($("upiUtr").value||"").replace(/\s/g,"");
+ if(!/^\d{12}$/.test(utr)){$("upiErr").textContent=x.upiUtrPh;return;}
+ const btn=$("upiSubmitBtn");btn.disabled=true;$("upiErr").textContent="";
+ try{const r=await api("/billing/upi/submit",{method:"POST",body:JSON.stringify({utr})});
+   if(r.premium){toast(x.upiDone);$("upgradePanel").classList.add("hidden");await loadMe();}
+   else{toast(x.upiPending);$("upiPanel").innerHTML=`<div class="mini-card c-season"><p class="mc-b">✅ ${x.upiPending}</p></div>`;}
+ }catch(e){$("upiErr").textContent=e.message;}
+ btn.disabled=false;
+}
 function fillProfile(p){
  $("age").value=p.age||"";$("gender").value=p.gender||"";$("height").value=p.height_cm||"";$("weight").value=p.weight_kg||"";
  $("lifestyle").value=p.lifestyle||"";$("allergy").value=(p.allergies||[]).join(", ");$("notes").value=p.notes||"";

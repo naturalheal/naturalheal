@@ -35,7 +35,7 @@ const userBySub = (subId) => db.users.findBy("provider_sub_id", subId);
 // ---- Pricing info ----
 function pricing() {
   const s = getSettings();
-  return { inr: s.price_inr, usd: s.price_usd, app_name: s.app_name, blurb_hi: s.premium_blurb_hi, blurb_en: s.premium_blurb_en, app_url: s.app_url || "", share_tagline_hi: s.share_tagline_hi || "", share_tagline_en: s.share_tagline_en || "", invite_video: s.invite_video || "", providers: { razorpay: !!(RZP_KEY && RZP_SECRET), stripe: !!STRIPE_KEY } };
+  return { inr: s.price_inr, usd: s.price_usd, app_name: s.app_name, blurb_hi: s.premium_blurb_hi, blurb_en: s.premium_blurb_en, app_url: s.app_url || "", share_tagline_hi: s.share_tagline_hi || "", share_tagline_en: s.share_tagline_en || "", invite_video: s.invite_video || "", providers: { razorpay: !!(RZP_KEY && RZP_SECRET), stripe: !!STRIPE_KEY }, upi: { id: s.upi_id || "", name: s.upi_name || "", enabled: !!s.upi_id } };
 }
 
 // ---- Stripe checkout ----
@@ -124,4 +124,25 @@ function razorpayWebhook(ctx) {
   return { received: true };
 }
 
-module.exports = { pricing, stripeCheckout, razorpaySubscribe, stripeWebhook, razorpayWebhook, grantPremium, revokePremium, logPayment };
+// ---- UPI direct (gateway-free): user UTR daalta hai; admin approve ya auto-approve ----
+function upiSubmit(ctx) {
+  const user = ctx.user;
+  const s = getSettings();
+  if (!s.upi_id) throw new HttpError(400, "UPI payment abhi set nahi hai");
+  const utr = String((ctx.body || {}).utr || "").replace(/\s/g, "");
+  if (!/^\d{12}$/.test(utr)) throw new HttpError(400, "Sahi 12-ank ka transaction/UTR number daalein");
+  const dup = db.upi_payments.filter((p) => p.utr === utr && p.status !== "rejected")[0];
+  if (dup) throw new HttpError(409, "Ye transaction ID pehle use ho chuka hai");
+  const amount = Number(s.price_inr || 0);
+  const auto = !!s.upi_auto_approve;
+  const rec = { id: uid(), user_id: user.id, user_name: user.name, user_email: user.email, utr, amount, status: auto ? "approved" : "pending", created_at: new Date().toISOString() };
+  db.upi_payments.insert(rec);
+  if (auto) {
+    grantPremium(user.id, { provider: "upi", days: 31 });
+    logPayment(user.id, { provider: "upi", amount, currency: "INR", status: "paid", ref_id: utr });
+    return { status: "approved", premium: true };
+  }
+  return { status: "pending" };
+}
+
+module.exports = { pricing, stripeCheckout, razorpaySubscribe, stripeWebhook, razorpayWebhook, grantPremium, revokePremium, logPayment, upiSubmit };

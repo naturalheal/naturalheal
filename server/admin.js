@@ -150,6 +150,25 @@ function deleteConcern(ctx) {
   const { removeConcern } = require("./settings");
   return { custom_concerns: removeConcern(ctx.params.id) };
 }
+// UPI payment requests — list + approve/reject
+function upiList() {
+  const rows = db.upi_payments.all().sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
+  return { payments: rows, pending: rows.filter((r) => r.status === "pending").length };
+}
+function upiSet(ctx) {
+  const p = db.upi_payments.get(ctx.params.id);
+  if (!p) throw new HttpError(404, "Request nahi mili");
+  const action = (ctx.body || {}).action;
+  if (action === "approve") {
+    const { logPayment } = require("./billing");
+    grantPremium(p.user_id, { provider: "upi", days: 31 });
+    logPayment(p.user_id, { provider: "upi", amount: p.amount, currency: "INR", status: "paid", ref_id: p.utr });
+    db.upi_payments.update(p.id, { status: "approved" });
+  } else if (action === "reject") {
+    db.upi_payments.update(p.id, { status: "rejected" });
+  }
+  return { ok: true };
+}
 
 // Fresh start (launch se pehle): sab test data saaf, admin account bacha rehta hai
 function resetData(ctx) {
@@ -159,4 +178,4 @@ function resetData(ctx) {
   return { ok: true, kept_admin: ctx.user.id };
 }
 
-module.exports = { stats, listUsers, userDetail, setPremium, deleteUser, recentPayments, readSettings, writeSettings, plansReport, symptomsReport, membersReport, userMembers, adminUpdateMember, adminDeleteMember, resetData, backup, resetPassword, addConcern, deleteConcern };
+module.exports = { stats, listUsers, userDetail, setPremium, deleteUser, recentPayments, readSettings, writeSettings, plansReport, symptomsReport, membersReport, userMembers, adminUpdateMember, adminDeleteMember, resetData, backup, resetPassword, addConcern, deleteConcern, upiList, upiSet };

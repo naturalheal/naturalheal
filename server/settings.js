@@ -41,6 +41,10 @@ function defaults() {
       product_min_points: 100,   // product/coupon redeem ke liye min points
     },
     coupon_enabled: false,       // product coupon abhi band; admin jab chahe ON kare
+    // UPI direct payment (gateway-free) — admin apna UPI daale
+    upi_id: process.env.UPI_ID || "",        // jaise: name@okhdfcbank
+    upi_name: process.env.UPI_NAME || "",    // jiske naam par paisa aayega
+    upi_auto_approve: false,     // ON = sahi format + non-duplicate UTR par turant premium (bharose par)
     // Extra bimariyan/samasyaein — admin ya user add karte hain, sabko chip ke roop me dikhti hain
     custom_concerns: [],         // [{id, label}]
   };
@@ -65,6 +69,9 @@ function saveSettings(patch) {
   if (patch.share_tagline_en != null) clean.share_tagline_en = String(patch.share_tagline_en).slice(0, 160);
   if (patch.invite_video != null) clean.invite_video = String(patch.invite_video).trim().slice(0, 300);
   if (patch.coupon_enabled != null) clean.coupon_enabled = !!patch.coupon_enabled;
+  if (patch.upi_id != null) clean.upi_id = String(patch.upi_id).trim().slice(0, 80);
+  if (patch.upi_name != null) clean.upi_name = String(patch.upi_name).trim().slice(0, 60);
+  if (patch.upi_auto_approve != null) clean.upi_auto_approve = !!patch.upi_auto_approve;
   const cur = db.settings.get("app");
   // Points rules (nested) — sirf valid number keys merge
   let pointsMerged;

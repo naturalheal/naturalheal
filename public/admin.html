@@ -130,6 +130,7 @@ const SECTIONS=[
  {key:"overview",title:"Overview",icon:"overview"},
  {key:"users",title:"Users",icon:"users"},
  {key:"pay",title:"Payments",icon:"pay"},
+ {key:"upi",title:"Payment requests (UPI)",icon:"pay"},
  {key:"plans",title:"Plans report",icon:"plans"},
  {key:"symptoms",title:"Symptoms report",icon:"symptoms"},
  {key:"members",title:"Family members",icon:"members"},
@@ -160,7 +161,7 @@ function show(key){
  $("navBtns").querySelectorAll(".navbtn").forEach(b=>b.classList.toggle("on",b.dataset.sec===key));
  $("secIc").innerHTML=svg(s.icon);$("secTitle").textContent=s.title;
  $("secBody").innerHTML='<p class="sub">Loading…</p>';
- ({overview:secOverview,users:secUsers,pay:secPay,plans:secPlans,symptoms:secSymptoms,members:secMembers,community:secCommunity,referral:secReferral,points:secPoints,settings:secSettings}[key])();
+ ({overview:secOverview,users:secUsers,pay:secPay,upi:secUpi,plans:secPlans,symptoms:secSymptoms,members:secMembers,community:secCommunity,referral:secReferral,points:secPoints,settings:secSettings}[key])();
 }
 
 /* ===== sections ===== */
@@ -221,6 +222,13 @@ async function openUserMembers(id,name){
 async function secPay(){
  const d=await api("/admin/payments");
  $("secBody").innerHTML=`<div class="scroll"><table><thead><tr><th>User</th><th>Amount</th><th>Provider</th><th>Status</th><th>Date</th></tr></thead><tbody>${d.payments.map(p=>`<tr><td>${esc(p.name)}<br><span class="sub" style="font-size:12px">${esc(p.email)}</span></td><td>${esc(p.currency||"")} ${p.amount!=null?p.amount:""}</td><td>${esc(p.provider||"")}</td><td>${esc(p.status||"")}</td><td>${esc((p.created_at||"").replace("T"," ").slice(0,16))}</td></tr>`).join("")||`<tr><td colspan="5" class="sub">Abhi koi payment nahi</td></tr>`}</tbody></table></div>`;
+}
+async function secUpi(){
+ const d=await api("/admin/upi");const rows=d.payments||[];
+ $("secBody").innerHTML=`<p class="sub" style="margin:0 0 12px">User UPI se pay karke UTR daalta hai. Apni UPI/bank app me paisa aaya check karke <b>Approve</b> karo. Pending: <b>${d.pending||0}</b></p><div class="scroll"><table><thead><tr><th>User</th><th>Amount</th><th>UTR</th><th>Status</th><th>Time</th><th>Action</th></tr></thead><tbody id="upr"></tbody></table></div>`;
+ $("upr").innerHTML=rows.map(p=>`<tr><td>${esc(p.user_name||"")}<div class="sub" style="font-size:12px">${esc(p.user_email||"")}</div></td><td>₹${p.amount||0}</td><td style="font-family:monospace">${esc(p.utr)}</td><td><span class="pill ${p.status==="approved"?"premium":"free"}">${esc(p.status)}</span></td><td class="sub">${esc((p.created_at||"").replace("T"," ").slice(0,16))}</td><td>${p.status==="pending"?`<div class="row"><button class="btn sm" data-ap="${p.id}">Approve</button><button class="btn ghost sm" data-rj="${p.id}">Reject</button></div>`:"—"}</td></tr>`).join("")||`<tr><td colspan="6" class="sub">Koi request nahi</td></tr>`;
+ $("upr").querySelectorAll("[data-ap]").forEach(b=>b.onclick=async()=>{try{await api("/admin/upi/"+b.dataset.ap,{method:"POST",body:JSON.stringify({action:"approve"})});toast("Approve ✓ Premium chalu");secUpi();}catch(e){toast(e.message);}});
+ $("upr").querySelectorAll("[data-rj]").forEach(b=>b.onclick=async()=>{if(!confirm("Reject karein?"))return;try{await api("/admin/upi/"+b.dataset.rj,{method:"POST",body:JSON.stringify({action:"reject"})});toast("Reject ho gaya");secUpi();}catch(e){toast(e.message);}});
 }
 async function secPlans(){
  const d=await api("/admin/report/plans");
@@ -328,6 +336,10 @@ async function secSettings(){
   <div class="field"><label>Premium: max plan/mahina</label><input id="sPpm" type="number" value="${s.premium_plans_per_month!=null?s.premium_plans_per_month:15}"><p class="sub" style="margin:4px 0 0;font-size:12px">0 = koi monthly limit nahi.</p></div>
   <p class="sub" style="margin:-4px 0 10px;font-size:12px">Premium user: roz max = normal + emergency (abhi 1+1 = 2/din), aur mahine me max (abhi 15). Dono me se jo pehle pure ho jaye. Agar user kuch na badle to dobara "update" par purana plan hi aata hai — tab kharcha bhi nahi aur limit bhi nahi katti.</p>
   <div class="field"><label>App ka public URL (sharing link ke liye)</label><input id="sUrl" value="${esc(s.app_url||"")}" placeholder="https://yourapp.com"><p class="sub" style="margin:4px 0 0;font-size:12px">Jab app online ho, yahan uska address daalein — share links isi se banenge. Khali chhodne par abhi wale address se.</p></div>
+  <h3 style="font-family:var(--f-head);font-weight:600;font-size:16px;margin:18px 0 8px">UPI direct payment (gateway-free)</h3>
+  <p class="sub" style="margin:0 0 10px">Yahan apna UPI daalo — user "UPI se pay" par QR scan karke seedha aapke UPI pe pay karega (0 fee, paisa turant). Khali chhodne par UPI option band rahega.</p>
+  <div class="two"><div class="field"><label>Aapka UPI ID</label><input id="sUpiId" value="${esc(s.upi_id||"")}" placeholder="name@okhdfcbank"></div><div class="field"><label>UPI naam (jiske naam paisa)</label><input id="sUpiName" value="${esc(s.upi_name||"")}" placeholder="Apna naam"></div></div>
+  <div class="field"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="sUpiAuto" ${s.upi_auto_approve?"checked":""} style="width:auto">Auto-approve ON karein (sahi 12-ank UTR + non-duplicate par turant Premium)</label><p class="sub" style="margin:4px 0 0;font-size:12px">⚠ App sirf UTR ka <b>format</b> aur <b>duplicate</b> check karta hai — bank se paisa "aaya ya nahi" confirm nahi kar sakta. Auto ON = user par bharosa (koi fake UTR daal sakta hai). Safe tarika: OFF rakho aur "Payment requests" me ek-click approve karo.</p></div>
   <h3 style="font-family:var(--f-head);font-weight:600;font-size:16px;margin:18px 0 8px">Share / Invite content</h3>
   <p class="sub" style="margin:0 0 10px">Ye line sab share-cards aur invite message me jaati hai.</p>
   <div class="field"><label>Share tagline (Hindi)</label><input id="sTagHi" value="${esc(s.share_tagline_hi||"")}"></div>
@@ -396,7 +408,7 @@ async function secSettings(){
  $("sSave").onclick=async()=>{try{
    const pk=["referral","plan","profile","post","log","share","like","member","member_max_awards","share_daily_cap","like_daily_cap","redeem_premium_month","rupee_per_point","product_min_points"];
    const points={};pk.forEach(k=>{const el=$("pt_"+k);if(el)points[k]=el.value;});
-   await api("/admin/settings",{method:"PUT",body:JSON.stringify({app_name:$("sName").value,price_inr:$("sInr").value,price_usd:$("sUsd").value,free_plan_limit:$("sLimit").value,premium_plans_per_day:$("sPpd").value,premium_emergency_per_day:$("sPem").value,premium_plans_per_month:$("sPpm").value,premium_blurb_hi:$("sBhi").value,premium_blurb_en:$("sBen").value,app_url:$("sUrl").value,share_tagline_hi:$("sTagHi").value,share_tagline_en:$("sTagEn").value,invite_video:$("sVid").value,points,coupon_enabled:$("sCoupon").checked})});
+   await api("/admin/settings",{method:"PUT",body:JSON.stringify({app_name:$("sName").value,price_inr:$("sInr").value,price_usd:$("sUsd").value,free_plan_limit:$("sLimit").value,premium_plans_per_day:$("sPpd").value,premium_emergency_per_day:$("sPem").value,premium_plans_per_month:$("sPpm").value,upi_id:$("sUpiId").value,upi_name:$("sUpiName").value,upi_auto_approve:$("sUpiAuto").checked,premium_blurb_hi:$("sBhi").value,premium_blurb_en:$("sBen").value,app_url:$("sUrl").value,share_tagline_hi:$("sTagHi").value,share_tagline_en:$("sTagEn").value,invite_video:$("sVid").value,points,coupon_enabled:$("sCoupon").checked})});
    toast("Settings save ho gayi ✓");
   }catch(e){$("sErr").textContent=e.message;}};
 }

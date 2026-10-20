@@ -14,7 +14,7 @@ const path = require("path");
 // warna project folder ke andar (free host).
 const DBF = process.env.DB_FILE || "naturalheal-data.json";
 const FILE = path.isAbsolute(DBF) ? DBF : path.join(__dirname, "..", DBF);
-const KEYS = ["users", "health_profiles", "ai_plans", "payments", "symptoms", "members", "settings", "posts", "shares", "points_ledger", "redemptions"];
+const KEYS = ["users", "health_profiles", "ai_plans", "payments", "symptoms", "members", "settings", "posts", "shares", "points_ledger", "redemptions", "upi_payments"];
 
 let data = {};
 for (const k of KEYS) data[k] = [];
@@ -109,6 +109,7 @@ module.exports = {
   shares: collection("shares"),
   points_ledger: collection("points_ledger"),
   redemptions: collection("redemptions"),
+  upi_payments: collection("upi_payments"),
   _raw: () => data,
   init,
   remoteOn,
@@ -120,7 +121,7 @@ module.exports = {
     data.members = (data.members || []).filter((m) => m.user_id === adminId);
     data.health_profiles = (data.health_profiles || []).filter((p) => p.user_id === adminId);
     data.ai_plans = []; data.payments = []; data.symptoms = [];
-    data.posts = []; data.shares = []; data.points_ledger = []; data.redemptions = [];
+    data.posts = []; data.shares = []; data.points_ledger = []; data.redemptions = []; data.upi_payments = [];
     save();
   },
 };
