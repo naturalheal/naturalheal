@@ -192,6 +192,17 @@ async function generate(ctx) {
         ? `Today's plan updates are used up (${cap}/day). Please try again tomorrow.`
         : `Aaj ke plan updates poore ho gaye (${cap}/din). Kal phir update kar sakte hain.`, { capped: true });
     }
+    // 3) Monthly cap — is mahine itne se zyada nahi
+    const capMonth = Number(s.premium_plans_per_month) || 0;
+    if (capMonth > 0) {
+      const thisMonth = istToday().slice(0, 7);
+      const usedMonth = db.plans.count((p) => p.user_id === user.id && p.source === "ai" && istDay(p.created_at).slice(0, 7) === thisMonth);
+      if (usedMonth >= capMonth) {
+        throw new HttpError(429, lang === "en"
+          ? `This month's plan updates are used up (${capMonth}/month).`
+          : `Is mahine ke plan updates poore ho gaye (${capMonth}/mahina). Agle mahine phir.`, { capped: true });
+      }
+    }
     const ss = symptomSummary(user.id, mem.id, mem.isSelf);
     if (ss) profile.symptom_context = ss;
     profile.season = seasonInfo(lang).ritu;
