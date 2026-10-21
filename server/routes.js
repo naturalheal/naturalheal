@@ -37,22 +37,17 @@ function belongsTo(item, memberId, isSelf) {
 // ---- Season (Indian ritucharya) — month se ----
 function seasonInfo(lang) {
   const m = new Date().getMonth(); // 0=Jan
-  const map = [
-    { ritu: "Shishir (late winter)", hi: "Sardi — garm, poshtik khaana; til, gud, garm paani.", en: "Winter — warm, nourishing food; sesame, jaggery, warm water." },        // Jan
-    { ritu: "Shishir (late winter)", hi: "Sardi — garm, poshtik khaana; til, gud, garm paani.", en: "Winter — warm, nourishing food; sesame, jaggery, warm water." },        // Feb
-    { ritu: "Vasant (spring)", hi: "Basant — halka khaana, kapha kam karein; shahad, adrak, kadwa-teekha.", en: "Spring — light food to reduce kapha; honey, ginger, bitter tastes." }, // Mar
-    { ritu: "Vasant (spring)", hi: "Basant — halka khaana, kapha kam karein; shahad, adrak, kadwa-teekha.", en: "Spring — light food to reduce kapha; honey, ginger, bitter tastes." }, // Apr
-    { ritu: "Grishma (summer)", hi: "Garmi — thandi taseer; nariyal paani, chaas, kam mirch.", en: "Summer — cooling foods; coconut water, buttermilk, less spice." },          // May
-    { ritu: "Grishma (summer)", hi: "Garmi — thandi taseer; nariyal paani, chaas, kam mirch.", en: "Summer — cooling foods; coconut water, buttermilk, less spice." },          // Jun
-    { ritu: "Varsha (monsoon)", hi: "Barish — pachan halka rakhein; garm-taza khaana, adrak chai, basi na khayein.", en: "Monsoon — keep digestion light; warm fresh food, ginger tea, avoid stale food." }, // Jul
-    { ritu: "Varsha (monsoon)", hi: "Barish — pachan halka rakhein; garm-taza khaana, adrak chai, basi na khayein.", en: "Monsoon — keep digestion light; warm fresh food, ginger tea, avoid stale food." }, // Aug
-    { ritu: "Sharad (autumn)", hi: "Sharad — pitta kam karein; thandi-meethi cheezein, ghee, amla.", en: "Autumn — reduce pitta; cooling-sweet foods, ghee, amla." },           // Sep
-    { ritu: "Sharad (autumn)", hi: "Sharad — pitta kam karein; thandi-meethi cheezein, ghee, amla.", en: "Autumn — reduce pitta; cooling-sweet foods, ghee, amla." },           // Oct
-    { ritu: "Hemant (pre-winter)", hi: "Hemant — balvardhak khaana; dry fruits, doodh, garm cheezein.", en: "Pre-winter — strengthening food; dry fruits, milk, warm foods." }, // Nov
-    { ritu: "Hemant (pre-winter)", hi: "Hemant — balvardhak khaana; dry fruits, doodh, garm cheezein.", en: "Pre-winter — strengthening food; dry fruits, milk, warm foods." }, // Dec
-  ];
-  const s = map[m];
-  return { ritu: s.ritu, tip: lang === "en" ? s.en : s.hi };
+  const keys = ["shishir", "shishir", "vasant", "vasant", "grishma", "grishma", "varsha", "varsha", "sharad", "sharad", "hemant", "hemant"];
+  const data = {
+    shishir: { ritu: "Shishir (late winter)", hi: "Sardi — garm, poshtik khaana; til, gud, garm paani.", en: "Winter — warm, nourishing food; sesame, jaggery, warm water." },
+    vasant: { ritu: "Vasant (spring)", hi: "Basant — halka khaana, kapha kam karein; shahad, adrak, kadwa-teekha.", en: "Spring — light food to reduce kapha; honey, ginger, bitter tastes." },
+    grishma: { ritu: "Grishma (summer)", hi: "Garmi — thandi taseer; nariyal paani, chaas, kam mirch.", en: "Summer — cooling foods; coconut water, buttermilk, less spice." },
+    varsha: { ritu: "Varsha (monsoon)", hi: "Barish — pachan halka rakhein; garm-taza khaana, adrak chai, basi na khayein.", en: "Monsoon — keep digestion light; warm fresh food, ginger tea, avoid stale food." },
+    sharad: { ritu: "Sharad (autumn)", hi: "Sharad — pitta kam karein; thandi-meethi cheezein, ghee, amla.", en: "Autumn — reduce pitta; cooling-sweet foods, ghee, amla." },
+    hemant: { ritu: "Hemant (pre-winter)", hi: "Hemant — balvardhak khaana; dry fruits, doodh, garm cheezein.", en: "Pre-winter — strengthening food; dry fruits, milk, warm foods." },
+  };
+  const key = keys[m]; const s = data[key];
+  return { ritu: s.ritu, tip: lang === "en" ? s.en : s.hi, key };
 }
 
 // recent symptoms ko ek chhoti summary line banaye (AI ke liye)
@@ -394,13 +389,13 @@ async function insight(ctx) {
     const txt = await aiText(prompt, 160);
     if (txt) return { insight: txt, source: "ai" };
   }
-  let msg;
+  let msg; let first = null;
   if (!summary) msg = lang === "hi" ? "Aaj apna pehla symptom log karein — jitna track karenge, plan utna behtar hoga." : "Log your first symptom today — the more you track, the better your plan gets.";
   else {
-    const first = summary.split(";")[0].split(":")[0].trim();
+    first = summary.split(";")[0].split(":")[0].trim();
     msg = lang === "hi" ? `Aapke "${first}" par thoda dhyaan dein — garm paani aur halka khaana madad karega.` : `Keep an eye on your "${first}" — warm water and light meals help.`;
   }
-  return { insight: msg, source: "basic" };
+  return { insight: msg, source: "basic", first };
 }
 
 // ---- "Why this?" explainer (F4) ----
