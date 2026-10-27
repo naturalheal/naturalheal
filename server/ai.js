@@ -238,6 +238,8 @@ const KB = {
   immunity:{rem:[["Giloy/tulsi kaadha","hafte mein kuch baar"],["Haldi doodh","raat ko"]],pref:["Nimbu","Amla","Adrak-lahsun"],avoid:["Processed food","Kam neend"],yoga:[["Bhastrika","phephde mazboot"],["Anulom-vilom","rog pratirodhak shakti"],["Surya namaskar","poora sharir active"],["Matsyasana","chhati khule, saans gehri"]],supp:[["Vitamin C","vitamin","immunity","BOTH"],["Giloy","ayurvedic_herb","rog pratirodhak","IN"]]},
 };
 
+const FB = require("./fallback-i18n");
+
 // Safe weight-loss estimate (0.5-1 kg/week) — fallback ke liye
 function weightPlanFor(p, lang) {
   const g = p.weight_goal;
@@ -248,6 +250,14 @@ function weightPlanFor(p, lang) {
   const milestone = (day) => ({ day, expect_kg: `${Math.min(T, r1((day / 7) * 0.5))}-${Math.min(T, r1((day / 7) * 1))}` });
   const ms = [milestone(15)]; if (D > 20) ms.push(milestone(30)); if (D > 35) ms.push(milestone(D));
   const slow = hi < T;
+  const M = lang !== "hi" && FB.msg(lang);
+  if (M) return {
+    target_kg: T, days: D, safe_pace: "0.5-1 kg/week",
+    expected_loss_kg: `${lo}-${hi}`,
+    milestones: ms.filter((m) => m.day <= D || m.day === D),
+    focus: M.wfocus,
+    note: FB.fill(slow ? M.wslow : M.wok, { d: D, lo, hi, t: T }),
+  };
   return {
     target_kg: T, days: D, safe_pace: "0.5-1 kg/week",
     expected_loss_kg: `${lo}-${hi}`,
@@ -261,8 +271,34 @@ function weightPlanFor(p, lang) {
   };
 }
 
+// Basic plan: Hinglish me banao, phir chuni bhasha me badlo (fallback-i18n)
 function fallbackPlan(p) {
-  const lang = p.language === "en" ? "en" : "hi"; // fallback text sirf en/hi me; non-en ko Hinglish
+  const want = FB.LANGS.includes(p.language) ? p.language : "hi";
+  const pl = fallbackPlanHi(p);
+  return want === "hi" ? pl : localizeFallback(pl, p, want);
+}
+function localizeFallback(pl, p, lang) {
+  const M = FB.msg(lang), t = (s) => FB.tr(lang, s);
+  const da = pl.dosha_analysis, dosha = da.primary_dosha;
+  const bmi = p.height_cm ? +(p.weight_kg / Math.pow(p.height_cm / 100, 2)).toFixed(1) : null;
+  const ci = !bmi ? -1 : bmi < 18.5 ? 0 : bmi < 25 ? 1 : bmi < 30 ? 2 : 3;
+  return {
+    ...pl,
+    meta: { ...pl.meta, language: lang },
+    dosha_analysis: { ...da, explanation: M.expl },
+    summary: FB.fill(M.sum, { name: p.name, bmi: bmi ?? "-", cat: ci < 0 ? "-" : M.cat[ci] }),
+    supplements: pl.supplements.map((x) => ({ ...x, name: t(x.name), reason: t(x.reason), common_form: t(x.common_form), general_usage: M.usage, caution: M.caution })),
+    home_remedies: pl.home_remedies.map((r) => ({ name: t(r.name), how: t(r.how) })),
+    diet: { prefer: pl.diet.prefer.map(t), avoid: pl.diet.avoid.map(t), dosha_note: FB.fill(M.dnote, { dosha: M.dosha[dosha] || dosha }) },
+    yoga: pl.yoga.map((y) => ({ name: t(y.name), benefit: t(y.benefit) })),
+    daily_routine: pl.daily_routine.map((d, i) => ({ time: d.time, activity: M.rt[i] || d.activity })),
+    lifestyle_tips: [M.tip],
+    weight_plan: weightPlanFor(p, lang),
+    disclaimer: M.disc,
+  };
+}
+function fallbackPlanHi(p) {
+  const lang = "hi";
 
   const bmi = p.height_cm ? +(p.weight_kg / Math.pow(p.height_cm / 100, 2)).toFixed(1) : null;
   const cat = !bmi ? "n/a" : bmi < 18.5 ? "Underweight" : bmi < 25 ? "Normal" : bmi < 30 ? "Overweight" : "Obese";
@@ -300,12 +336,12 @@ function fallbackPlan(p) {
     dosha_analysis: {
       primary_dosha: dosha, secondary_dosha: "pitta",
       balance_percent: bal,
-      explanation: lang === "hi" ? "Umar, body type aur lifestyle ke aadhaar par anumaan (offline)." : "Estimated from age, body type and lifestyle (offline).",
+      explanation: lang === "hi" ? "Umar, body type aur lifestyle ke aadhaar par anumaan." : "Estimated from age, body type and lifestyle.",
       imbalance_signs: [],
     },
     summary: lang === "hi"
-      ? `${p.name} ji, aapke liye ek simple natural plan taiyaar hai. BMI ${bmi ?? "n/a"} (${cat}). (Offline plan — poore AI plan ke liye API key jodein.)`
-      : `${p.name}, here is a simple natural plan. BMI ${bmi ?? "n/a"} (${cat}). (Offline plan — add an API key for the full AI plan.)`,
+      ? `${p.name} ji, aapke liye ek simple natural plan taiyaar hai. BMI ${bmi ?? "n/a"} (${cat}). (Basic plan — poora AI plan Premium me.)`
+      : `${p.name}, here is a simple natural plan. BMI ${bmi ?? "n/a"} (${cat}). (Basic plan — the full AI plan comes with Premium.)`,
     report_findings: (p.report || []).map((r) => ({ marker: r.marker, value: r.value, status: "normal", note: "" })),
     supplements: supp.map((s) => ({
       name: s[0], type: s[1], reason: s[2], region_availability: s[3],
@@ -389,4 +425,4 @@ ${JSON.stringify(plan)}`;
 // Key available hai? (frontend ko batane ke liye route use karta hai)
 function aiAvailable() { return !!KEY; }
 
-module.exports = { generatePlan, translatePlan, aiText, aiVision, aiAvailable, buildSystemPrompt, JSON_SHAPE, testAI, aiLast, MODEL, langName };
+module.exports = { generatePlan, fallbackPlan, translatePlan, aiText, aiVision, aiAvailable, buildSystemPrompt, JSON_SHAPE, testAI, aiLast, MODEL, langName };

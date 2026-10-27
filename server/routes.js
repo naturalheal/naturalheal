@@ -4,7 +4,7 @@
 const db = require("./store");
 const { HttpError, uid } = require("./util");
 const { hashPassword, checkPassword, signToken } = require("./auth");
-const { generatePlan, translatePlan, aiText, langName } = require("./ai");
+const { generatePlan, fallbackPlan, translatePlan, aiText, langName } = require("./ai");
 const { featuresFor, isPremium } = require("./plans");
 const { getSettings } = require("./settings");
 const { findReferrer } = require("./share");
@@ -214,7 +214,8 @@ async function generate(ctx) {
   const priorPlans = db.plans.count((p) => p.user_id === user.id);
   const { plan, source } = await generatePlan(profile, { forceFallback: !feat.ai_plan });
   const id = uid();
-  db.plans.insert({ id, user_id: user.id, member_id: mem.id, sig, lang, title: plan && plan.summary ? plan.summary.slice(0, 60) : "Wellness plan", plan, source, created_at: now() });
+  db.plans.insert({ id, user_id: user.id, member_id: mem.id, sig, lang, title: plan && plan.summary ? plan.summary.slice(0, 60) : "Wellness plan", plan, source, created_at: now(),
+    fb: source === "fallback" ? { ...profile, report_file: null, report: [] } : undefined });
   // Healing Points: pehla plan banane par, aur referral wale ko bhi (jab referred-user active ho)
   const awarded = points.award(user.id, "plan").awarded;
   if (priorPlans === 0 && user.referred_by) points.award(user.referred_by, "referral", { ref: user.id, note: "referral active" });
@@ -226,7 +227,7 @@ function listPlans(ctx) {
   const rows = db.plans.filter((p) => p.user_id === ctx.user.id)
     .sort((a, b) => (b.created_at || "").localeCompare(a.created_at || "")).slice(0, 50)
     .map((p) => {
-      const tr = ql && p.lang !== ql && p.tr && p.tr[ql];
+      const tr = ql && p.lang !== ql && ((p.tr && p.tr[ql]) || (p.source === "fallback" && TR_LANGS.includes(ql) ? fallbackIn(p, ql, ctx.user) : null));
       return { id: p.id, title: tr && tr.summary ? tr.summary.slice(0, 60) : p.title, source: p.source, created_at: p.created_at };
     });
   return { plans: rows };
@@ -238,6 +239,20 @@ function getPlan(ctx) {
   if (ql && p.lang !== ql && p.tr && p.tr[ql]) return { id: p.id, source: p.source, created_at: p.created_at, plan: p.tr[ql], plan_lang: ql };
   return { id: p.id, source: p.source, created_at: p.created_at, plan: p.plan, plan_lang: p.lang || null };
 }
+// Basic (fallback) plan ko kisi bhi bhasha me — bina AI, aur save bhi
+function fallbackIn(p, ql, user) {
+  if (p.tr && p.tr[ql]) return p.tr[ql];
+  let inp = p.fb;
+  if (!inp) {
+    const prof = db.profiles.findBy("user_id", user.id);
+    const u = prof ? unpackProfile(prof) : {};
+    const m = (p.plan && p.plan.meta) || {};
+    inp = { ...u, name: m.generated_for || user.name, region: m.region || "IN" };
+  }
+  const out = fallbackPlan({ ...inp, language: ql });
+  db.plans.update(p.id, { tr: { ...(p.tr || {}), [ql]: out } });
+  return out;
+}
 // Plan ko chuni hui bhasha me badlo (ek baar AI, phir save — dobara kharcha nahi)
 const TR_LANGS = ["en", "hi", "hin", "bn", "mr", "gu", "ta", "te", "kn", "pa", "ml"];
 const trBusy = new Map();
@@ -248,6 +263,8 @@ async function translatePlanRoute(ctx) {
   if (!TR_LANGS.includes(ql)) throw new HttpError(400, "language?");
   if (p.lang === ql) return { plan: p.plan, plan_lang: ql };
   if (p.tr && p.tr[ql]) return { plan: p.tr[ql], plan_lang: ql };
+  // Basic plan: AI ki zaroorat nahi — usi jaankari se nayi bhasha me dobara banao
+  if (p.source === "fallback") return { plan: fallbackIn(p, ql, ctx.user), plan_lang: ql };
   const key = p.id + ":" + ql;
   if (!trBusy.has(key)) trBusy.set(key, translatePlan(p.plan, ql).finally(() => setTimeout(() => trBusy.delete(key), 1000)));
   const out = await trBusy.get(key);
