@@ -362,7 +362,31 @@ async function aiVision(prompt, image, maxTokens = 500) {
   } catch (_) { return null; }
 }
 
+// Bana hua plan dusri bhasha me (keys/numbers/enums same rehte hain). Key na ho ya fail ho to null.
+async function translatePlan(plan, lang) {
+  if (!KEY || !plan) return null;
+  const prompt = `Translate this wellness-plan JSON into ${langName(lang)}.
+Rules:
+- Translate EVERY human-readable string value (summary, explanations, names, reasons, usage, cautions, diet items, yoga, routine activities, tips, red flags, weight-plan text, disclaimer, report notes) into that language and script. Herb/food names may keep the common local name, written in that script.
+- Keep ALL keys exactly the same. Keep numbers, times (like "06:30 AM"), units and these values unchanged: status, primary_dosha, balance_percent, region, region_availability, meta.generated_for, marker, value.
+- Keep the same structure and the same number of items in every array.
+- Reply with ONLY the JSON, nothing else.
+
+${JSON.stringify(plan)}`;
+  try {
+    const resp = await fetch(API_URL, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-api-key": KEY, "anthropic-version": "2023-06-01" },
+      body: JSON.stringify({ model: MODEL, max_tokens: MAX_TOKENS, messages: [{ role: "user", content: prompt }] }),
+    });
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    const out = parseJson((data.content || []).map((c) => c.text || "").join(""));
+    return out && typeof out === "object" && out.summary ? out : null;
+  } catch (_) { return null; }
+}
+
 // Key available hai? (frontend ko batane ke liye route use karta hai)
 function aiAvailable() { return !!KEY; }
 
-module.exports = { generatePlan, aiText, aiVision, aiAvailable, buildSystemPrompt, JSON_SHAPE, testAI, aiLast, MODEL, langName };
+module.exports = { generatePlan, translatePlan, aiText, aiVision, aiAvailable, buildSystemPrompt, JSON_SHAPE, testAI, aiLast, MODEL, langName };

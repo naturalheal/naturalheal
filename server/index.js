@@ -41,6 +41,7 @@ const R = [
   ["POST", "/api/plan/generate", routes.generate, { auth: true }],
   ["GET", "/api/plans", routes.listPlans, { auth: true }],
   ["GET", "/api/plans/:id", routes.getPlan, { auth: true }],
+  ["POST", "/api/plans/:id/translate", routes.translatePlanRoute, { auth: true }],
   ["DELETE", "/api/plans/:id", routes.deletePlan, { auth: true }],
   ["GET", "/api/dashboard", routes.dashboard, { auth: true }],
   ["POST", "/api/insight", routes.insight, { auth: true }],

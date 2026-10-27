@@ -4,7 +4,7 @@
 const db = require("./store");
 const { HttpError, uid } = require("./util");
 const { hashPassword, checkPassword, signToken } = require("./auth");
-const { generatePlan, aiText, langName } = require("./ai");
+const { generatePlan, translatePlan, aiText, langName } = require("./ai");
 const { featuresFor, isPremium } = require("./plans");
 const { getSettings } = require("./settings");
 const { findReferrer } = require("./share");
@@ -189,7 +189,7 @@ async function generate(ctx) {
     const last = db.plans.filter((p) => p.user_id === user.id && p.member_id === mem.id)
       .sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""))[0];
     if (last && last.sig === sig && last.source === "ai" && last.plan) {
-      return { id: last.id, source: "ai", plan: last.plan, cached: true, points_awarded: 0 };
+      return { id: last.id, source: "ai", plan: last.plan, plan_lang: last.lang || null, cached: true, points_awarded: 0 };
     }
     // 2) Daily cap (normal + emergency) — roz itne hi AI plan-update
     const s = getSettings();
@@ -214,23 +214,47 @@ async function generate(ctx) {
   const priorPlans = db.plans.count((p) => p.user_id === user.id);
   const { plan, source } = await generatePlan(profile, { forceFallback: !feat.ai_plan });
   const id = uid();
-  db.plans.insert({ id, user_id: user.id, member_id: mem.id, sig, title: plan && plan.summary ? plan.summary.slice(0, 60) : "Wellness plan", plan, source, created_at: now() });
+  db.plans.insert({ id, user_id: user.id, member_id: mem.id, sig, lang, title: plan && plan.summary ? plan.summary.slice(0, 60) : "Wellness plan", plan, source, created_at: now() });
   // Healing Points: pehla plan banane par, aur referral wale ko bhi (jab referred-user active ho)
   const awarded = points.award(user.id, "plan").awarded;
   if (priorPlans === 0 && user.referred_by) points.award(user.referred_by, "referral", { ref: user.id, note: "referral active" });
-  return { id, source, plan, points_awarded: awarded };
+  return { id, source, plan, plan_lang: lang, points_awarded: awarded };
 }
 
 function listPlans(ctx) {
+  const ql = ctx.query && ctx.query.language;
   const rows = db.plans.filter((p) => p.user_id === ctx.user.id)
     .sort((a, b) => (b.created_at || "").localeCompare(a.created_at || "")).slice(0, 50)
-    .map((p) => ({ id: p.id, title: p.title, source: p.source, created_at: p.created_at }));
+    .map((p) => {
+      const tr = ql && p.lang !== ql && p.tr && p.tr[ql];
+      return { id: p.id, title: tr && tr.summary ? tr.summary.slice(0, 60) : p.title, source: p.source, created_at: p.created_at };
+    });
   return { plans: rows };
 }
 function getPlan(ctx) {
   const p = db.plans.get(ctx.params.id);
   if (!p || p.user_id !== ctx.user.id) throw new HttpError(404, "Plan nahi mila");
-  return { id: p.id, source: p.source, created_at: p.created_at, plan: p.plan };
+  const ql = ctx.query && ctx.query.language;
+  if (ql && p.lang !== ql && p.tr && p.tr[ql]) return { id: p.id, source: p.source, created_at: p.created_at, plan: p.tr[ql], plan_lang: ql };
+  return { id: p.id, source: p.source, created_at: p.created_at, plan: p.plan, plan_lang: p.lang || null };
+}
+// Plan ko chuni hui bhasha me badlo (ek baar AI, phir save — dobara kharcha nahi)
+const TR_LANGS = ["en", "hi", "hin", "bn", "mr", "gu", "ta", "te", "kn", "pa", "ml"];
+const trBusy = new Map();
+async function translatePlanRoute(ctx) {
+  const p = db.plans.get(ctx.params.id);
+  if (!p || p.user_id !== ctx.user.id) throw new HttpError(404, "Plan nahi mila");
+  const ql = ctx.body && ctx.body.language;
+  if (!TR_LANGS.includes(ql)) throw new HttpError(400, "language?");
+  if (p.lang === ql) return { plan: p.plan, plan_lang: ql };
+  if (p.tr && p.tr[ql]) return { plan: p.tr[ql], plan_lang: ql };
+  const key = p.id + ":" + ql;
+  if (!trBusy.has(key)) trBusy.set(key, translatePlan(p.plan, ql).finally(() => setTimeout(() => trBusy.delete(key), 1000)));
+  const out = await trBusy.get(key);
+  if (!out) return { plan: p.plan, plan_lang: p.lang || null, failed: true };
+  const cur = db.plans.get(p.id);
+  if (cur) db.plans.update(p.id, { tr: { ...(cur.tr || {}), [ql]: out } });
+  return { plan: out, plan_lang: ql };
 }
 function deletePlan(ctx) {
   db.plans.remove((p) => p.id === ctx.params.id && p.user_id === ctx.user.id);
@@ -356,8 +380,10 @@ function dashboard(ctx) {
   const plansCount = db.plans.count((p) => p.user_id === user.id && belongsTo(p, mem.id, mem.isSelf));
   let activePlan = null;
   if (latest && latest.plan) {
-    const pl = latest.plan;
-    activePlan = { title: latest.title || (pl.summary || "").slice(0, 50), dosha: pl.dosha_analysis ? pl.dosha_analysis.primary_dosha : null, balance: pl.dosha_analysis ? pl.dosha_analysis.balance_percent : null, routine: pl.daily_routine || [] };
+    const ql = ctx.query && ctx.query.language;
+    const tr = ql && latest.lang !== ql && latest.tr && latest.tr[ql];
+    const pl = tr || latest.plan;
+    activePlan = { title: (tr ? (pl.summary || "").slice(0, 60) : latest.title) || (pl.summary || "").slice(0, 50), dosha: pl.dosha_analysis ? pl.dosha_analysis.primary_dosha : null, balance: pl.dosha_analysis ? pl.dosha_analysis.balance_percent : null, routine: pl.daily_routine || [] };
   }
   // F1: auto-adjust hint — recent severity high => suggest plan update
   const autoAdjust = (stats.sevN >= 2 && stats.avgSev >= 3.3)
@@ -436,4 +462,4 @@ async function chat(ctx) {
   return { reply: txt || i18n.pick(rawLang, "chatFail"), source: txt ? "ai" : "basic" };
 }
 
-module.exports = { health, publicStats, register, login, me, putProfile, generate, listPlans, getPlan, deletePlan, logSymptom, listSymptoms, deleteSymptom, dashboard, insight, listMembers, addMember, updateMember, deleteMember, season, progress, explain, chat, addConcernRoute };
+module.exports = { health, publicStats, register, login, me, putProfile, generate, listPlans, getPlan, translatePlanRoute, deletePlan, logSymptom, listSymptoms, deleteSymptom, dashboard, insight, listMembers, addMember, updateMember, deleteMember, season, progress, explain, chat, addConcernRoute };

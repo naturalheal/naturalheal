@@ -954,6 +954,12 @@ let _tc=null,_tcLang=null;
 function t(){ if(_tc&&_tcLang===lang)return _tc; const cur=T[lang]||T.hi; _tc=Object.assign({},T.en,cur); _tcLang=lang; return _tc; }
 /* Chhote/dynamic text jo T me nahi the — har bhasha me (har key: {en,hi,hin,bn,mr,gu,ta,te,kn,pa,ml}) */
 const TX={
+ dVata:{en:"Vata",hi:"Vata",hin:"वात",bn:"বাত",mr:"वात",gu:"વાત",ta:"வாதம்",te:"వాతం",kn:"ವಾತ",pa:"ਵਾਤ",ml:"വാതം"},
+ dPitta:{en:"Pitta",hi:"Pitta",hin:"पित्त",bn:"পিত্ত",mr:"पित्त",gu:"પિત્ત",ta:"பித்தம்",te:"పిత్తం",kn:"ಪಿತ್ತ",pa:"ਪਿੱਤ",ml:"പിത്തം"},
+ dKapha:{en:"Kapha",hi:"Kapha",hin:"कफ",bn:"কফ",mr:"कफ",gu:"કફ",ta:"கபம்",te:"కఫం",kn:"ಕಫ",pa:"ਕਫ਼",ml:"കഫം"},
+ regionBoth:{en:"Everywhere",hi:"Har jagah",hin:"हर जगह",bn:"সব জায়গায়",mr:"सगळीकडे",gu:"બધે",ta:"எல்லா இடத்திலும்",te:"అన్నిచోట్లా",kn:"ಎಲ್ಲೆಡೆ",pa:"ਹਰ ਥਾਂ",ml:"എല്ലായിടത്തും"},
+ plTrans:{en:"Changing your plan to this language…",hi:"Aapka plan is bhasha me badal raha hai…",hin:"आपका प्लान इस भाषा में बदल रहा है…",bn:"আপনার প্ল্যান এই ভাষায় বদলানো হচ্ছে…",mr:"तुमचा प्लॅन या भाषेत बदलत आहे…",gu:"તમારો પ્લાન આ ભાષામાં બદલાઈ રહ્યો છે…",ta:"உங்கள் திட்டம் இந்த மொழிக்கு மாற்றப்படுகிறது…",te:"మీ ప్లాన్ ఈ భాషలోకి మార్చబడుతోంది…",kn:"ನಿಮ್ಮ ಯೋಜನೆಯನ್ನು ಈ ಭಾಷೆಗೆ ಬದಲಾಯಿಸಲಾಗುತ್ತಿದೆ…",pa:"ਤੁਹਾਡਾ ਪਲਾਨ ਇਸ ਭਾਸ਼ਾ ਵਿੱਚ ਬਦਲਿਆ ਜਾ ਰਿਹਾ ਹੈ…",ml:"നിങ്ങളുടെ പ്ലാൻ ഈ ഭാഷയിലേക്ക് മാറ്റുന്നു…"},
+ plTransFail:{en:"Couldn't change the plan's language right now. Try again later.",hi:"Abhi plan ki bhasha nahi badal paye. Thodi der baad try karein.",hin:"अभी प्लान की भाषा नहीं बदल पाए। थोड़ी देर बाद कोशिश करें।",bn:"এখন প্ল্যানের ভাষা বদলানো গেল না। পরে আবার চেষ্টা করুন।",mr:"आत्ता प्लॅनची भाषा बदलता आली नाही. थोड्या वेळाने प्रयत्न करा.",gu:"હમણાં પ્લાનની ભાષા બદલી શકાઈ નહીં. થોડી વાર પછી પ્રયત્ન કરો.",ta:"இப்போது திட்டத்தின் மொழியை மாற்ற முடியவில்லை. பிறகு முயற்சிக்கவும்.",te:"ఇప్పుడు ప్లాన్ భాష మార్చలేకపోయాం. తర్వాత మళ్లీ ప్రయత్నించండి.",kn:"ಈಗ ಯೋಜನೆಯ ಭಾಷೆ ಬದಲಾಯಿಸಲಾಗಲಿಲ್ಲ. ನಂತರ ಪ್ರಯತ್ನಿಸಿ.",pa:"ਹੁਣੇ ਪਲਾਨ ਦੀ ਭਾਸ਼ਾ ਨਹੀਂ ਬਦਲ ਸਕੇ। ਥੋੜ੍ਹੀ ਦੇਰ ਬਾਅਦ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",ml:"ഇപ്പോൾ പ്ലാനിന്റെ ഭാഷ മാറ്റാനായില്ല. പിന്നീട് ശ്രമിക്കുക."},
  errFileBig:{en:"Report file must be under 9MB",hi:"Report file 9MB se chhoti honi chahiye",hin:"रिपोर्ट फ़ाइल 9MB से छोटी होनी चाहिए",bn:"রিপোর্ট ফাইল 9MB-এর কম হতে হবে",mr:"रिपोर्ट फाइल 9MB पेक्षा लहान असावी",gu:"રિપોર્ટ ફાઇલ 9MB થી નાની હોવી જોઈએ",ta:"அறிக்கை கோப்பு 9MB-க்குக் குறைவாக இருக்க வேண்டும்",te:"రిపోర్ట్ ఫైల్ 9MB కంటే చిన్నదిగా ఉండాలి",kn:"ವರದಿ ಫೈಲ್ 9MB ಗಿಂತ ಚಿಕ್ಕದಾಗಿರಬೇಕು",pa:"ਰਿਪੋਰਟ ਫ਼ਾਈਲ 9MB ਤੋਂ ਛੋਟੀ ਹੋਣੀ ਚਾਹੀਦੀ ਹੈ",ml:"റിപ്പോർട്ട് ഫയൽ 9MB-യിൽ താഴെയായിരിക്കണം"},
  payNoLink:{en:"Payment link not found",hi:"Payment link nahi mila",hin:"पेमेंट लिंक नहीं मिला",bn:"পেমেন্ট লিঙ্ক পাওয়া যায়নি",mr:"पेमेंट लिंक मिळाली नाही",gu:"પેમેન્ટ લિંક મળી નહીં",ta:"கட்டண இணைப்பு கிடைக்கவில்லை",te:"పేమెంట్ లింక్ దొరకలేదు",kn:"ಪಾವತಿ ಲಿಂಕ್ ಸಿಗಲಿಲ್ಲ",pa:"ਪੇਮੈਂਟ ਲਿੰਕ ਨਹੀਂ ਮਿਲਿਆ",ml:"പേയ്മെന്റ് ലിങ്ക് കിട്ടിയില്ല"},
  upiNotSet:{en:"UPI is not set up yet",hi:"UPI abhi set nahi",hin:"UPI अभी सेट नहीं है",bn:"UPI এখনও সেট করা হয়নি",mr:"UPI अजून सेट केलेले नाही",gu:"UPI હજી સેટ નથી",ta:"UPI இன்னும் அமைக்கப்படவில்லை",te:"UPI ఇంకా సెట్ కాలేదు",kn:"UPI ಇನ್ನೂ ಸೆಟ್ ಆಗಿಲ್ಲ",pa:"UPI ਅਜੇ ਸੈੱਟ ਨਹੀਂ ਹੈ",ml:"UPI ഇതുവരെ സജ്ജമാക്കിയിട്ടില്ല"},
@@ -1181,8 +1187,9 @@ function refreshView(){
   else if(tb==="track"&&typeof loadTracker==="function")loadTracker();
   else if(tb==="kitchen"&&typeof loadKitchen==="function")loadKitchen();
   else if(tb==="community"&&typeof loadCommunity==="function")loadCommunity();
-  else if(tb==="plan"&&window._lastPlan&&typeof renderPlan==="function")renderPlan(window._lastPlan,window._lastSrc);
+  else if(tb==="plan"&&window._lastPlan&&typeof renderPlan==="function")renderPlan(window._lastPlan,window._lastSrc,true);
  }catch(e){}
+ try{if(window._lastPlan)ensurePlanLang();if(typeof loadHistory==="function"&&$("histList"))loadHistory();}catch(e){}
 }
 $("authSwitch").onclick=()=>{authMode=authMode==="login"?"register":"login";$("authErr").textContent="";renderStatic();};
 $("authGo").onclick=async()=>{
@@ -1312,7 +1319,7 @@ $("genBtn").onclick=async()=>{
   if(rf){ if(rf.size>9*1024*1024){throw new Error(tx("errFileBig"));} p.report_file={media_type:rf.type||"application/pdf",data:await fileToBase64(rf)}; }
   await api("/profile",{method:"PUT",body:JSON.stringify({...p,report_file:undefined})}); // auto-save (file ke bina)
   const d=await api("/plan/generate",{method:"POST",body:JSON.stringify(p)});
-  renderPlan(d.plan,d.source);
+  showPlanRec(d);
   if(!me.premium)toast(x.aiLocked);
   pointToast(d);
   await loadHistory();
@@ -1324,15 +1331,39 @@ $("genBtn").onclick=async()=>{
 };
 
 /* ---- render plan ---- */
-function renderPlan(pl,source){
+function doshaLbl(d){const k=String(d||"").toLowerCase();return k==="vata"?tx("dVata"):k==="pitta"?tx("dPitta"):k==="kapha"?tx("dKapha"):(d||"-");}
+function regLbl(r){const k=String(r||"").toUpperCase();return k==="IN"?tx("regionIN"):k==="GLOBAL"?tx("regionGlobal"):k==="BOTH"?tx("regionBoth"):(r||"-");}
+/* Server se aaya plan record dikhao; bhasha alag ho to AI se us bhasha me badal kar dobara dikhao */
+let _trSeq=0;
+function showPlanRec(d){
+ if(!d||!d.plan)return;
+ window._lastPlanId=d.id||window._lastPlanId;window._lastPlanLang=d.plan_lang||null;
+ renderPlan(d.plan,d.source);
+ ensurePlanLang();
+}
+async function ensurePlanLang(){
+ const id=window._lastPlanId;if(!id||!window._lastPlan||window._lastPlanLang===lang)return;
+ const want=lang,seq=++_trSeq;
+ const n=$("planTrNote");if(n){n.textContent=tx("plTrans");n.classList.remove("hidden");}
+ try{
+  const d=await api("/plans/"+id+"/translate",{method:"POST",body:JSON.stringify({language:want})});
+  if(seq!==_trSeq||want!==lang||id!==window._lastPlanId)return;
+  if(d.failed){const n2=$("planTrNote");if(n2)n2.textContent=tx("plTransFail");return;}
+  window._lastPlanLang=d.plan_lang;
+  const y=window.scrollY;renderPlan(d.plan,window._lastSrc,true);window.scrollTo(0,y);
+  loadHistory();
+  if(curTab==="home"&&typeof loadDashboard==="function")loadDashboard();
+ }catch(e){const n2=$("planTrNote");if(n2&&seq===_trSeq)n2.textContent=tx("plTransFail");}
+}
+function renderPlan(pl,source,keepScroll){
  window._lastPlan=pl;window._lastSrc=source;
  const x=t();
  const DC={vata:"var(--vata)",pitta:"var(--pitta)",kapha:"var(--kapha)"};
  const da=pl.dosha_analysis||{};const bp=da.balance_percent||{};
- const bars=["vata","pitta","kapha"].map(k=>`<div class="dbar"><div class="nm">${k}</div><div class="track"><div class="fill" style="width:${bp[k]||0}%;background:${DC[k]}"></div></div><div class="pc">${bp[k]||0}%</div></div>`).join("");
+ const bars=["vata","pitta","kapha"].map(k=>`<div class="dbar"><div class="nm">${esc(doshaLbl(k))}</div><div class="track"><div class="fill" style="width:${bp[k]||0}%;background:${DC[k]}"></div></div><div class="pc">${bp[k]||0}%</div></div>`).join("");
  const fArr=pl.report_findings||[];
  const findings=fArr.length?`<div class="card"><div class="sec-h">${icn("report")}${x.hReport}${TTS?`<button class="listen-btn" id="repSpk" style="margin-left:auto">🔊 ${x.listen}</button>`:""}</div><p class="sub" style="margin:0 0 10px">${x.reportSimpleHint}</p>${fArr.map(f=>{const sm=statusMeta(f.status,x);const nm=simpleMarker(f.marker,lang);return `<details class="acc"><summary><span class="acc-nm">${esc(nm)}</span><span class="acc-tag" style="color:${sm.c};border-color:${sm.c}">${esc(sm.word)}</span></summary><div class="acc-body"><span class="f-val">${esc(f.value||"")}</span><div class="f-track"><div class="f-fill" style="width:${sm.pct}%;background:${sm.c}"></div></div>${f.note?`<div style="margin-top:4px">${esc(f.note)}</div>`:""}</div></details>`;}).join("")}</div>`:"";
- const supp=(pl.supplements||[]).length?`<div class="card"><div class="sec-h">${icn("pill")}${x.hSupp}</div><p class="sub" style="margin:0 0 10px">${x.tapOpen||""}</p>${pl.supplements.map(s=>`<details class="acc"><summary><span class="acc-nm">${esc(s.name)}</span>${s.region_availability?`<span class="pill">${esc(s.region_availability)}</span>`:""}</summary><div class="acc-body"><div>${esc(s.reason||"")}</div><div class="meta">${esc(s.common_form||"")} · ${esc(s.general_usage||"")}${s.caution?" · ⚠ "+esc(s.caution):""}</div><button class="why-btn" data-why="${esc(s.name)}" style="margin-top:9px">${x.whyBtn}</button></div></details>`).join("")}</div>`:"";
+ const supp=(pl.supplements||[]).length?`<div class="card"><div class="sec-h">${icn("pill")}${x.hSupp}</div><p class="sub" style="margin:0 0 10px">${x.tapOpen||""}</p>${pl.supplements.map(s=>`<details class="acc"><summary><span class="acc-nm">${esc(s.name)}</span>${s.region_availability?`<span class="pill">${esc(regLbl(s.region_availability))}</span>`:""}</summary><div class="acc-body"><div>${esc(s.reason||"")}</div><div class="meta">${esc(s.common_form||"")} · ${esc(s.general_usage||"")}${s.caution?" · ⚠ "+esc(s.caution):""}</div><button class="why-btn" data-why="${esc(s.name)}" style="margin-top:9px">${x.whyBtn}</button></div></details>`).join("")}</div>`:"";
  const rem=(pl.home_remedies||[]).length?`<div class="card"><div class="sec-h">${icn("leaf")}${x.hRem}</div><p class="sub" style="margin:0 0 10px">${x.tapOpen||""}</p>${pl.home_remedies.map(r=>`<details class="acc"><summary><span class="acc-nm">${esc(r.name)}</span></summary><div class="acc-body"><div>${esc(r.how||"")}</div><button class="why-btn" data-why="${esc(r.name)}" style="margin-top:9px">${x.whyBtn}</button></div></details>`).join("")}</div>`:"";
  const diet=pl.diet?`<details class="acc card-acc"><summary><span class="acc-nm">${icn("diet")}${x.hDiet}</span></summary><div class="acc-body"><div class="two"><div class="dietbox p"><h4>${x.prefer}</h4><ul>${(pl.diet.prefer||[]).map(i=>`<li>${esc(i)}</li>`).join("")}</ul></div><div class="dietbox a"><h4>${x.avoid}</h4><ul>${(pl.diet.avoid||[]).map(i=>`<li>${esc(i)}</li>`).join("")}</ul></div></div>${pl.diet.dosha_note?`<p class="sub" style="margin:10px 0 0">${esc(pl.diet.dosha_note)}</p>`:""}</div></details>`:"";
  const yoga=(pl.yoga||[]).length?`<details class="acc card-acc"><summary><span class="acc-nm">${icn("yoga")}${x.hYoga}</span></summary><div class="acc-body"><ul class="items">${pl.yoga.map(y=>`<li><b>${esc(y.name)}</b>${y.benefit?" — "+esc(y.benefit):""}</li>`).join("")}</ul></div></details>`:"";
@@ -1349,12 +1380,13 @@ function renderPlan(pl,source){
  </div>`:"";
  const m=pl.meta||{};
  $("plan").innerHTML=`
+  <div id="planTrNote" class="sub hidden" style="margin:0 0 10px;padding:10px 14px;border-radius:12px;background:var(--card,#fff)"></div>
   <div class="summary"><span class="badge ${source==="ai"?"badge-ai":"badge-fb"}">${source==="ai"?x.badgeAi:x.badgeFb}</span>
    <h2>${esc(m.generated_for||"")}</h2><p>${esc(pl.summary||"")}</p>
    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">${TTS?`<button class="listen-btn" id="planSpk">🔊 ${x.listen}</button>`:""}<button class="listen-btn" id="planShareBtn">📤 ${x.shareBtn}</button><button class="listen-btn" id="planEditBtn">✎ ${x.planEdit}</button></div>
    <div class="stats">
-    <div class="stat"><div class="k">${x.sDosha}</div><div class="v" style="text-transform:capitalize">${esc(da.primary_dosha||"-")}</div></div>
-    <div class="stat"><div class="k">${x.sRegion}</div><div class="v">${esc(m.region||"-")}</div></div>
+    <div class="stat"><div class="k">${x.sDosha}</div><div class="v">${esc(doshaLbl(da.primary_dosha))}</div></div>
+    <div class="stat"><div class="k">${x.sRegion}</div><div class="v">${esc(regLbl(m.region))}</div></div>
    </div>
   </div>
   ${wplan}
@@ -1368,14 +1400,14 @@ function renderPlan(pl,source){
  if($("profileCard"))$("profileCard").classList.add("hidden");
  if(TTS&&$("repSpk"))$("repSpk").onclick=()=>toggleSpeak(reportToSpeech(fArr,x,lang));
  $("plan").classList.remove("hidden");
- window.scrollTo({top:0,behavior:"smooth"});
+ if(!keepScroll)window.scrollTo({top:0,behavior:"smooth"});
 }
 async function loadLastPlan(){
  try{
   const d=await api("/plans");
   if(d&&d.plans&&d.plans.length){
-   const dd=await api("/plans/"+d.plans[0].id);
-   if(dd&&dd.plan)renderPlan(dd.plan,dd.source);
+   const dd=await api("/plans/"+d.plans[0].id+"?language="+lang);
+   if(dd&&dd.plan)showPlanRec(dd);
   }
  }catch(e){}
 }
@@ -1407,7 +1439,7 @@ function planToSpeech(pl,x){
  const p=[];
  if(pl.summary)p.push(pl.summary);
  const da=pl.dosha_analysis||{};
- if(da.primary_dosha)p.push(`${x.sDosha}: ${da.primary_dosha}. ${da.explanation||""}`);
+ if(da.primary_dosha)p.push(`${x.sDosha}: ${doshaLbl(da.primary_dosha)}. ${da.explanation||""}`);
  if((pl.supplements||[]).length){p.push(x.hSupp+".");pl.supplements.forEach(s=>p.push(`${s.name}. ${s.reason||""}`));}
  if((pl.home_remedies||[]).length){p.push(x.hRem+".");pl.home_remedies.forEach(r=>p.push(`${r.name}. ${r.how||""}`));}
  if(pl.diet){if((pl.diet.prefer||[]).length)p.push(`${x.prefer}: ${(pl.diet.prefer||[]).join(", ")}.`);if((pl.diet.avoid||[]).length)p.push(`${x.avoid}: ${(pl.diet.avoid||[]).join(", ")}.`);}
@@ -1769,7 +1801,7 @@ async function loadDashboard(){
   const dosha=d.activePlan&&d.activePlan.dosha;
   const bal=(d.activePlan&&d.activePlan.balance)||{};
   const DC={vata:"var(--vata)",pitta:"var(--pitta)",kapha:"var(--kapha)"};
-  const pills=dosha?["vata","pitta","kapha"].map(k=>`<span class="d-pill"><span class="dot" style="width:7px;height:7px;border-radius:4px;background:${DC[k]}"></span>${k} ${bal[k]||0}%</span>`).join(""):"";
+  const pills=dosha?["vata","pitta","kapha"].map(k=>`<span class="d-pill"><span class="dot" style="width:7px;height:7px;border-radius:4px;background:${DC[k]}"></span>${esc(doshaLbl(k))} ${bal[k]||0}%</span>`).join(""):"";
   const bars=(d.trend||[]).map(b=>`<div class="d-bar"><div class="d-track"><div class="d-fill" style="height:${(b.v/5)*100}%;background:${SEV[Math.max(0,Math.round(b.v)-1)]||'var(--line)'}"></div></div><div class="d-bl">${esc(b.date?dayLetter(new Date(b.date+"T12:00:00")):b.d)}</div></div>`).join("");
   const routine=(d.activePlan&&d.activePlan.routine)||[];
   const leaf='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12c.6.6 1 1.3 1 2h6c0-.7.4-1.4 1-2a7 7 0 0 0-4-12Z"/></svg>';
@@ -2094,12 +2126,12 @@ async function submitPost(){
 
 /* ---- history ---- */
 async function loadHistory(){
- try{const d=await api("/plans");const x=t();
+ try{const d=await api("/plans?language="+lang);const x=t();
   if(!d.plans.length){$("histList").innerHTML=`<p class="sub" style="margin:0">${x.noHist}</p>`;return;}
   $("histList").innerHTML=d.plans.map(p=>`<div class="pitem" data-id="${p.id}"><div style="flex:1;min-width:0"><div class="ti">${esc(p.title||"Plan")}</div><div class="dt">${p.source==="ai"?"🌿 AI":"Basic"}</div></div><div class="dt" style="text-align:right;white-space:nowrap">${esc((p.created_at||"").replace("T"," ").slice(0,16))}</div><button class="link del" data-del="${p.id}">${x.del}</button></div>`).join("");
   $("histList").querySelectorAll(".pitem").forEach(el=>el.onclick=async(ev)=>{
    if(ev.target.dataset.del){ev.stopPropagation();await api("/plans/"+ev.target.dataset.del,{method:"DELETE"});toast(t().deleted);loadHistory();return;}
-   const dd=await api("/plans/"+el.dataset.id);renderPlan(dd.plan,dd.source);toast(t().opened);
+   const dd=await api("/plans/"+el.dataset.id+"?language="+lang);showPlanRec(dd);toast(t().opened);
   });
  }catch(e){}
 }
