@@ -319,6 +319,13 @@ ul.items li b{color:var(--accent-ink)}
 .pitem .dt{font-size:12px;color:var(--muted)}
 .spin{width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
+.trpop{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(340px,calc(100vw - 32px));background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:13px 15px;z-index:60;animation:sheetUp .25s ease-out}
+.trpop .tp-row{display:flex;align-items:center;gap:11px}
+.trpop .tp-sp{width:22px;height:22px;flex:none;border:3px solid var(--accent-soft);border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite}
+.trpop .tp-t{font-weight:800;font-size:14px;line-height:1.35}
+.trpop .tp-s{font-size:12.5px;color:var(--muted);margin-top:2px;font-weight:700}
+.trpop .tp-bar{height:5px;border-radius:5px;background:var(--surface-2);margin-top:10px;overflow:hidden}
+.trpop .tp-bar i{display:block;height:100%;width:0;background:var(--accent);border-radius:5px;transition:width .9s linear}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:11px 18px;border-radius:12px;font-weight:700;font-size:14px;box-shadow:var(--shadow);z-index:50}
 .icon{width:32px;height:32px;border-radius:9px;background:var(--accent-soft);color:var(--accent-ink);display:grid;place-items:center;flex:none}
 .icon svg{width:18px;height:18px}
@@ -957,6 +964,8 @@ let _tc=null,_tcLang=null;
 function t(){ if(_tc&&_tcLang===lang)return _tc; const cur=T[lang]||T.hi; _tc=Object.assign({},T.en,cur); _tcLang=lang; return _tc; }
 /* Chhote/dynamic text jo T me nahi the — har bhasha me (har key: {en,hi,hin,bn,mr,gu,ta,te,kn,pa,ml}) */
 const TX={
+ trLeft:{en:"About {n} sec left",hi:"Lagbhag {n} second baaki",hin:"लगभग {n} सेकंड बाकी",bn:"আর প্রায় {n} সেকেন্ড",mr:"सुमारे {n} सेकंद बाकी",gu:"લગભગ {n} સેકન્ડ બાકી",ta:"இன்னும் சுமார் {n} வினாடிகள்",te:"సుమారు {n} సెకన్లు మిగిలి ఉన్నాయి",kn:"ಸುಮಾರು {n} ಸೆಕೆಂಡ್ ಬಾಕಿ",pa:"ਲਗਭਗ {n} ਸਕਿੰਟ ਬਾਕੀ",ml:"ഏകദേശം {n} സെക്കൻഡ് കൂടി"},
+ trAlmost:{en:"Almost done…",hi:"Bas ho gaya…",hin:"बस हो गया…",bn:"প্রায় হয়ে গেছে…",mr:"जवळजवळ झाले…",gu:"બસ થઈ ગયું…",ta:"கிட்டத்தட்ட முடிந்தது…",te:"దాదాపు అయిపోయింది…",kn:"ಬಹುತೇಕ ಆಯಿತು…",pa:"ਬੱਸ ਹੋ ਗਿਆ…",ml:"ഏതാണ്ട് കഴിഞ്ഞു…"},
  basicLbl:{en:"Basic",hi:"Basic",hin:"बेसिक",bn:"বেসিক",mr:"बेसिक",gu:"બેસિક",ta:"அடிப்படை",te:"బేసిక్",kn:"ಬೇಸಿಕ್",pa:"ਬੇਸਿਕ",ml:"ബേസിക്"},
  pAi:{en:"Build your AI plan",hi:"Apna AI plan banayein",hin:"अपना AI प्लान बनाएं",bn:"নিজের AI প্ল্যান বানান",mr:"तुमचा AI प्लॅन बनवा",gu:"તમારો AI પ્લાન બનાવો",ta:"உங்கள் AI திட்டத்தை உருவாக்குங்கள்",te:"మీ AI ప్లాన్ తయారు చేసుకోండి",kn:"ನಿಮ್ಮ AI ಯೋಜನೆ ಮಾಡಿ",pa:"ਆਪਣਾ AI ਪਲਾਨ ਬਣਾਓ",ml:"നിങ്ങളുടെ AI പ്ലാൻ ഉണ്ടാക്കൂ"},
  pSub:{en:"Natural health with holistic healing",hi:"Natural sehat, holistic healing ke saath",hin:"प्राकृतिक सेहत, सम्पूर्ण (होलिस्टिक) हीलिंग के साथ",bn:"প্রাকৃতিক স্বাস্থ্য, সামগ্রিক নিরাময়ের সঙ্গে",mr:"नैसर्गिक आरोग्य, संपूर्ण (होलिस्टिक) उपचारासह",gu:"કુદરતી સ્વાસ્થ્ય, સંપૂર્ણ (હોલિસ્ટિક) હીલિંગ સાથે",ta:"இயற்கை ஆரோக்கியம், முழுமையான குணமளிப்புடன்",te:"సహజ ఆరోగ్యం, సంపూర్ణ (హోలిస్టిక్) స్వస్థతతో",kn:"ನೈಸರ್ಗಿಕ ಆರೋಗ್ಯ, ಸಮಗ್ರ (ಹೋಲಿಸ್ಟಿಕ್) ಚಿಕಿತ್ಸೆಯೊಂದಿಗೆ",pa:"ਕੁਦਰਤੀ ਸਿਹਤ, ਸੰਪੂਰਨ (ਹੋਲਿਸਟਿਕ) ਇਲਾਜ ਨਾਲ",ml:"പ്രകൃതിദത്ത ആരോഗ്യം, സമഗ്ര (ഹോളിസ്റ്റിക്) സൗഖ്യത്തോടെ"},
@@ -1183,6 +1192,7 @@ function renderPlanStrip(){
  sel.onchange=()=>applyLang(sel.value);
 })();
 function applyLang(code){
+ trPopHide();
  lang=code;try{localStorage.setItem("nh_lang",code);}catch(e){}
  _tc=null;                 // merge cache reset
  try{stopSpeak();}catch(e){}
@@ -1352,13 +1362,30 @@ function showPlanRec(d){
  renderPlan(d.plan,d.source);
  ensurePlanLang();
 }
+/* Pehli baar bhasha badalne par plan ka anuvaad kuch second leta hai — tab tak chhota popup + ulti ginti; hote hi hat jaata hai */
+let _trPopIv=null;
+function trPopShow(){
+ if($("trPop"))return;
+ const el=document.createElement("div");el.className="trpop";el.id="trPop";el.setAttribute("role","status");el.setAttribute("aria-live","polite");
+ el.innerHTML='<div class="tp-row"><div class="tp-sp"></div><div><div class="tp-t" id="tpT"></div><div class="tp-s" id="tpS"></div></div></div><div class="tp-bar"><i id="tpBar"></i></div>';
+ document.body.appendChild(el);
+ const t0=Date.now(),EST=25;
+ const tick=()=>{const e=(Date.now()-t0)/1000,left=Math.ceil(EST-e);
+  if(!$("trPop")){clearInterval(_trPopIv);return;}
+  $("tpT").textContent=tx("plTrans");
+  $("tpS").textContent=left>3?tx("trLeft",{n:left}):tx("trAlmost");
+  $("tpBar").style.width=Math.min(95,(e/EST)*100)+"%";};
+ tick();clearInterval(_trPopIv);_trPopIv=setInterval(tick,1000);
+}
+function trPopHide(){clearInterval(_trPopIv);_trPopIv=null;const el=$("trPop");if(el){const b=$("tpBar");if(b)b.style.width="100%";setTimeout(()=>el.remove(),250);}}
 /* Anuvaad adhoora/fail ho to apne-aap dobara (har plan+bhasha ke liye kuch hi baar) — refresh ki zaroorat nahi */
 const _trTries={};
-function trRetry(id,want,fn){const k=id+":"+want;_trTries[k]=(_trTries[k]||0)+1;if(_trTries[k]<=4)setTimeout(()=>{if(lang===want)fn();},3000*_trTries[k]);}
+function trRetry(id,want,fn){const k=id+":"+want;_trTries[k]=(_trTries[k]||0)+1;if(_trTries[k]<=4)setTimeout(()=>{if(lang===want)fn();},3000*_trTries[k]);else{trPopHide();toast(tx("plTransFail"));}}
 async function ensurePlanLang(){
  const id=window._lastPlanId;if(!id||!window._lastPlan||window._lastPlanLang===lang)return;
  const want=lang,seq=++_trSeq;
  const n=$("planTrNote");if(n){n.textContent=tx("plTrans");n.classList.remove("hidden");}
+ trPopShow();
  try{
   const d=await api("/plans/"+id+"/translate",{method:"POST",body:JSON.stringify({language:want})});
   if(seq!==_trSeq||want!==lang||id!==window._lastPlanId)return;
@@ -1367,7 +1394,7 @@ async function ensurePlanLang(){
   if(d.plan_lang===want){const y=window.scrollY;renderPlan(d.plan,window._lastSrc,true);window.scrollTo(0,y);}
   loadHistory();
   if(curTab==="home"&&typeof loadDashboard==="function")loadDashboard();
-  if(d.partial)trRetry(id,want,ensurePlanLang);
+  if(d.partial)trRetry(id,want,ensurePlanLang);else trPopHide();
  }catch(e){const n2=$("planTrNote");if(n2&&seq===_trSeq)n2.textContent=tx("plTransFail");trRetry(id,want,ensurePlanLang);}
 }
 /* Home ka plan (kisi bhi member ka) anuvaad baaki ho to khud karwao, phir home dobara */
@@ -1375,10 +1402,11 @@ let _dashTrBusy="";
 async function dashTranslate(id){
  if(id===window._lastPlanId&&window._lastPlan){ensurePlanLang();return;}
  const want=lang,k=id+":"+want;if(_dashTrBusy===k)return;_dashTrBusy=k;
+ trPopShow();
  try{const d=await api("/plans/"+id+"/translate",{method:"POST",body:JSON.stringify({language:want})});
   _dashTrBusy="";if(lang!==want)return;
   if(curTab==="home")loadDashboard();
-  if(d.failed||d.partial)trRetry(id,want,()=>{if(curTab==="home")loadDashboard();});
+  if(d.failed||d.partial)trRetry(id,want,()=>{if(curTab==="home")loadDashboard();});else trPopHide();
  }catch(e){_dashTrBusy="";trRetry(id,want,()=>{if(curTab==="home")loadDashboard();});}
 }
 function renderPlan(pl,source,keepScroll){
