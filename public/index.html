@@ -1348,10 +1348,13 @@ function regLbl(r){const k=String(r||"").toUpperCase();return k==="IN"?tx("regio
 let _trSeq=0;
 function showPlanRec(d){
  if(!d||!d.plan)return;
- window._lastPlanId=d.id||window._lastPlanId;window._lastPlanLang=d.plan_lang||null;
+ window._lastPlanId=d.id||window._lastPlanId;window._lastPlanLang=d.partial?null:(d.plan_lang||null);
  renderPlan(d.plan,d.source);
  ensurePlanLang();
 }
+/* Anuvaad adhoora/fail ho to apne-aap dobara (har plan+bhasha ke liye kuch hi baar) — refresh ki zaroorat nahi */
+const _trTries={};
+function trRetry(id,want,fn){const k=id+":"+want;_trTries[k]=(_trTries[k]||0)+1;if(_trTries[k]<=4)setTimeout(()=>{if(lang===want)fn();},3000*_trTries[k]);}
 async function ensurePlanLang(){
  const id=window._lastPlanId;if(!id||!window._lastPlan||window._lastPlanLang===lang)return;
  const want=lang,seq=++_trSeq;
@@ -1359,12 +1362,24 @@ async function ensurePlanLang(){
  try{
   const d=await api("/plans/"+id+"/translate",{method:"POST",body:JSON.stringify({language:want})});
   if(seq!==_trSeq||want!==lang||id!==window._lastPlanId)return;
-  if(d.failed){const n2=$("planTrNote");if(n2)n2.textContent=tx("plTransFail");return;}
-  window._lastPlanLang=d.plan_lang;
-  const y=window.scrollY;renderPlan(d.plan,window._lastSrc,true);window.scrollTo(0,y);
+  if(d.failed){const n2=$("planTrNote");if(n2)n2.textContent=tx("plTransFail");trRetry(id,want,ensurePlanLang);return;}
+  window._lastPlanLang=d.partial?null:d.plan_lang;
+  if(d.plan_lang===want){const y=window.scrollY;renderPlan(d.plan,window._lastSrc,true);window.scrollTo(0,y);}
   loadHistory();
   if(curTab==="home"&&typeof loadDashboard==="function")loadDashboard();
- }catch(e){const n2=$("planTrNote");if(n2&&seq===_trSeq)n2.textContent=tx("plTransFail");}
+  if(d.partial)trRetry(id,want,ensurePlanLang);
+ }catch(e){const n2=$("planTrNote");if(n2&&seq===_trSeq)n2.textContent=tx("plTransFail");trRetry(id,want,ensurePlanLang);}
+}
+/* Home ka plan (kisi bhi member ka) anuvaad baaki ho to khud karwao, phir home dobara */
+let _dashTrBusy="";
+async function dashTranslate(id){
+ if(id===window._lastPlanId&&window._lastPlan){ensurePlanLang();return;}
+ const want=lang,k=id+":"+want;if(_dashTrBusy===k)return;_dashTrBusy=k;
+ try{const d=await api("/plans/"+id+"/translate",{method:"POST",body:JSON.stringify({language:want})});
+  _dashTrBusy="";if(lang!==want)return;
+  if(curTab==="home")loadDashboard();
+  if(d.failed||d.partial)trRetry(id,want,()=>{if(curTab==="home")loadDashboard();});
+ }catch(e){_dashTrBusy="";trRetry(id,want,()=>{if(curTab==="home")loadDashboard();});}
 }
 function renderPlan(pl,source,keepScroll){
  window._lastPlan=pl;window._lastSrc=source;
@@ -1916,6 +1931,7 @@ async function loadDashboard(){
   if($("adjBtn"))$("adjBtn").onclick=()=>setTab("plan");
   if($("remBtn"))$("remBtn").onclick=()=>enableReminders(routine);
   if(remindersOn())scheduleReminders(routine);
+  if(d.activePlan&&d.activePlan.needTr&&d.activePlan.id)dashTranslate(d.activePlan.id);
   if($("streakShare"))$("streakShare").onclick=()=>shareStreak(d.stats.streak);
   if($("seasonShare")&&d.season)$("seasonShare").onclick=()=>{const st=x.seasonTip&&x.seasonTip[d.season.key];const nm=(x.seasonName&&x.seasonName[d.season.key])||d.season.ritu;const tip=(st&&st.t)?`${x.prefer}: ${st.t}. ${x.avoid}: ${st.a}.`:d.season.tip;shareSeason(nm,tip);};
   loadInsight();

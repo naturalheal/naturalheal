@@ -4,7 +4,7 @@
 const db = require("./store");
 const { HttpError, uid } = require("./util");
 const { hashPassword, checkPassword, signToken } = require("./auth");
-const { generatePlan, fallbackPlan, translatePlan, aiText, langName } = require("./ai");
+const { generatePlan, fallbackPlan, translatePlan, trKeys, aiText, aiAvailable, langName } = require("./ai");
 const { featuresFor, isPremium } = require("./plans");
 const { getSettings } = require("./settings");
 const { findReferrer } = require("./share");
@@ -237,19 +237,28 @@ function getPlan(ctx) {
   if (!p || p.user_id !== ctx.user.id) throw new HttpError(404, "Plan nahi mila");
   const ql = ctx.query && ctx.query.language;
   const done = ql && p.lang !== ql && trFor(p, ql);
-  if (done) return { id: p.id, source: p.source, created_at: p.created_at, plan: done, plan_lang: ql };
+  if (done) return { id: p.id, source: p.source, created_at: p.created_at, plan: done, plan_lang: ql, partial: !trDone(p, ql) };
   return { id: p.id, source: p.source, created_at: p.created_at, plan: p.plan, plan_lang: p.lang || null };
 }
-// Save kiya anuvaad: har key/array asli jitna ho tabhi "poora" (pehle kata hua save ho jaata tha)
+// Save kiya anuvaad. Naye anuvaad ke saath tr_keys hota hai (kaun se hisse ho gaye) — adhoora bhi dikhane layak
+// (baaki asli me). Purane (bina tr_keys) ko tabhi maano jab har key/array asli jitna ho (pehle kata hua save hota tha).
 function trFor(p, ql) {
   const t = ql && p.tr && p.tr[ql], o = p.plan;
   if (!t || !o) return null;
+  if (p.tr_keys && p.tr_keys[ql]) return t;
   for (const k of Object.keys(o)) {
     if (k === "meta") continue;
     const a = o[k], b = t[k];
     if (Array.isArray(a) ? !(Array.isArray(b) && b.length === a.length) : (a != null && a !== "" && (b == null || b === ""))) return null;
   }
   return t;
+}
+// Anuvaad poora ho chuka?
+function trDone(p, ql) {
+  if (!trFor(p, ql)) return false;
+  if (p.source === "fallback") return true;
+  const k = p.tr_keys && p.tr_keys[ql];
+  return !k || trKeys(p.plan).every((x) => k.includes(x));
 }
 // Basic (fallback) plan ko kisi bhi bhasha me — bina AI, aur save bhi
 function fallbackIn(p, ql, user) {
@@ -275,17 +284,18 @@ async function translatePlanRoute(ctx) {
   const ql = ctx.body && ctx.body.language;
   if (!TR_LANGS.includes(ql)) throw new HttpError(400, "language?");
   if (p.lang === ql) return { plan: p.plan, plan_lang: ql };
-  const done = trFor(p, ql);
-  if (done) return { plan: done, plan_lang: ql };
+  if (trDone(p, ql)) return { plan: trFor(p, ql), plan_lang: ql };
   // Basic plan: AI ki zaroorat nahi — usi jaankari se nayi bhasha me dobara banao
   if (p.source === "fallback") return { plan: fallbackIn(p, ql, ctx.user), plan_lang: ql };
   const key = p.id + ":" + ql;
-  if (!trBusy.has(key)) trBusy.set(key, translatePlan(p.plan, ql).finally(() => setTimeout(() => trBusy.delete(key), 1000)));
+  const prevKeys = p.tr_keys && p.tr_keys[ql];
+  const base = prevKeys ? p.tr[ql] : null;
+  if (!trBusy.has(key)) trBusy.set(key, translatePlan(p.plan, ql, base, prevKeys).finally(() => setTimeout(() => trBusy.delete(key), 1000)));
   const res = await trBusy.get(key);
-  if (!res) return { plan: p.plan, plan_lang: p.lang || null, failed: true };
-  // Sirf poora anuvaad save; adhoora abhi dikhao (bache hisse asli me), agli baar phir koshish
+  if (!res || !res.keys.length) return { plan: p.plan, plan_lang: p.lang || null, failed: true };
+  // Jo hisse ho gaye wo save (home routine turant badle); bache hue agli koshish me
   const cur = db.plans.get(p.id);
-  if (cur && res.complete) db.plans.update(p.id, { tr: { ...(cur.tr || {}), [ql]: res.plan } });
+  if (cur) db.plans.update(p.id, { tr: { ...(cur.tr || {}), [ql]: res.plan }, tr_keys: { ...(cur.tr_keys || {}), [ql]: res.keys } });
   return { plan: res.plan, plan_lang: ql, partial: !res.complete };
 }
 function deletePlan(ctx) {
@@ -413,9 +423,12 @@ function dashboard(ctx) {
   let activePlan = null;
   if (latest && latest.plan) {
     const ql = ctx.query && ctx.query.language;
-    const tr = ql && latest.lang !== ql && trFor(latest, ql);
+    const other = ql && TR_LANGS.includes(ql) && latest.lang !== ql;
+    const tr = other && (latest.source === "fallback" ? fallbackIn(latest, ql, user) : trFor(latest, ql));
     const pl = tr || latest.plan;
-    activePlan = { title: (tr ? (pl.summary || "").slice(0, 60) : latest.title) || (pl.summary || "").slice(0, 50), dosha: pl.dosha_analysis ? pl.dosha_analysis.primary_dosha : null, balance: pl.dosha_analysis ? pl.dosha_analysis.balance_percent : null, routine: pl.daily_routine || [] };
+    // Anuvaad baaki ho to app ko batao — wo khud anuvaad karwa ke home dobara dikhayegi
+    const needTr = !!(other && latest.source !== "fallback" && aiAvailable() && !trDone(latest, ql));
+    activePlan = { id: latest.id, needTr, title: (tr ? (pl.summary || "").slice(0, 60) : latest.title) || (pl.summary || "").slice(0, 50), dosha: pl.dosha_analysis ? pl.dosha_analysis.primary_dosha : null, balance: pl.dosha_analysis ? pl.dosha_analysis.balance_percent : null, routine: pl.daily_routine || [] };
   }
   // F1: auto-adjust hint — recent severity high => suggest plan update
   const autoAdjust = (stats.sevN >= 2 && stats.avgSev >= 3.3)

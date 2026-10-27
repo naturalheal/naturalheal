@@ -432,23 +432,36 @@ ${JSON.stringify(obj)}`;
     return out && typeof out === "object" ? out : null;
   } catch (_) { return null; }
 }
-async function translatePlan(plan, lang) {
+// Plan ki kaun si keys anuvaad layak hain (khaali chhod kar)
+function trKeys(plan) {
+  return TR_PARTS.flat().filter((k) => plan && plan[k] != null && plan[k] !== "" && !(Array.isArray(plan[k]) && !plan[k].length));
+}
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+// Ek hissa — fail (rate-limit / kata jawab) ho to 2 baar aur koshish
+async function translatePartRetry(obj, lang) {
+  for (let i = 0; i < 3; i++) {
+    const r = await translatePart(obj, lang);
+    if (r) return r;
+    if (i < 2) await wait(1500 * (i + 1));
+  }
+  return null;
+}
+// base = pehle ka (adhoora) anuvaad, done = jo keys ho chuki hain — sirf baaki hisse dobara
+async function translatePlan(plan, lang, base, done) {
   if (!KEY || !plan) return null;
-  const parts = TR_PARTS.map((keys) => keys.filter((k) => plan[k] != null && plan[k] !== "" && !(Array.isArray(plan[k]) && !plan[k].length)))
-    .filter((keys) => keys.length);
-  const results = await Promise.all(parts.map((keys) => translatePart(Object.fromEntries(keys.map((k) => [k, plan[k]])), lang)));
-  const out = { ...plan, meta: { ...(plan.meta || {}), language: lang } };
-  let complete = true, any = false;
+  const all = trKeys(plan), have = new Set(done || []);
+  const parts = TR_PARTS.map((keys) => keys.filter((k) => all.includes(k) && !have.has(k))).filter((keys) => keys.length);
+  const results = await Promise.all(parts.map((keys, i) => wait(i * 400).then(() => translatePartRetry(Object.fromEntries(keys.map((k) => [k, plan[k]])), lang))));
+  const out = { ...(base || plan), meta: { ...(plan.meta || {}), language: lang } };
   parts.forEach((keys, i) => {
     const r = results[i];
-    keys.forEach((k) => {
-      if (r && sameShape(plan[k], r[k])) { out[k] = r[k]; any = true; } else complete = false;
-    });
+    keys.forEach((k) => { if (r && sameShape(plan[k], r[k])) { out[k] = r[k]; have.add(k); } });
   });
-  return any ? { plan: out, complete } : null;
+  const keys = all.filter((k) => have.has(k));
+  return { plan: out, keys, complete: keys.length === all.length };
 }
 
 // Key available hai? (frontend ko batane ke liye route use karta hai)
 function aiAvailable() { return !!KEY; }
 
-module.exports = { generatePlan, fallbackPlan, translatePlan, aiText, aiVision, aiAvailable, buildSystemPrompt, JSON_SHAPE, testAI, aiLast, MODEL, langName };
+module.exports = { generatePlan, fallbackPlan, translatePlan, trKeys, aiText, aiVision, aiAvailable, buildSystemPrompt, JSON_SHAPE, testAI, aiLast, MODEL, langName };
