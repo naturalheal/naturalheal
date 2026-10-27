@@ -9,6 +9,7 @@ const { featuresFor, isPremium } = require("./plans");
 const { getSettings } = require("./settings");
 const { findReferrer } = require("./share");
 const points = require("./points");
+const i18n = require("./i18n");
 
 const SYMPTOM_LIST = ["Acidity", "Sir dard", "Thakaan", "Neend", "Jodo ka dard", "Stress", "Tension", "Gas", "Kabz", "Sardi-khaansi"];
 const iso = (d) => d.toISOString().slice(0, 10);
@@ -195,9 +196,7 @@ async function generate(ctx) {
     const cap = (Number(s.premium_plans_per_day) || 0) + (Number(s.premium_emergency_per_day) || 0);
     const usedToday = db.plans.count((p) => p.user_id === user.id && p.source === "ai" && istDay(p.created_at) === istToday());
     if (cap > 0 && usedToday >= cap) {
-      throw new HttpError(429, lang === "en"
-        ? `Today's plan updates are used up (${cap}/day). Please try again tomorrow.`
-        : `Aaj ke plan updates poore ho gaye (${cap}/din). Kal phir update kar sakte hain.`, { capped: true });
+      throw new HttpError(429, i18n.pick(lang, "capDay", { n: cap }), { capped: true });
     }
     // 3) Monthly cap — is mahine itne se zyada nahi
     const capMonth = Number(s.premium_plans_per_month) || 0;
@@ -205,9 +204,7 @@ async function generate(ctx) {
       const thisMonth = istToday().slice(0, 7);
       const usedMonth = db.plans.count((p) => p.user_id === user.id && p.source === "ai" && istDay(p.created_at).slice(0, 7) === thisMonth);
       if (usedMonth >= capMonth) {
-        throw new HttpError(429, lang === "en"
-          ? `This month's plan updates are used up (${capMonth}/month).`
-          : `Is mahine ke plan updates poore ho gaye (${capMonth}/mahina). Agle mahine phir.`, { capped: true });
+        throw new HttpError(429, i18n.pick(lang, "capMonth", { n: capMonth }), { capped: true });
       }
     }
     const ss = symptomSummary(user.id, mem.id, mem.isSelf);
@@ -310,7 +307,7 @@ function computeStats(userId, memberId, isSelf) {
     const todays = syms.filter((s) => (s.created_at || "").slice(0, 10) === key);
     const avg = todays.length ? todays.reduce((a, s) => a + s.sev, 0) / todays.length : 0;
     if (todays.length) { sevSum += avg; sevN++; }
-    trend.push({ d: W[day.getDay()], v: Math.round(avg * 10) / 10 });
+    trend.push({ d: W[day.getDay()], date: key, v: Math.round(avg * 10) / 10 }); // date: UI chuni bhasha me din ka akshar banaye
   }
   const avgSev = sevN ? sevSum / sevN : 0;
   const score = sevN ? Math.round(100 - ((avgSev - 1) / 4) * 55) : 72;
@@ -404,8 +401,7 @@ async function explain(ctx) {
   const b = ctx.body || {};
   const text = String(b.text || "").trim().slice(0, 120);
   const rawLang = b.language || "hi";
-  const lang = rawLang === "en" ? "en" : "hi";
-  if (!text) throw new HttpError(400, "Kya samjhana hai?");
+  if (!text) throw new HttpError(400, i18n.pick(rawLang, "needText"));
   const mem = resolveMemberId(ctx);
   const latest = db.plans.filter((p) => p.user_id === user.id && belongsTo(p, mem.id, mem.isSelf)).sort((a, b2) => (b2.created_at || "").localeCompare(a.created_at || ""))[0];
   const dosha = latest && latest.plan && latest.plan.dosha_analysis ? latest.plan.dosha_analysis.primary_dosha : "";
@@ -414,25 +410,11 @@ async function explain(ctx) {
     const txt = await aiText(prompt, 140);
     if (txt) return { text, explanation: txt, source: "ai" };
   }
-  // Offline: aam items ka specific fayda (free users ko bhi accha jawab)
+  // Offline: aam items ka specific fayda (free users ko bhi accha jawab) — sab bhashaon me i18n.js se
   const key = text.toLowerCase();
-  const WHY = {
-    ashwagandha: { hi: "Ashwagandha ek rasayan jadi-booti hai jo stress-hormone (cortisol) ko kam karti hai, neend gehri karti hai aur sharir ko taakat deti hai.", en: "Ashwagandha is a rejuvenating herb that lowers the stress hormone cortisol, deepens sleep and builds strength." },
-    triphala: { hi: "Triphala teen phalon (amla, harad, baheda) ka mel hai — pachan saaf rakhta hai, kabz door karta hai aur detox karta hai.", en: "Triphala blends three fruits — it cleanses digestion, relieves constipation and gently detoxes." },
-    amla: { hi: "Amla me bahut Vitamin C hota hai — immunity badhata hai, baal-tvacha ke liye achha, aur acidity shaant karta hai.", en: "Amla is rich in Vitamin C — it boosts immunity, is great for hair and skin, and soothes acidity." },
-    giloy: { hi: "Giloy rog-pratirodhak shakti badhati hai aur bukhar/infection me sharir ki raksha karti hai.", en: "Giloy strengthens immunity and helps the body fight fever and infection." },
-    methi: { hi: "Methi (fenugreek) blood sugar aur cholesterol santulit rakhne me madad karti hai aur pachan sudhaarti hai.", en: "Fenugreek helps balance blood sugar and cholesterol and improves digestion." },
-    jeera: { hi: "Jeera pachan-agni tez karta hai, gas-acidity kam karta hai aur pet halka rakhta hai.", en: "Cumin fires up digestion, eases gas and acidity, and keeps the stomach light." },
-    haldi: { hi: "Haldi me curcumin hota hai jo sujan (inflammation) kam karta hai aur immunity badhata hai.", en: "Turmeric's curcumin reduces inflammation and boosts immunity." },
-    tulsi: { hi: "Tulsi stress kam karti hai, saans-naali saaf rakhti hai aur immunity badhati hai.", en: "Holy basil lowers stress, clears the airways and supports immunity." },
-    "vitamin d": { hi: "Vitamin D haddiyon ko mazboot karta hai, mood theek rakhta hai aur immunity support karta hai. Dhoop sabse achha source hai.", en: "Vitamin D strengthens bones, lifts mood and supports immunity. Sunlight is the best source." },
-    "vitamin b12": { hi: "B12 khoon aur naso ke liye zaroori hai — kamzori aur thakaan door karta hai.", en: "B12 is vital for blood and nerves — it fights weakness and fatigue." },
-    magnesium: { hi: "Magnesium naso aur maanspeshiyon ko shaant karta hai, neend aur stress me madad karta hai.", en: "Magnesium calms nerves and muscles, helping sleep and stress." },
-  };
   let hit = null;
-  for (const k in WHY) if (key.includes(k)) { hit = WHY[k]; break; }
-  const base = hit ? (lang === "hi" ? hit.hi : hit.en)
-    : (lang === "hi" ? `"${text}" ek aam gharelu/ayurvedic upay hai jo sharir ko santulit karne aur aaram dene mein madad karta hai.` : `"${text}" is a common home/ayurvedic measure that helps balance and soothe the body.`);
+  for (const k in i18n.WHY) if (key.includes(k)) { hit = i18n.WHY[k]; break; }
+  const base = hit ? i18n.whyText(rawLang, hit) : i18n.pick(rawLang, "whyGeneric", { s: text });
   return { text, explanation: base, source: "basic" };
 }
 
@@ -441,18 +423,17 @@ async function chat(ctx) {
   const user = ctx.user;
   const b = ctx.body || {};
   const rawLang = b.language || "hi";
-  const lang = rawLang === "en" ? "en" : "hi";
   const msgs = Array.isArray(b.messages) ? b.messages.slice(-6) : [];
   const lastUser = [...msgs].reverse().find((m) => m.role === "user");
-  if (!lastUser) throw new HttpError(400, "Message daalein");
-  if (!isPremium(user)) return { reply: lang === "hi" ? "AI chat Premium feature hai. Premium lein to apne plan ke baare mein kuch bhi pooch sakte hain. 🌿" : "AI chat is a Premium feature. Go Premium to ask anything about your plan. 🌿", source: "basic" };
+  if (!lastUser) throw new HttpError(400, i18n.pick(rawLang, "needMsg"));
+  if (!isPremium(user)) return { reply: i18n.pick(rawLang, "chatPremium"), source: "basic" };
   const mem = resolveMemberId(ctx);
   const latest = db.plans.filter((p) => p.user_id === user.id && belongsTo(p, mem.id, mem.isSelf)).sort((a, b2) => (b2.created_at || "").localeCompare(a.created_at || ""))[0];
   const planCtx = latest && latest.plan ? JSON.stringify({ summary: latest.plan.summary, dosha: latest.plan.dosha_analysis, diet: latest.plan.diet }).slice(0, 1500) : "no plan yet";
   const convo = msgs.map((m) => `${m.role === "user" ? "User" : "Coach"}: ${String(m.content).slice(0, 500)}`).join("\n");
   const prompt = `You are "NaturalHeal", a warm natural-wellness coach. Answer the user's question in ${langName(rawLang)} (use that language's native script), short and practical (2-4 sentences). Base answers on their plan context. No medicines, no diagnosis; for anything serious tell them to see a doctor.\n\nUser's plan context: ${planCtx}\n\nConversation:\n${convo}\nCoach:`;
   const txt = await aiText(prompt, 320);
-  return { reply: txt || (lang === "hi" ? "Abhi jawab nahi mil paaya, dobara koshish karein." : "Couldn't answer right now, please try again."), source: txt ? "ai" : "basic" };
+  return { reply: txt || i18n.pick(rawLang, "chatFail"), source: txt ? "ai" : "basic" };
 }
 
 module.exports = { health, publicStats, register, login, me, putProfile, generate, listPlans, getPlan, deletePlan, logSymptom, listSymptoms, deleteSymptom, dashboard, insight, listMembers, addMember, updateMember, deleteMember, season, progress, explain, chat, addConcernRoute };

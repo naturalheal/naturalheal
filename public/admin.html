@@ -17,7 +17,7 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body)}
 h1{font-family:var(--f-head);font-weight:600;margin:0}
 .sub{color:var(--muted);font-size:14px}
 label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}
-input{width:100%;font:inherit;font-size:15px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 12px}
+input,textarea.ta{width:100%;font:inherit;font-size:15px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 12px}
 .btn{border:none;cursor:pointer;font-weight:800;font-size:14px;padding:11px 16px;border-radius:10px;background:var(--accent);color:#fff;font-family:var(--f-body)}
 .btn.sm{padding:7px 12px;font-size:13px}
 .btn.ghost{background:var(--surface-2);color:var(--fg);border:1px solid var(--line)}
@@ -351,8 +351,12 @@ async function secSettings(){
   <button class="btn ghost" id="tgTest" style="width:auto">🔔 Test message bhejo</button>
   <h3 style="font-family:var(--f-head);font-weight:600;font-size:16px;margin:18px 0 8px">Share / Invite content</h3>
   <p class="sub" style="margin:0 0 10px">Ye line sab share-cards aur invite message me jaati hai.</p>
-  <div class="field"><label>Share tagline (Hindi)</label><input id="sTagHi" value="${esc(s.share_tagline_hi||"")}"></div>
-  <div class="field"><label>Share tagline (English)</label><input id="sTagEn" value="${esc(s.share_tagline_en||"")}"></div>
+  <div class="field"><label>Share message — हिन्दी (Hindi)</label><textarea class="ta" id="sTagHi" rows="4" maxlength="1000">${esc(s.share_tagline_hi||"")}</textarea></div>
+  <div class="field"><label>Share message — English</label><textarea class="ta" id="sTagEn" rows="4" maxlength="1000">${esc(s.share_tagline_en||"")}</textarea></div>
+  <details style="margin:0 0 12px"><summary style="cursor:pointer;font-weight:600;font-size:14px">Baaki bhashaon ka share message (optional)</summary>
+   <p class="sub" style="margin:6px 0 10px;font-size:12px">Khaali chhodenge to: Hinglish me Hindi wala message jaayega, baaki bhashaon me app ki apni default line (usi bhasha me).</p>
+   ${[["hi","Hinglish"],["bn","বাংলা"],["mr","मराठी"],["gu","ગુજરાતી"],["ta","தமிழ்"],["te","తెలుగు"],["kn","ಕನ್ನಡ"],["pa","ਪੰਜਾਬੀ"],["ml","മലയാളം"]].map(([k,n])=>`<div class="field"><label>Share message — ${n}</label><textarea class="ta" id="sTag_${k}" rows="3" maxlength="1000">${esc((s.share_taglines||{})[k]||"")}</textarea></div>`).join("")}
+  </details>
   <div class="field"><label>Invite video link (optional)</label><input id="sVid" value="${esc(s.invite_video||"")}" placeholder="https://youtu.be/..."><p class="sub" style="margin:4px 0 0;font-size:12px">YouTube/koi video link — invite message ke saath jaayega. (Video yahi banti nahi, link daalein.)</p></div>
   <div class="field"><label>Premium blurb (Hindi)</label><input id="sBhi" value="${esc(s.premium_blurb_hi)}"></div>
   <div class="field"><label>Premium blurb (English)</label><input id="sBen" value="${esc(s.premium_blurb_en)}"></div>
@@ -419,7 +423,7 @@ async function secSettings(){
  $("sSave").onclick=async()=>{try{
    const pk=["referral","plan","profile","post","log","share","like","member","member_max_awards","share_daily_cap","like_daily_cap","redeem_premium_month","rupee_per_point","product_min_points"];
    const points={};pk.forEach(k=>{const el=$("pt_"+k);if(el)points[k]=el.value;});
-   await api("/admin/settings",{method:"PUT",body:JSON.stringify({app_name:$("sName").value,price_inr:$("sInr").value,price_usd:$("sUsd").value,free_plan_limit:$("sLimit").value,premium_plans_per_day:$("sPpd").value,premium_emergency_per_day:$("sPem").value,premium_plans_per_month:$("sPpm").value,upi_id:$("sUpiId").value,upi_name:$("sUpiName").value,upi_auto_approve:$("sUpiAuto").checked,telegram_bot_token:$("sTgTok").value,telegram_chat_id:$("sTgChat").value,premium_blurb_hi:$("sBhi").value,premium_blurb_en:$("sBen").value,app_url:$("sUrl").value,share_tagline_hi:$("sTagHi").value,share_tagline_en:$("sTagEn").value,invite_video:$("sVid").value,points,coupon_enabled:$("sCoupon").checked})});
+   await api("/admin/settings",{method:"PUT",body:JSON.stringify({app_name:$("sName").value,price_inr:$("sInr").value,price_usd:$("sUsd").value,free_plan_limit:$("sLimit").value,premium_plans_per_day:$("sPpd").value,premium_emergency_per_day:$("sPem").value,premium_plans_per_month:$("sPpm").value,upi_id:$("sUpiId").value,upi_name:$("sUpiName").value,upi_auto_approve:$("sUpiAuto").checked,telegram_bot_token:$("sTgTok").value,telegram_chat_id:$("sTgChat").value,premium_blurb_hi:$("sBhi").value,premium_blurb_en:$("sBen").value,app_url:$("sUrl").value,share_tagline_hi:$("sTagHi").value,share_tagline_en:$("sTagEn").value,share_taglines:(()=>{const m={};["hi","bn","mr","gu","ta","te","kn","pa","ml"].forEach(k=>{const el=$("sTag_"+k);if(el)m[k]=el.value;});return m;})(),invite_video:$("sVid").value,points,coupon_enabled:$("sCoupon").checked})});
    toast("Settings save ho gayi ✓");
   }catch(e){$("sErr").textContent=e.message;}};
 }

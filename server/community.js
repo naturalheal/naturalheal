@@ -4,6 +4,7 @@
 // (status "hidden") aur admin review ke liye jaati hai. Report button bhi hai.
 // ---------------------------------------------------------------------------
 const db = require("./store");
+const i18n = require("./i18n");
 const { HttpError, uid } = require("./util");
 const points = require("./points");
 
@@ -34,7 +35,7 @@ const REPORT_LIMIT = 3; // itni report par post chhup jaati hai
 
 function pub(p, lang) {
   return {
-    id: p.id, author: p.author_name || (lang === "en" ? "Someone" : "Koi"),
+    id: p.id, author: p.author_name || i18n.pick(lang, "someone"),
     tag: p.tag || "", title: p.title, body: p.body, likes: p.likes || 0,
     created_at: p.created_at, mine: false,
   };
@@ -42,7 +43,7 @@ function pub(p, lang) {
 
 // ---- User: list (sirf approved) ----
 function listPosts(ctx) {
-  const lang = (ctx.query && ctx.query.language) === "en" ? "en" : "hi";
+  const lang = (ctx.query && ctx.query.language) || "hi";
   const tag = ctx.query && ctx.query.tag;
   let rows = db.posts.filter((p) => p.status === "approved");
   if (tag) rows = rows.filter((p) => p.tag === tag);
@@ -54,16 +55,16 @@ function listPosts(ctx) {
 // ---- User: create ----
 function createPost(ctx) {
   const b = ctx.body || {};
-  const lang = b.language === "en" ? "en" : "hi";
+  const lang = b.language || "hi";
   const title = String(b.title || "").trim().slice(0, 120);
   const body = String(b.body || "").trim().slice(0, 2000);
   const tag = String(b.tag || "").trim().slice(0, 40);
-  if (!title || !body) throw new HttpError(400, lang === "en" ? "Title and story are required" : "Title aur kahani dono bharein");
+  if (!title || !body) throw new HttpError(400, i18n.pick(lang, "postTitleReq"));
   const mod = moderate(title, body);
   const anon = b.anon ? true : false;
   const post = {
     id: uid(), user_id: ctx.user.id,
-    author_name: anon ? (lang === "en" ? "Anonymous" : "Anonymous") : ctx.user.name,
+    author_name: anon ? "Anonymous" : ctx.user.name, // UI "Anonymous" ko chuni bhasha me dikhata hai
     tag, title, body, status: mod.status, flag: mod.flag, likes: 0, liked_by: [], report_count: 0, reported_by: [],
     created_at: now(),
   };
@@ -73,7 +74,7 @@ function createPost(ctx) {
     return { ok: true, status: "approved", id: post.id, points_awarded: pts };
   }
   // chhup gayi -> user ko batayein ki review me hai
-  return { ok: true, status: "pending", msg: lang === "en" ? "Your post is under review and will show once approved." : "Aapki post review me hai, approve hone par dikhegi." };
+  return { ok: true, status: "pending", msg: i18n.pick(lang, "postReview") };
 }
 
 // ---- User: like ----

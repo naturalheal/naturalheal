@@ -4,6 +4,7 @@
 // ---------------------------------------------------------------------------
 const db = require("./store");
 const { uid } = require("./util");
+const SHARE_LANGS = ["hi", "bn", "mr", "gu", "ta", "te", "kn", "pa", "ml"]; // Hindi(hin)+English ke alag fields hain
 const num = (k, d) => Number(process.env[k] || d);
 
 function defaults() {
@@ -22,6 +23,8 @@ function defaults() {
     // Share/invite content — admin se editable
     share_tagline_hi: "Ghar baithe natural ilaaj — bina dawai ke, bilkul free. Aaj hi try karein 🌿",
     share_tagline_en: "Natural healing at home — no medicines, free. Try it today 🌿",
+    // Baaki bhashaon ki apni share line (lang code -> text). Khaali = app ki default line us bhasha me.
+    share_taglines: {},
     invite_video: "",
     // Healing Points — har activity ke points + redeem rates (admin se editable)
     points: {
@@ -68,8 +71,13 @@ function saveSettings(patch) {
   if (patch.premium_blurb_hi != null) clean.premium_blurb_hi = String(patch.premium_blurb_hi).slice(0, 200);
   if (patch.premium_blurb_en != null) clean.premium_blurb_en = String(patch.premium_blurb_en).slice(0, 200);
   if (patch.app_url != null) clean.app_url = String(patch.app_url).trim().replace(/\/+$/, "").slice(0, 200);
-  if (patch.share_tagline_hi != null) clean.share_tagline_hi = String(patch.share_tagline_hi).slice(0, 160);
-  if (patch.share_tagline_en != null) clean.share_tagline_en = String(patch.share_tagline_en).slice(0, 160);
+  // Share message lamba aur multi-line ho sakta hai (WhatsApp) — 1000 akshar tak, newlines safe
+  if (patch.share_tagline_hi != null) clean.share_tagline_hi = String(patch.share_tagline_hi).replace(/\r/g, "").slice(0, 1000);
+  if (patch.share_tagline_en != null) clean.share_tagline_en = String(patch.share_tagline_en).replace(/\r/g, "").slice(0, 1000);
+  if (patch.share_taglines && typeof patch.share_taglines === "object") {
+    clean.share_taglines = {};
+    SHARE_LANGS.forEach((k) => { const v = patch.share_taglines[k]; if (v != null && String(v).trim()) clean.share_taglines[k] = String(v).replace(/\r/g, "").slice(0, 1000); });
+  }
   if (patch.invite_video != null) clean.invite_video = String(patch.invite_video).trim().slice(0, 300);
   if (patch.coupon_enabled != null) clean.coupon_enabled = !!patch.coupon_enabled;
   if (patch.upi_id != null) clean.upi_id = String(patch.upi_id).trim().slice(0, 80);

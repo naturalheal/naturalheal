@@ -3,7 +3,8 @@
 // User apne ghar me maujood cheezein chunta hai + ek takleef; hum unhi cheezon
 // se nuskha banate hain. Premium + API key ho to AI, warna rule-based.
 // ---------------------------------------------------------------------------
-const { aiText, aiVision, aiAvailable } = require("./ai");
+const { aiText, aiVision, aiAvailable, langName } = require("./ai");
+const KL = require("./kitchen-i18n"); // hin + regional bhashaon ke anuvaad
 const { isPremium } = require("./plans");
 const { HttpError } = require("./util");
 
@@ -56,7 +57,7 @@ const RECIPES = [
   { c: "sardi", need: ["tulsi", "adrak"], hi: ["Tulsi-adrak kaadha", "5-6 tulsi patte + adrak paani me ubaalein, chaan kar garm peeyein."], en: ["Basil-ginger decoction", "Boil 5-6 basil leaves with ginger, strain and drink warm."] },
   { c: "sardi", need: ["haldi", "doodh"], hi: ["Haldi doodh", "1 glass garm doodh me chutki haldi, raat ko sone se pehle."], en: ["Turmeric milk", "A pinch of turmeric in a glass of warm milk at bedtime."] },
   { c: "khaansi", need: ["shahad", "kalimirch"], hi: ["Shahad-kali mirch", "1 chammach shahad me chutki kali mirch, din me 2 baar chaatein."], en: ["Honey-pepper", "A pinch of black pepper in 1 tsp honey, lick twice a day."] },
-  { c: "khaansi", need: ["adrak", "namak"], hi: ["Adrak-namak", "Adrak ke chhote tukde par chutki namak laga kar chooshें."], en: ["Ginger-salt", "Sprinkle a pinch of salt on a small ginger piece and suck on it."] },
+  { c: "khaansi", need: ["adrak", "namak"], hi: ["Adrak-namak", "Adrak ke chhote tukde par chutki namak laga kar chooshein."], en: ["Ginger-salt", "Sprinkle a pinch of salt on a small ginger piece and suck on it."] },
   { c: "khaansi", need: ["tulsi", "shahad"], hi: ["Tulsi-shahad", "Tulsi ke ras me shahad mila kar lein."], en: ["Basil-honey", "Mix basil juice with honey and take."] },
   { c: "sirdard", need: ["adrak"], hi: ["Adrak chai", "Adrak wali halki chai se sir dard me aaram."], en: ["Ginger tea", "Light ginger tea eases a headache."] },
   { c: "sirdard", need: ["lavang"], hi: ["Lavang", "2 lavang bhoon kar peeslein, maathe par lep lagayein."], en: ["Clove paste", "Roast 2 cloves, grind, and apply as a paste on the forehead."] },
@@ -65,12 +66,52 @@ const RECIPES = [
   { c: "thakaan", need: ["shahad", "nimbu"], hi: ["Shahad-nimbu paani", "Garm paani me nimbu + shahad, subah — din bhar taazgi."], en: ["Honey-lemon water", "Lemon and honey in warm water in the morning for all-day freshness."] },
   { c: "thakaan", need: ["gud"], hi: ["Gud", "Khaane baad thoda gud — turant energy aur iron."], en: ["Jaggery", "A little jaggery after meals for quick energy and iron."] },
   { c: "immunity", need: ["haldi", "doodh"], hi: ["Haldi doodh", "Roz raat 1 glass garm doodh me chutki haldi."], en: ["Turmeric milk", "A pinch of turmeric in warm milk every night."] },
-  { c: "immunity", need: ["tulsi", "adrak", "kalimirch"], hi: ["Kaadha", "Tulsi, adrak aur kali mirch paani me ubaalein, haftе me kuch baar."], en: ["Kaadha", "Boil basil, ginger and black pepper in water, a few times a week."] },
+  { c: "immunity", need: ["tulsi", "adrak", "kalimirch"], hi: ["Kaadha", "Tulsi, adrak aur kali mirch paani me ubaalein, hafte me kuch baar."], en: ["Kaadha", "Boil basil, ginger and black pepper in water, a few times a week."] },
   { c: "immunity", need: ["lahsun"], hi: ["Kaccha lahsun", "Subah khaali pet 1 kali kaccha lahsun."], en: ["Raw garlic", "One raw garlic clove on an empty stomach in the morning."] },
 ];
 
+// Hinglish (hi) + English (en) messages; baaki bhashayein kitchen-i18n.js me
+const MSG = {
+  hi: {
+    pickProblem: "Takleef chunein", pickItem: "Kam se kam ek cheez chunein", pickProblemFirst: "Pehle takleef chunein",
+    needPhoto: "Apne saman ki photo khinchein ya upload karein", photoBig: "Photo bahut badi hai — chhoti photo lein",
+    scanNeedsAI: "Photo scan ke liye AI chahiye. Abhi ke liye neeche se apni cheezein tap karein aur 'Nuskha dhoondo' dabayein.",
+    scanPremium: "Photo scan Premium feature hai. Free me neeche se cheezein tap karein.",
+    noItemSeen: "Photo me koi kaam ki cheez nahi dikhi. Saaf photo lein, ya neeche se cheezein tap karein.",
+    caution: "Ye sirf gharelu nuskha hai, dawai nahi. 2-3 din me aaram na ho ya badhe to doctor ko dikhayein.",
+    warmWater: "garm paani", wwTitle: "Garm paani + {nm}", wwHow: "{nm} ko ek glass garm paani ke saath lein. Aaram karein aur paani peete rahein.",
+  },
+  en: {
+    pickProblem: "Pick a problem", pickItem: "Pick at least one kitchen item", pickProblemFirst: "Pick a problem first",
+    needPhoto: "Take or upload a photo of your items", photoBig: "Photo too big — try a smaller one",
+    scanNeedsAI: "Photo scan needs AI. For now, tap the items you have below and tap Find remedy.",
+    scanPremium: "Photo scan is a Premium feature. Free: tap the items you have below.",
+    noItemSeen: "Couldn't spot a useful item in the photo. Try a clearer photo, or tap your items below.",
+    caution: "Home remedy only, not a medicine. See a doctor if it doesn't improve in 2-3 days or gets worse.",
+    warmWater: "warm water", wwTitle: "Warm water + {nm}", wwHow: "Take {nm} with a glass of warm water. Rest and stay hydrated.",
+  },
+};
+// App ki bhasha code (hin/en/hi/bn/...) — anjaan ho to Hinglish
+function kLang(l) { return l === "en" || l === "hi" || KL[l] ? l : "hi"; }
+function msg(lang, k) { return (KL[lang] && KL[lang].msg[k]) || MSG[lang === "en" ? "en" : "hi"][k]; }
+function itemName(id, lang) {
+  const it = ITEM_MAP[id]; if (!it) return id;
+  if (KL[lang]) return KL[lang].items[id] || it.hi;
+  return lang === "en" ? it.en : it.hi;
+}
+function concernText(c, lang) { // [label, benefit]
+  if (KL[lang] && KL[lang].concerns[c.id]) return KL[lang].concerns[c.id];
+  return lang === "en" ? [c.en, c.fen] : [c.hi, c.fhi];
+}
+function recipeText(r, lang) { // [title, how]
+  const i = RECIPES.indexOf(r);
+  if (KL[lang] && KL[lang].recipes[i]) return KL[lang].recipes[i];
+  return lang === "en" ? r.en : r.hi;
+}
+for (const k in KL) if (KL[k].recipes.length !== RECIPES.length) console.warn("kitchen-i18n:", k, "recipes ki ginti RECIPES se alag hai");
+
 function labelItems(ids, lang) {
-  return ids.map((id) => (ITEM_MAP[id] ? (lang === "en" ? ITEM_MAP[id].en : ITEM_MAP[id].hi) : id));
+  return ids.map((id) => itemName(id, lang));
 }
 
 function ruleRemedy(concern, have, lang) {
@@ -79,13 +120,13 @@ function ruleRemedy(concern, have, lang) {
   let matched = RECIPES.filter((r) => r.c === concern && r.need.every((n) => haveSet.has(n)));
   // Agar is concern ke liye kuch nahi mila, jin nuskhon me kam se kam 1 item ho
   if (!matched.length) matched = RECIPES.filter((r) => r.c === concern && r.need.some((n) => haveSet.has(n)));
-  const steps = matched.slice(0, 3).map((r) => ({ title: (lang === "en" ? r.en : r.hi)[0], how: (lang === "en" ? r.en : r.hi)[1], uses: labelItems(r.need, lang) }));
+  const steps = matched.slice(0, 3).map((r) => { const [title, how] = recipeText(r, lang); return { title, how, uses: labelItems(r.need, lang) }; });
   if (!steps.length) {
     const first = have[0];
-    const nm = first ? labelItems([first], lang)[0] : (lang === "en" ? "warm water" : "garm paani");
+    const nm = first ? labelItems([first], lang)[0] : msg(lang, "warmWater");
     steps.push({
-      title: lang === "en" ? `Warm water + ${nm}` : `Garm paani + ${nm}`,
-      how: lang === "en" ? `Take ${nm} with a glass of warm water. Rest and stay hydrated.` : `${nm} ko ek glass garm paani ke saath lein. Aaram karein aur paani peete rahein.`,
+      title: msg(lang, "wwTitle").replace("{nm}", nm),
+      how: msg(lang, "wwHow").replace("{nm}", nm),
       uses: first ? labelItems([first], lang) : [],
     });
   }
@@ -94,24 +135,20 @@ function ruleRemedy(concern, have, lang) {
 
 async function kitchenRemedy(ctx) {
   const b = ctx.body || {};
-  const lang = b.language === "en" ? "en" : "hi";
+  const lang = kLang(b.language);
   const concern = String(b.concern || "").trim();
   const have = (Array.isArray(b.items) ? b.items : []).filter((id) => ITEM_MAP[id]).slice(0, 20);
-  if (!concern) throw new HttpError(400, lang === "en" ? "Pick a problem" : "Takleef chunein");
-  if (!have.length) throw new HttpError(400, lang === "en" ? "Pick at least one kitchen item" : "Kam se kam ek cheez chunein");
+  if (!concern) throw new HttpError(400, msg(lang, "pickProblem"));
+  if (!have.length) throw new HttpError(400, msg(lang, "pickItem"));
 
   const concObj = CONCERNS.find((c) => c.id === concern);
-  const concernLabel = concObj ? (lang === "en" ? concObj.en : concObj.hi) : concern;
-  const benefit = concObj ? (lang === "en" ? concObj.fen : concObj.fhi) : "";
-  const caution = lang === "en"
-    ? "Home remedy only, not a medicine. See a doctor if it doesn't improve in 2-3 days or gets worse."
-    : "Ye sirf gharelu nuskha hai, dawai nahi. 2-3 din me aaram na ho ya badhe to doctor ko dikhayein.";
+  const [concernLabel, benefit] = concObj ? concernText(concObj, lang) : [concern, ""];
+  const caution = msg(lang, "caution");
 
   // Premium + API key -> AI se behtar nuskha (unhi items se)
   if (isPremium(ctx.user)) {
-    const langName = lang === "hi" ? "Hinglish (Roman Hindi)" : "English";
     const haveNames = labelItems(have, lang).join(", ");
-    const prompt = `You are a careful Indian home-remedy (dadi-nani ke nuskhe) helper. The user has ONLY these kitchen items available: ${haveNames}. Their problem: "${concernLabel}". Suggest 1-2 safe home remedies USING ONLY those items (do not use anything they didn't list). For EACH remedy give a short title and simple how-to. Write in ${langName}, very simple words a non-reader could follow if read aloud. No medicines, no doses, no diagnosis. Reply as ONLY a JSON array like [{"title":"...","how":"...","uses":["item"]}]. No text outside JSON.`;
+    const prompt = `You are a careful Indian home-remedy (dadi-nani ke nuskhe) helper. The user has ONLY these kitchen items available: ${haveNames}. Their problem: "${concernLabel}". Suggest 1-2 safe home remedies USING ONLY those items (do not use anything they didn't list). For EACH remedy give a short title and simple how-to. Write in ${langName(lang)}, very simple words a non-reader could follow if read aloud. No medicines, no doses, no diagnosis. Reply as ONLY a JSON array like [{"title":"...","how":"...","uses":["item"]}]. No text outside JSON.`;
     const txt = await aiText(prompt, 400);
     const parsed = safeArr(txt);
     if (parsed && parsed.length) {
@@ -139,32 +176,26 @@ function safeObj(text) {
 // ---- ADVANCE: phone se fridge/saman ki photo scan -> AI kaam ki cheezein pehchaane + ilaaj ----
 async function kitchenScan(ctx) {
   const b = ctx.body || {};
-  const lang = b.language === "en" ? "en" : "hi";
+  const lang = kLang(b.language);
   const concern = String(b.concern || "").trim();
-  if (!concern) throw new HttpError(400, lang === "en" ? "Pick a problem first" : "Pehle takleef chunein");
+  if (!concern) throw new HttpError(400, msg(lang, "pickProblemFirst"));
   const img = b.image;
   if (!img || !img.data || !/^image\//.test(img.media_type || "")) {
-    throw new HttpError(400, lang === "en" ? "Take or upload a photo of your items" : "Apne saman ki photo khinchein ya upload karein");
+    throw new HttpError(400, msg(lang, "needPhoto"));
   }
   if (typeof img.data === "string" && img.data.length > 8000000) {
-    throw new HttpError(413, lang === "en" ? "Photo too big — try a smaller one" : "Photo bahut badi hai — chhoti photo lein");
+    throw new HttpError(413, msg(lang, "photoBig"));
   }
   // Scan ke liye vision AI chahiye (API key). Key/premium na ho to seedha samjha dein.
   if (!aiAvailable()) {
-    throw new HttpError(402, lang === "en"
-      ? "Photo scan needs AI. For now, tap the items you have below and tap Find remedy."
-      : "Photo scan ke liye AI chahiye. Abhi ke liye neeche se apni cheezein tap karein aur 'Nuskha dhoondo' dabayein.");
+    throw new HttpError(402, msg(lang, "scanNeedsAI"));
   }
   if (!isPremium(ctx.user)) {
-    throw new HttpError(402, lang === "en"
-      ? "Photo scan is a Premium feature. Free: tap the items you have below."
-      : "Photo scan Premium feature hai. Free me neeche se cheezein tap karein.");
+    throw new HttpError(402, msg(lang, "scanPremium"));
   }
 
   const concObj = CONCERNS.find((c) => c.id === concern);
-  const concernLabel = concObj ? (lang === "en" ? concObj.en : concObj.hi) : concern;
-  const benefit = concObj ? (lang === "en" ? concObj.fen : concObj.fhi) : "";
-  const langName = lang === "hi" ? "Hinglish (Roman Hindi)" : "English";
+  const [concernLabel, benefit] = concObj ? concernText(concObj, lang) : [concern, ""];
   const known = ITEMS.map((i) => `${i.id} (${i.en})`).join(", ");
   const prompt = `You are a careful Indian home-remedy helper looking at a photo of a user's kitchen/fridge/groceries.
 Known useful items (id and English name): ${known}.
@@ -174,7 +205,7 @@ TASK:
 2) Suggest 1-2 safe home remedies using ONLY those visible items. Short title + simple how-to a non-reader could follow if read aloud. No medicines, no doses, no diagnosis.
 Reply as ONLY this JSON (no text outside): {"detected":["id","id"],"steps":[{"title":"...","how":"...","uses":["English item name"]}]}
 If no useful item is visible, return {"detected":[],"steps":[]}.
-Write titles/how in ${langName}.`;
+Write titles/how in ${langName(lang)}.`;
 
   const txt = await aiVision(prompt, { media_type: img.media_type, data: img.data }, 600);
   const parsed = safeObj(txt) || {};
@@ -183,17 +214,13 @@ Write titles/how in ${langName}.`;
   // AI ne steps na diye par cheezein mili -> rule-based se bana do
   if (!steps.length && detectedIds.length) steps = ruleRemedy(concern, detectedIds, lang);
 
-  const caution = lang === "en"
-    ? "Home remedy only, not a medicine. See a doctor if it doesn't improve in 2-3 days or gets worse."
-    : "Ye sirf gharelu nuskha hai, dawai nahi. 2-3 din me aaram na ho ya badhe to doctor ko dikhayein.";
+  const caution = msg(lang, "caution");
 
   if (!detectedIds.length) {
     return {
       concern: concernLabel, benefit, detected: [], items: [], steps: [], caution,
       source: "ai-scan",
-      msg: lang === "en"
-        ? "Couldn't spot a useful item in the photo. Try a clearer photo, or tap your items below."
-        : "Photo me koi kaam ki cheez nahi dikhi. Saaf photo lein, ya neeche se cheezein tap karein.",
+      msg: msg(lang, "noItemSeen"),
     };
   }
   return {
@@ -206,6 +233,12 @@ Write titles/how in ${langName}.`;
 }
 
 // UI ke liye options (items + concerns)
-function kitchenOptions() { return { items: ITEMS, concerns: CONCERNS, scanEnabled: aiAvailable() }; }
+// l = har bhasha ka label (hin/bn/...), taaki UI chuni hui bhasha me dikhe
+function kitchenOptions() {
+  const langs = Object.keys(KL);
+  const items = ITEMS.map((i) => ({ ...i, l: Object.fromEntries(langs.map((k) => [k, KL[k].items[i.id]])) }));
+  const concerns = CONCERNS.map((c) => ({ ...c, l: Object.fromEntries(langs.map((k) => [k, (KL[k].concerns[c.id] || [])[0]])) }));
+  return { items, concerns, scanEnabled: aiAvailable() };
+}
 
 module.exports = { kitchenRemedy, kitchenScan, kitchenOptions };

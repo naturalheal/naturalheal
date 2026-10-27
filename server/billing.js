@@ -35,7 +35,7 @@ const userBySub = (subId) => db.users.findBy("provider_sub_id", subId);
 // ---- Pricing info ----
 function pricing() {
   const s = getSettings();
-  return { inr: s.price_inr, usd: s.price_usd, app_name: s.app_name, blurb_hi: s.premium_blurb_hi, blurb_en: s.premium_blurb_en, app_url: s.app_url || "", share_tagline_hi: s.share_tagline_hi || "", share_tagline_en: s.share_tagline_en || "", invite_video: s.invite_video || "", providers: { razorpay: !!(RZP_KEY && RZP_SECRET), stripe: !!STRIPE_KEY }, upi: { id: s.upi_id || "", name: s.upi_name || "", enabled: !!s.upi_id } };
+  return { inr: s.price_inr, usd: s.price_usd, app_name: s.app_name, blurb_hi: s.premium_blurb_hi, blurb_en: s.premium_blurb_en, app_url: s.app_url || "", share_tagline_hi: s.share_tagline_hi || "", share_tagline_en: s.share_tagline_en || "", share_taglines: s.share_taglines || {}, invite_video: s.invite_video || "", providers: { razorpay: !!(RZP_KEY && RZP_SECRET), stripe: !!STRIPE_KEY }, upi: { id: s.upi_id || "", name: s.upi_name || "", enabled: !!s.upi_id } };
 }
 
 // ---- Stripe checkout ----
