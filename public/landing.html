@@ -4,10 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script>
-/* Login wale user, installed app, ya share/payment link (?ref= ?tab= ?paid=) -> seedha app */
+/* Login wale user / installed app / payment-tab-post link -> seedha app.
+   Sirf referral (?ref=) wala naya visitor yahin page dekhe; ref yaad rahe taaki register par mile */
 (function(){try{
- var q=location.search,s=window.matchMedia&&matchMedia("(display-mode: standalone)").matches;
- if(q.length>1||s||navigator.standalone||localStorage.getItem("nh_token"))location.replace("/app"+q+location.hash);
+ var q=location.search,p=new URLSearchParams(q),s=window.matchMedia&&matchMedia("(display-mode: standalone)").matches;
+ var r=p.get("ref");if(r)localStorage.setItem("nh_ref",String(r).toUpperCase().slice(0,12));
+ var other=false;p.forEach(function(v,k){if(k!=="ref"&&k.indexOf("utm_")!==0)other=true;});
+ if(other||s||navigator.standalone||localStorage.getItem("nh_token"))location.replace("/app"+q+location.hash);
 }catch(e){}})();
 </script>
 <title>NaturalHeal AI — आयुर्वेदिक AI हेल्थ प्लान, लैब रिपोर्ट आसान भाषा में | Ayurvedic AI Health Plan</title>
@@ -262,7 +265,7 @@ footer{padding:40px 0 50px;color:var(--muted);font-size:14px}
  <div class="nlinks"><a href="#features" data-k="nF">फ़ीचर</a><a href="#how" data-k="nH">कैसे काम करता है</a><a href="#plans" data-k="nP">प्लान</a><a href="#faq" data-k="nQ">सवाल</a></div>
  <div class="nright">
   <div class="lsw" role="group" aria-label="Language"><button data-l="hi" class="on">हिं</button><button data-l="en">EN</button></div>
-  <a href="/app" class="btn btn-p nlogin" data-k="login">लॉगिन</a>
+  <a href="/app?auth=login" class="btn btn-p nlogin" data-k="login">लॉगिन</a>
  </div>
 </div></nav>
 
@@ -272,7 +275,7 @@ footer{padding:40px 0 50px;color:var(--muted);font-size:14px}
   <h1 data-k="h1">आयुर्वेद की समझ, <em>AI की ताकत</em> — आपका अपना हेल्थ प्लान</h1>
   <p class="lead" data-k="lead">अपनी उम्र, वज़न, तकलीफ़ बताइए या लैब रिपोर्ट की फ़ोटो डालिए — NaturalHeal AI आपके दोष को समझकर आहार, योग, दिनचर्या और घरेलू उपाय का पूरा प्लान आपकी भाषा में बनाता है।</p>
   <div class="ctas">
-   <a href="/app" class="btn btn-p"><span data-k="cta1">फ्री में प्लान बनाएं</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+   <a href="/app?auth=register" class="btn btn-p"><span data-k="cta1">फ्री में प्लान बनाएं</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
    <button class="btn btn-g js-install"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span data-k="cta2">ऐप डाउनलोड करें</span></button>
   </div>
   <div class="trust">
@@ -371,10 +374,10 @@ footer{padding:40px 0 50px;color:var(--muted);font-size:14px}
  <div class="pgrid">
   <div class="pc rv"><h3 data-k="p1h">फ्री</h3><p class="sub" data-k="p1s">शुरुआत के लिए सब ज़रूरी</p>
    <ul><li data-k="p1a">बेसिक आयुर्वेदिक प्लान</li><li data-k="p1b">लक्षण ट्रैकर और ग्राफ़</li><li data-k="p1c">घर की रसोई के नुस्खे</li><li data-k="p1d">परिवार के प्रोफ़ाइल, मौसम के सुझाव, कम्युनिटी</li></ul>
-   <a href="/app" class="btn btn-g" style="width:100%" data-k="p1btn">फ्री में शुरू करें</a></div>
+   <a href="/app?auth=register" class="btn btn-g" style="width:100%" data-k="p1btn">फ्री में शुरू करें</a></div>
   <div class="pc pro rv"><h3 data-k="p2h">प्रीमियम ✨</h3><p class="sub" data-k="p2s">पूरी AI ताकत</p>
    <ul><li data-k="p2a">पूरा AI पर्सनलाइज़्ड प्लान</li><li data-k="p2b">लैब रिपोर्ट पढ़कर प्लान</li><li data-k="p2c">AI हेल्थ कोच से चैट</li><li data-k="p2d">रसोई फ़ोटो स्कैन और AI इनसाइट</li></ul>
-   <a href="/app" class="btn" style="width:100%" data-k="p2btn">प्रीमियम देखें</a></div>
+   <a href="/app?auth=register" class="btn" style="width:100%" data-k="p2btn">प्रीमियम देखें</a></div>
  </div>
 </div></section>
 
@@ -391,13 +394,13 @@ footer{padding:40px 0 50px;color:var(--muted);font-size:14px}
 
 <section style="padding-top:20px"><div class="wrap">
  <div class="cta rv"><h2 data-k="ch">आज से अपनी सेहत की शुरुआत करें</h2><p data-k="cp">2 मिनट में अपना आयुर्वेदिक प्लान पाएं — फ्री, आपकी भाषा में।</p>
-  <div class="ctas"><a href="/app" class="btn btn-p" data-k="cb1">फ्री में प्लान बनाएं</a><button class="btn btn-g js-install" data-k="cb2">ऐप डाउनलोड करें</button></div></div>
+  <div class="ctas"><a href="/app?auth=register" class="btn btn-p" data-k="cb1">फ्री में प्लान बनाएं</a><button class="btn btn-g js-install" data-k="cb2">ऐप डाउनलोड करें</button></div></div>
 </div></section>
 
 <footer><div class="wrap">
  <div class="fgrid2">
   <a href="/" class="logo"><div class="leaf"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/></svg></div>NaturalHeal AI</a>
-  <div class="fl"><a href="#features" data-k="nF2">फ़ीचर</a><a href="#faq" data-k="nQ2">सवाल</a><a href="/app" data-k="login2">लॉगिन</a><a href="/app" data-k="reg">नया अकाउंट</a></div>
+  <div class="fl"><a href="#features" data-k="nF2">फ़ीचर</a><a href="#faq" data-k="nQ2">सवाल</a><a href="/app?auth=login" data-k="login2">लॉगिन</a><a href="/app?auth=register" data-k="reg">नया अकाउंट</a></div>
  </div>
  <p class="disc" data-k="disc">⚕ NaturalHeal AI सामान्य वेलनेस जानकारी देता है, यह मेडिकल डायग्नोसिस, इलाज या डॉक्टर की सलाह का विकल्प नहीं है। गंभीर लक्षण होने पर तुरंत डॉक्टर से मिलें।</p>
  <p style="margin:6px 0 0">© <span id="yr"></span> NaturalHeal AI</p>
