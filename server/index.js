@@ -134,8 +134,39 @@ function readBody(req) {
 }
 function sendJson(res, status, obj) { res.writeHead(status, { "Content-Type": "application/json" }); res.end(JSON.stringify(obj)); }
 const MIME = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".ico": "image/x-icon", ".webmanifest": "application/manifest+json" };
+// Site ka public address (canonical/sitemap ke liye): APP_URL, warna request ka host
+function siteOrigin(req) {
+  if (process.env.APP_URL) return process.env.APP_URL.replace(/\/+$/, "");
+  const proto = String(req.headers["x-forwarded-proto"] || "http").split(",")[0].trim();
+  return proto + "://" + (req.headers.host || "localhost");
+}
+// Promotion / SEO page "/" par; app "/app" par
+function serveLanding(req, res) {
+  fs.readFile(path.join(PUBLIC, "landing.html"), "utf8", (err, html) => {
+    if (err) return serveStatic("/app", res);
+    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    res.end(html.split("{{ORIGIN}}").join(siteOrigin(req)));
+  });
+}
+function serveSeo(pathname, req, res) {
+  const o = siteOrigin(req);
+  if (pathname === "/robots.txt") {
+    res.writeHead(200, { "Content-Type": "text/plain" });
+    return res.end(`User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin
+Disallow: /app
+Sitemap: ${o}/sitemap.xml
+`);
+  }
+  res.writeHead(200, { "Content-Type": "application/xml" });
+  res.end(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>${o}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url></urlset>
+`);
+}
 function serveStatic(pathname, res) {
-  let rel = pathname === "/" ? "/index.html" : (pathname === "/admin" ? "/admin.html" : pathname);
+  let rel = (pathname === "/app" || pathname === "/app/") ? "/index.html" : (pathname === "/admin" ? "/admin.html" : pathname);
   let file = path.normalize(path.join(PUBLIC, rel));
   if (!file.startsWith(PUBLIC)) file = path.join(PUBLIC, "index.html");
   fs.readFile(file, (err, data) => {
@@ -161,6 +192,8 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, "http://localhost");
   const pathname = url.pathname;
 
+  if (pathname === "/" || pathname === "/index.html") return serveLanding(req, res);
+  if (pathname === "/robots.txt" || pathname === "/sitemap.xml") return serveSeo(pathname, req, res);
   if (!pathname.startsWith("/api/")) return serveStatic(pathname, res);
 
   // find route
