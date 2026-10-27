@@ -227,7 +227,7 @@ function listPlans(ctx) {
   const rows = db.plans.filter((p) => p.user_id === ctx.user.id)
     .sort((a, b) => (b.created_at || "").localeCompare(a.created_at || "")).slice(0, 50)
     .map((p) => {
-      const tr = ql && p.lang !== ql && ((p.tr && p.tr[ql]) || (p.source === "fallback" && TR_LANGS.includes(ql) ? fallbackIn(p, ql, ctx.user) : null));
+      const tr = ql && p.lang !== ql && (trFor(p, ql) || (p.source === "fallback" && TR_LANGS.includes(ql) ? fallbackIn(p, ql, ctx.user) : null));
       return { id: p.id, title: tr && tr.summary ? tr.summary.slice(0, 60) : p.title, source: p.source, created_at: p.created_at };
     });
   return { plans: rows };
@@ -236,12 +236,25 @@ function getPlan(ctx) {
   const p = db.plans.get(ctx.params.id);
   if (!p || p.user_id !== ctx.user.id) throw new HttpError(404, "Plan nahi mila");
   const ql = ctx.query && ctx.query.language;
-  if (ql && p.lang !== ql && p.tr && p.tr[ql]) return { id: p.id, source: p.source, created_at: p.created_at, plan: p.tr[ql], plan_lang: ql };
+  const done = ql && p.lang !== ql && trFor(p, ql);
+  if (done) return { id: p.id, source: p.source, created_at: p.created_at, plan: done, plan_lang: ql };
   return { id: p.id, source: p.source, created_at: p.created_at, plan: p.plan, plan_lang: p.lang || null };
+}
+// Save kiya anuvaad: har key/array asli jitna ho tabhi "poora" (pehle kata hua save ho jaata tha)
+function trFor(p, ql) {
+  const t = ql && p.tr && p.tr[ql], o = p.plan;
+  if (!t || !o) return null;
+  for (const k of Object.keys(o)) {
+    if (k === "meta") continue;
+    const a = o[k], b = t[k];
+    if (Array.isArray(a) ? !(Array.isArray(b) && b.length === a.length) : (a != null && a !== "" && (b == null || b === ""))) return null;
+  }
+  return t;
 }
 // Basic (fallback) plan ko kisi bhi bhasha me — bina AI, aur save bhi
 function fallbackIn(p, ql, user) {
-  if (p.tr && p.tr[ql]) return p.tr[ql];
+  const done = trFor(p, ql);
+  if (done) return done;
   let inp = p.fb;
   if (!inp) {
     const prof = db.profiles.findBy("user_id", user.id);
@@ -262,16 +275,18 @@ async function translatePlanRoute(ctx) {
   const ql = ctx.body && ctx.body.language;
   if (!TR_LANGS.includes(ql)) throw new HttpError(400, "language?");
   if (p.lang === ql) return { plan: p.plan, plan_lang: ql };
-  if (p.tr && p.tr[ql]) return { plan: p.tr[ql], plan_lang: ql };
+  const done = trFor(p, ql);
+  if (done) return { plan: done, plan_lang: ql };
   // Basic plan: AI ki zaroorat nahi — usi jaankari se nayi bhasha me dobara banao
   if (p.source === "fallback") return { plan: fallbackIn(p, ql, ctx.user), plan_lang: ql };
   const key = p.id + ":" + ql;
   if (!trBusy.has(key)) trBusy.set(key, translatePlan(p.plan, ql).finally(() => setTimeout(() => trBusy.delete(key), 1000)));
-  const out = await trBusy.get(key);
-  if (!out) return { plan: p.plan, plan_lang: p.lang || null, failed: true };
+  const res = await trBusy.get(key);
+  if (!res) return { plan: p.plan, plan_lang: p.lang || null, failed: true };
+  // Sirf poora anuvaad save; adhoora abhi dikhao (bache hisse asli me), agli baar phir koshish
   const cur = db.plans.get(p.id);
-  if (cur) db.plans.update(p.id, { tr: { ...(cur.tr || {}), [ql]: out } });
-  return { plan: out, plan_lang: ql };
+  if (cur && res.complete) db.plans.update(p.id, { tr: { ...(cur.tr || {}), [ql]: res.plan } });
+  return { plan: res.plan, plan_lang: ql, partial: !res.complete };
 }
 function deletePlan(ctx) {
   db.plans.remove((p) => p.id === ctx.params.id && p.user_id === ctx.user.id);
@@ -398,7 +413,7 @@ function dashboard(ctx) {
   let activePlan = null;
   if (latest && latest.plan) {
     const ql = ctx.query && ctx.query.language;
-    const tr = ql && latest.lang !== ql && latest.tr && latest.tr[ql];
+    const tr = ql && latest.lang !== ql && trFor(latest, ql);
     const pl = tr || latest.plan;
     activePlan = { title: (tr ? (pl.summary || "").slice(0, 60) : latest.title) || (pl.summary || "").slice(0, 50), dosha: pl.dosha_analysis ? pl.dosha_analysis.primary_dosha : null, balance: pl.dosha_analysis ? pl.dosha_analysis.balance_percent : null, routine: pl.daily_routine || [] };
   }

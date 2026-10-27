@@ -398,17 +398,27 @@ async function aiVision(prompt, image, maxTokens = 500) {
   } catch (_) { return null; }
 }
 
-// Bana hua plan dusri bhasha me (keys/numbers/enums same rehte hain). Key na ho ya fail ho to null.
-async function translatePlan(plan, lang) {
-  if (!KEY || !plan) return null;
-  const prompt = `Translate this wellness-plan JSON into ${langName(lang)}.
+// Bana hua plan dusri bhasha me. Plan 3 hisson me (parallel) — lambi script me jawab katta nahi.
+// Jo hissa fail/adhoora ho, wahan asli rehta hai; { plan, complete } lautata hai. Key na ho to null.
+const TR_PARTS = [
+  ["summary", "dosha_analysis", "report_findings", "supplements"],
+  ["home_remedies", "diet", "yoga"],
+  ["daily_routine", "lifestyle_tips", "weight_plan", "red_flags", "disclaimer"],
+];
+function sameShape(a, b) {
+  if (Array.isArray(a)) return Array.isArray(b) && b.length === a.length;
+  if (a && typeof a === "object") return !!b && typeof b === "object" && !Array.isArray(b);
+  return typeof b === typeof a;
+}
+async function translatePart(obj, lang) {
+  const prompt = `Translate this JSON (part of a wellness plan) into ${langName(lang)}.
 Rules:
-- Translate EVERY human-readable string value (summary, explanations, names, reasons, usage, cautions, diet items, yoga, routine activities, tips, red flags, weight-plan text, disclaimer, report notes) into that language and script. Herb/food names may keep the common local name, written in that script.
-- Keep ALL keys exactly the same. Keep numbers, times (like "06:30 AM"), units and these values unchanged: status, primary_dosha, balance_percent, region, region_availability, meta.generated_for, marker, value.
+- Translate EVERY human-readable string value into that language and script. Herb/food names may keep the common local name, written in that script.
+- Keep ALL keys exactly the same. Keep numbers, times (like "06:30 AM"), units and these values unchanged: status, primary_dosha, secondary_dosha, balance_percent, region_availability, marker, value, type, priority.
 - Keep the same structure and the same number of items in every array.
 - Reply with ONLY the JSON, nothing else.
 
-${JSON.stringify(plan)}`;
+${JSON.stringify(obj)}`;
   try {
     const resp = await fetch(API_URL, {
       method: "POST",
@@ -417,9 +427,25 @@ ${JSON.stringify(plan)}`;
     });
     if (!resp.ok) return null;
     const data = await resp.json();
+    if (data.stop_reason === "max_tokens") return null; // kata hua jawab — bharosa nahi
     const out = parseJson((data.content || []).map((c) => c.text || "").join(""));
-    return out && typeof out === "object" && out.summary ? out : null;
+    return out && typeof out === "object" ? out : null;
   } catch (_) { return null; }
+}
+async function translatePlan(plan, lang) {
+  if (!KEY || !plan) return null;
+  const parts = TR_PARTS.map((keys) => keys.filter((k) => plan[k] != null && plan[k] !== "" && !(Array.isArray(plan[k]) && !plan[k].length)))
+    .filter((keys) => keys.length);
+  const results = await Promise.all(parts.map((keys) => translatePart(Object.fromEntries(keys.map((k) => [k, plan[k]])), lang)));
+  const out = { ...plan, meta: { ...(plan.meta || {}), language: lang } };
+  let complete = true, any = false;
+  parts.forEach((keys, i) => {
+    const r = results[i];
+    keys.forEach((k) => {
+      if (r && sameShape(plan[k], r[k])) { out[k] = r[k]; any = true; } else complete = false;
+    });
+  });
+  return any ? { plan: out, complete } : null;
 }
 
 // Key available hai? (frontend ko batane ke liye route use karta hai)
