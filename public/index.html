@@ -954,6 +954,9 @@ let _tc=null,_tcLang=null;
 function t(){ if(_tc&&_tcLang===lang)return _tc; const cur=T[lang]||T.hi; _tc=Object.assign({},T.en,cur); _tcLang=lang; return _tc; }
 /* Chhote/dynamic text jo T me nahi the — har bhasha me (har key: {en,hi,hin,bn,mr,gu,ta,te,kn,pa,ml}) */
 const TX={
+ pAi:{en:"Build your AI plan",hi:"Apna AI plan banayein",hin:"अपना AI प्लान बनाएं",bn:"নিজের AI প্ল্যান বানান",mr:"तुमचा AI प्लॅन बनवा",gu:"તમારો AI પ્લાન બનાવો",ta:"உங்கள் AI திட்டத்தை உருவாக்குங்கள்",te:"మీ AI ప్లాన్ తయారు చేసుకోండి",kn:"ನಿಮ್ಮ AI ಯೋಜನೆ ಮಾಡಿ",pa:"ਆਪਣਾ AI ਪਲਾਨ ਬਣਾਓ",ml:"നിങ്ങളുടെ AI പ്ലാൻ ഉണ്ടാക്കൂ"},
+ pSub:{en:"Natural health with holistic healing",hi:"Natural sehat, holistic healing ke saath",hin:"प्राकृतिक सेहत, सम्पूर्ण (होलिस्टिक) हीलिंग के साथ",bn:"প্রাকৃতিক স্বাস্থ্য, সামগ্রিক নিরাময়ের সঙ্গে",mr:"नैसर्गिक आरोग्य, संपूर्ण (होलिस्टिक) उपचारासह",gu:"કુદરતી સ્વાસ્થ્ય, સંપૂર્ણ (હોલિસ્ટિક) હીલિંગ સાથે",ta:"இயற்கை ஆரோக்கியம், முழுமையான குணமளிப்புடன்",te:"సహజ ఆరోగ్యం, సంపూర్ణ (హోలిస్టిక్) స్వస్థతతో",kn:"ನೈಸರ್ಗಿಕ ಆರೋಗ್ಯ, ಸಮಗ್ರ (ಹೋಲಿಸ್ಟಿಕ್) ಚಿಕಿತ್ಸೆಯೊಂದಿಗೆ",pa:"ਕੁਦਰਤੀ ਸਿਹਤ, ਸੰਪੂਰਨ (ਹੋਲਿਸਟਿਕ) ਇਲਾਜ ਨਾਲ",ml:"പ്രകൃതിദത്ത ആരോഗ്യം, സമഗ്ര (ഹോളിസ്റ്റിക്) സൗഖ്യത്തോടെ"},
+ pScan:{en:"Scan to start",hi:"Scan karke shuru karein",hin:"स्कैन करके शुरू करें",bn:"স্ক্যান করে শুরু করুন",mr:"स्कॅन करून सुरू करा",gu:"સ્કેન કરીને શરૂ કરો",ta:"ஸ்கேன் செய்து தொடங்குங்கள்",te:"స్కాన్ చేసి ప్రారంభించండి",kn:"ಸ್ಕ್ಯಾನ್ ಮಾಡಿ ಪ್ರಾರಂಭಿಸಿ",pa:"ਸਕੈਨ ਕਰਕੇ ਸ਼ੁਰੂ ਕਰੋ",ml:"സ്കാൻ ചെയ്ത് തുടങ്ങൂ"},
  pKick:{en:"Ayurveda + AI · 11 languages",hi:"Ayurveda + AI · 11 bhashayein",hin:"आयुर्वेद + AI · 11 भाषाएं",bn:"আয়ুর্বেদ + AI · ১১টি ভাষা",mr:"आयुर्वेद + AI · 11 भाषा",gu:"આયુર્વેદ + AI · 11 ભાષાઓ",ta:"ஆயுர்வேதம் + AI · 11 மொழிகள்",te:"ఆయుర్వేదం + AI · 11 భాషలు",kn:"ಆಯುರ್ವೇದ + AI · 11 ಭಾಷೆಗಳು",pa:"ਆਯੁਰਵੇਦ + AI · 11 ਭਾਸ਼ਾਵਾਂ",ml:"ആയുർവേദം + AI · 11 ഭാഷകൾ"},
  pCta:{en:"Create your free plan",hi:"Free me apna plan banayein",hin:"फ्री में अपना प्लान बनाएं",bn:"বিনামূল্যে নিজের প্ল্যান বানান",mr:"मोफत तुमचा प्लॅन बनवा",gu:"ફ્રીમાં તમારો પ્લાન બનાવો",ta:"இலவசமாக உங்கள் திட்டத்தை உருவாக்குங்கள்",te:"ఉచితంగా మీ ప్లాన్ తయారు చేసుకోండి",kn:"ಉಚಿತವಾಗಿ ನಿಮ್ಮ ಯೋಜನೆ ಮಾಡಿ",pa:"ਮੁਫ਼ਤ ਵਿੱਚ ਆਪਣਾ ਪਲਾਨ ਬਣਾਓ",ml:"സൗജന്യമായി നിങ്ങളുടെ പ്ലാൻ ഉണ്ടാക്കൂ"},
  pPoster:{en:"Share poster",hi:"Poster share karein",hin:"पोस्टर शेयर करें",bn:"পোস্টার শেয়ার করুন",mr:"पोस्टर शेअर करा",gu:"પોસ્ટર શેર કરો",ta:"போஸ்டரைப் பகிருங்கள்",te:"పోస్టర్ షేర్ చేయండి",kn:"ಪೋಸ್ಟರ್ ಹಂಚಿಕೊಳ್ಳಿ",pa:"ਪੋਸਟਰ ਸਾਂਝਾ ਕਰੋ",ml:"പോസ്റ്റർ പങ്കിടൂ"},
@@ -1483,7 +1486,7 @@ async function copyLink(){try{await navigator.clipboard.writeText(myRefLink());t
 /* canvas share-card — anpad-friendly: bada emoji + kam text + link */
 function rrect(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
 function wrapText(g,text,x,y,maxW,lh){const words=String(text||"").split(" ");let line="",yy=y;for(const w of words){const tt=line?line+" "+w:w;if(g.measureText(tt).width>maxW&&line){g.fillText(line,x,yy);line=w;yy+=lh;}else line=tt;}if(line)g.fillText(line,x,yy);return yy;}
-/* Landing page jaisa poster (1080x1350): logo, headline, fayde, CTA + referral QR */
+/* Landing page jaisa poster (1080x1500): logo, headline, fayde, CTA. QR sirf "Show QR" wale poster par */
 function wrapLines(g,text,maxW,maxLines){
  const words=String(text||"").replace(/\s+/g," ").trim().split(" ");const out=[];let line="",cut=false;
  for(const w of words){const tt=line?line+" "+w:w;if(g.measureText(tt).width>maxW&&line){out.push(line);line=w;if(out.length===maxLines){cut=true;break;}}else line=tt;}
@@ -1492,58 +1495,60 @@ function wrapLines(g,text,maxW,maxLines){
  return out;
 }
 function loadImg(src,ms){return new Promise(res=>{const im=new Image();im.crossOrigin="anonymous";const tm=setTimeout(()=>res(null),ms||4000);im.onload=()=>{clearTimeout(tm);res(im);};im.onerror=()=>{clearTimeout(tm);res(null);};im.src=src;});}
-async function makeCardFile({emoji,title,lines}){
- const W=1080,H=1350,c=document.createElement("canvas");c.width=W;c.height=H;const g=c.getContext("2d");
+function posterBenefits(){const b=tx("qrB")||[];return [b[0],"📋 "+tx("pAi"),b[2]].filter(Boolean);}
+async function makeCardFile({emoji,title,lines,withQr}){
+ const W=1080,H=1500,c=document.createElement("canvas");c.width=W;c.height=H;const g=c.getContext("2d");
  const SANS='"Mulish","Segoe UI","Noto Sans",system-ui,sans-serif',HEAD='"Fraunces",Georgia,"Noto Serif",serif';
- const qr=await loadImg(qrImgUrl().replace("size=300x300","size=420x420"));
+ const qr=withQr?await loadImg(qrImgUrl().replace("size=300x300","size=420x420")):null;
  // background + halki roshni (landing hero jaisa)
  g.fillStyle="#F2F5F0";g.fillRect(0,0,W,H);
- let rg=g.createRadialGradient(900,140,0,900,140,620);rg.addColorStop(0,"rgba(46,125,91,.26)");rg.addColorStop(1,"rgba(46,125,91,0)");g.fillStyle=rg;g.fillRect(0,0,W,H);
- rg=g.createRadialGradient(80,900,0,80,900,520);rg.addColorStop(0,"rgba(214,170,80,.26)");rg.addColorStop(1,"rgba(214,170,80,0)");g.fillStyle=rg;g.fillRect(0,0,W,H);
- const X=80;
+ let rg=g.createRadialGradient(900,150,0,900,150,680);rg.addColorStop(0,"rgba(46,125,91,.26)");rg.addColorStop(1,"rgba(46,125,91,0)");g.fillStyle=rg;g.fillRect(0,0,W,H);
+ rg=g.createRadialGradient(80,1000,0,80,1000,560);rg.addColorStop(0,"rgba(214,170,80,.26)");rg.addColorStop(1,"rgba(214,170,80,0)");g.fillStyle=rg;g.fillRect(0,0,W,H);
+ const X=76;
  // logo
- g.fillStyle="#2E7D5B";rrect(g,X,74,84,84,24);g.fill();
- g.save();g.translate(X+14,88);g.scale(2.35,2.35);g.strokeStyle="#fff";g.lineWidth=2;g.lineCap="round";g.lineJoin="round";
+ g.fillStyle="#2E7D5B";rrect(g,X,74,96,96,28);g.fill();
+ g.save();g.translate(X+16,90);g.scale(2.7,2.7);g.strokeStyle="#fff";g.lineWidth=2;g.lineCap="round";g.lineJoin="round";
  g.stroke(new Path2D("M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"));g.stroke(new Path2D("M2 21c0-3 1.85-5.36 5.08-6"));g.restore();
- g.textAlign="left";g.textBaseline="middle";g.fillStyle="#1E2823";g.font="600 50px "+HEAD;g.fillText(appName(),X+108,118);
+ g.textAlign="left";g.textBaseline="middle";g.fillStyle="#1E2823";g.font="600 58px "+HEAD;g.fillText(appName(),X+122,124);
  // kicker pill
- g.font="800 30px "+SANS;const kick=tx("pKick");const kw=g.measureText(kick).width+86;
- g.fillStyle="#fff";rrect(g,X,206,kw,62,31);g.fill();g.strokeStyle="#D9E2D6";g.lineWidth=2;g.stroke();
- g.fillStyle="#2E7D5B";g.beginPath();g.arc(X+34,237,9,0,7);g.fill();
- g.fillStyle="#B07D22";g.fillText(kick,X+58,238);
+ g.font="800 34px "+SANS;const kick=tx("pKick");const kw=g.measureText(kick).width+94;
+ g.fillStyle="#fff";rrect(g,X,222,kw,70,35);g.fill();g.strokeStyle="#D9E2D6";g.lineWidth=2;g.stroke();
+ g.fillStyle="#2E7D5B";g.beginPath();g.arc(X+38,257,10,0,7);g.fill();
+ g.fillStyle="#B07D22";g.fillText(kick,X+62,258);
  // emoji badge
- g.fillStyle="#fff";g.beginPath();g.arc(W-150,250,74,0,7);g.fill();g.textAlign="center";g.font="80px sans-serif";g.fillText(emoji||"🌿",W-150,256);
+ g.fillStyle="#fff";g.beginPath();g.arc(W-150,270,82,0,7);g.fill();g.textAlign="center";g.font="90px sans-serif";g.fillText(emoji||"🌿",W-150,277);
  // headline + chhota text
- g.textAlign="left";g.textBaseline="alphabetic";g.fillStyle="#1C5A3E";g.font="700 82px "+HEAD;
- let y=390;for(const l of wrapLines(g,title||"",W-2*X-40,2)){g.fillText(l,X,y);y+=98;}
- g.fillStyle="#5C6B61";g.font="600 38px "+SANS;y+=4;
- for(const l of wrapLines(g,(lines||[]).join(" "),W-2*X,3)){g.fillText(l,X,y);y+=54;}
+ g.textAlign="left";g.textBaseline="alphabetic";g.fillStyle="#1C5A3E";g.font="700 96px "+HEAD;
+ let y=440;for(const l of wrapLines(g,title||"",W-2*X-30,2)){g.fillText(l,X,y);y+=112;}
+ g.fillStyle="#5C6B61";g.font="700 44px "+SANS;y+=2;
+ for(const l of wrapLines(g,(lines||[]).join(" "),W-2*X,3)){g.fillText(l,X,y);y+=60;}
  // fayde (3 cards)
- y+=20;g.font="800 36px "+SANS;
- for(const b of (tx("qrB")||[]).slice(0,3)){
-  g.fillStyle="#fff";rrect(g,X,y,W-2*X,92,24);g.fill();g.strokeStyle="#D9E2D6";g.lineWidth=2;g.stroke();
-  g.fillStyle="#1E2823";g.textBaseline="middle";g.fillText(wrapLines(g,b,W-2*X-60,1)[0]||"",X+30,y+47);g.textBaseline="alphabetic";y+=110;
+ y+=26;g.font="800 42px "+SANS;
+ for(const b of posterBenefits()){
+  g.fillStyle="#fff";rrect(g,X,y,W-2*X,108,28);g.fill();g.strokeStyle="#D9E2D6";g.lineWidth=2;g.stroke();
+  g.fillStyle="#1E2823";g.textBaseline="middle";g.fillText(wrapLines(g,b,W-2*X-64,1)[0]||"",X+34,y+55);g.textBaseline="alphabetic";y+=128;
  }
- // neeche hara CTA panel + QR
- const PY=Math.max(y+16,H-360),PH=H-PY-60;
- const lg=g.createLinearGradient(0,PY,W,PY+PH);lg.addColorStop(0,"#2E7D5B");lg.addColorStop(1,"#1C5A3E");g.fillStyle=lg;rrect(g,X-20,PY,W-2*X+40,PH,40);g.fill();
- const QS=PH-70,QX=W-X+20-30-QS,QY=PY+35;
- if(qr){g.fillStyle="#fff";rrect(g,QX-12,QY-12,QS+24,QS+24,22);g.fill();g.drawImage(qr,QX,QY,QS,QS);}
- const TW=(qr?QX-40:W-X)-(X+10);
- g.fillStyle="#fff";g.font="800 46px "+SANS;let ty=PY+86;
- for(const l of wrapLines(g,tx("pCta")+" →",TW,2)){g.fillText(l,X+10,ty);ty+=58;}
- g.fillStyle="rgba(255,255,255,.85)";g.font="600 30px "+SANS;ty+=6;
- for(const l of wrapLines(g,shareTagline().split("\n").filter(Boolean)[0]||"",TW,2)){g.fillText(l,X+10,ty);ty+=40;}
- g.fillStyle="#F4E9CE";g.font="800 30px "+SANS;
- g.fillText(qr?("📲 "+(t().qrScan2||"")):myRefLink().replace(/^https?:\/\//,"").slice(0,40),X+10,PY+PH-36);
+ // neeche hara CTA panel (QR wale poster me QR bhi)
+ const PH=qr?340:220,PY=y+24;
+ const lg=g.createLinearGradient(0,PY,W,PY+PH);lg.addColorStop(0,"#2E7D5B");lg.addColorStop(1,"#1C5A3E");g.fillStyle=lg;rrect(g,X-20,PY,W-2*X+40,PH,44);g.fill();
+ const QS=PH-80,QX=W-X+20-36-QS,QY=PY+40;
+ if(qr){g.fillStyle="#fff";rrect(g,QX-14,QY-14,QS+28,QS+28,24);g.fill();g.drawImage(qr,QX,QY,QS,QS);}
+ const TX0=X+16,TW=(qr?QX-44:W-X-20)-TX0;
+ g.fillStyle="#fff";g.font="800 "+(qr?52:58)+"px "+SANS;let ty=PY+(qr?100:96);
+ for(const l of wrapLines(g,tx("pAi")+" →",TW,qr?3:2)){g.fillText(l,TX0,ty);ty+=64;}
+ g.fillStyle="#F4E9CE";g.font="800 34px "+SANS;
+ g.fillText(qr?("📲 "+tx("pScan")):myRefLink().replace(/^https?:\/\//,"").slice(0,44),TX0,PY+PH-44);
+ // jitna content utni lambai (khaali jagah na rahe)
+ const HH=Math.min(H,PY+PH+64),out=document.createElement("canvas");out.width=W;out.height=HH;out.getContext("2d").drawImage(c,0,0);
  return new Promise(resolve=>{
-  if(c.toBlob)c.toBlob(b=>resolve(b?new File([b],"naturalheal.png",{type:"image/png"}):null),"image/png");
+  if(out.toBlob)out.toBlob(b=>resolve(b?new File([b],"naturalheal.png",{type:"image/png"}):null),"image/png");
   else resolve(null);
  });
 }
-async function shareInvite(){
- const file=await makeCardFile({emoji:"🌿",title:tx("shGift"),lines:[tx("shFreeApp")]});
- shareContent({text:inviteText(),file,type:"invite"});
+function invitePoster(withQr){return makeCardFile({emoji:"🌿",title:tx("shGift"),lines:[tx("pSub")],withQr});}
+async function shareInvite(type){
+ const file=await invitePoster(false);
+ shareContent({text:inviteText(),file,type:typeof type==="string"?type:"invite"});
 }
 async function sharePlan(pl){
  const title=tx("shMyPlan");
@@ -1586,12 +1591,17 @@ function showQR(){
    <div class="qr-badge">${appName()}</div>
    <h3 class="qr-h">${x.qrHeadline}</h3>
    <div class="qr-benes">${benefits.map(b=>`<div>${b}</div>`).join("")}</div>
-   <div class="qr-box"><img src="${qrImgUrl()}" alt="QR" style="width:220px;height:220px;display:block" onerror="this.parentElement.innerHTML='<div style=&quot;font-weight:700;word-break:break-all;padding:20px&quot;>'+${JSON.stringify(esc(myRefLink()))}+'</div>'"></div>
+   <div class="qr-box"><img src="${qrImgUrl()}" alt="QR" style="width:220px;height:220px;display:block" onerror="this.parentElement.innerHTML='<div style=&quot;font-weight:700;word-break:break-all;padding:20px&quot;>'+${esc(JSON.stringify(myRefLink()))}+'</div>'"></div>
    <div class="qr-cta">📲 ${x.qrScan2}</div>
    <p class="sub" style="margin:8px 0 0;word-break:break-all;font-size:12px">${esc(myRefLink().replace(/^https?:\/\//,""))}</p>
  </div>
+ <div id="qrPosterPv" style="margin-top:14px;text-align:center"><span class="spin"></span></div>
  <button class="btn btn-primary" id="qrPoster" style="width:100%;margin-top:12px">📤 ${esc(tx("pPoster"))}</button>`);
- const pb=$("qrPoster");if(pb)pb.onclick=shareInvite;
+ // QR wala poster: dikhao bhi, share bhi
+ let qf=null;const pv=$("qrPosterPv");
+ invitePoster(true).then(f=>{qf=f;const box=$("qrPosterPv");if(!box)return;
+  if(f){box.innerHTML="";const im=new Image();im.alt="";im.style.cssText="width:100%;max-width:360px;border-radius:14px;box-shadow:var(--shadow)";im.src=URL.createObjectURL(f);box.appendChild(im);}else box.innerHTML="";});
+ const pb=$("qrPoster");if(pb)pb.onclick=async()=>{const f=qf||await invitePoster(true);shareContent({text:inviteText(),file:f,type:"qr"});};
 }
 /* PWA install */
 let deferredPrompt=null;
@@ -1938,7 +1948,7 @@ async function renderInvite(){
    <div class="inv-stat">👥 ${joined} ${x.invJoined}</div>
  </div>`;
  $("invCopy").onclick=copyLink;
- $("invWa").onclick=()=>openWhatsApp(inviteText(),"invite");
+ $("invWa").onclick=()=>shareInvite("whatsapp");
  $("invShare").onclick=shareInvite;
  $("invQr").onclick=showQR;
  $("installBtn").onclick=doInstall;
