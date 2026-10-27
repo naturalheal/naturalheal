@@ -6,7 +6,7 @@
 // ---------------------------------------------------------------------------
 // Note: Anthropic API ko seedha fetch se call karte hain (koi SDK package nahi chahiye).
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-haiku-4-5";
-const MAX_TOKENS = Number(process.env.ANTHROPIC_MAX_TOKENS) || 8000; // poora plan JSON kat na jaaye (Devanagari/regional script tokens zyada lete hain)
+const MAX_TOKENS = Number(process.env.ANTHROPIC_MAX_TOKENS) || 16000; // poora plan JSON kat na jaaye (Devanagari/regional script tokens zyada lete hain)
 const KEY = process.env.ANTHROPIC_API_KEY || "";
 const API_URL = "https://api.anthropic.com/v1/messages";
 let lastAI = null; // aakhri AI plan-call ka natija (admin diagnostics ke liye)
@@ -178,12 +178,12 @@ async function testAI() {
     if (!resp.ok) {
       let msg = txt.slice(0, 300);
       try { const j = JSON.parse(txt); if (j.error && j.error.message) msg = j.error.message; } catch (_) {}
-      return { ok: false, model: MODEL, status: resp.status, error: msg };
+      return { ok: false, model: MODEL, status: resp.status, error: msg, tr_errors: trErrors() };
     }
     const data = JSON.parse(txt);
     const text = (data.content || []).map((c) => c.text || "").join("");
     const plan = parseJson(text);
-    if (plan) return { ok: true, model: MODEL, stop_reason: data.stop_reason, summary: (plan.summary || "").slice(0, 90) };
+    if (plan) return { ok: true, model: MODEL, stop_reason: data.stop_reason, summary: (plan.summary || "").slice(0, 90), tr_errors: trErrors() };
     return { ok: false, model: MODEL, stop_reason: data.stop_reason, error: "AI ne jawab to diya par JSON parse nahi hua (stop=" + data.stop_reason + ", length=" + text.length + "). Shayad jawab bada/kat gaya." };
   } catch (e) {
     return { ok: false, model: MODEL, error: e.message };
@@ -398,19 +398,26 @@ async function aiVision(prompt, image, maxTokens = 500) {
   } catch (_) { return null; }
 }
 
-// Bana hua plan dusri bhasha me. Plan 3 hisson me (parallel) — lambi script me jawab katta nahi.
-// Jo hissa fail/adhoora ho, wahan asli rehta hai; { plan, complete } lautata hai. Key na ho to null.
+// Bana hua plan dusri bhasha me — chhote tukdon me (har key alag, lambi list 3-3 item ki).
+// Bangla/Tamil/Telugu/Kannada/Punjabi/Malayalam me jawab Hindi se kai guna lamba hota hai; bade tukde kat jaate the.
+// Kata jawab (max_tokens) dobara nahi bheja jaata — tukda aur chhota karte hain (limit bekaar na jaaye).
+// Sirf rate-limit / server error par thoda ruk kar dobara.
 const TR_PARTS = [
   ["summary", "dosha_analysis", "report_findings", "supplements"],
   ["home_remedies", "diet", "yoga"],
   ["daily_routine", "lifestyle_tips", "weight_plan", "red_flags", "disclaimer"],
 ];
+const TR_CHUNK = 4, TR_CONC = 3;
+const trLog = []; // aakhri anuvaad galtiyan (admin AI test me dikhti hain)
+function trErr(e) { trLog.unshift({ at: new Date().toISOString(), ...e }); trLog.length = Math.min(trLog.length, 12); }
 function sameShape(a, b) {
   if (Array.isArray(a)) return Array.isArray(b) && b.length === a.length;
   if (a && typeof a === "object") return !!b && typeof b === "object" && !Array.isArray(b);
   return typeof b === typeof a;
 }
-async function translatePart(obj, lang) {
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+// Ek tukda: { ok, data } | { ok:false, cut:true } (kata) | { ok:false } (fail)
+async function translateChunk(obj, lang) {
   const prompt = `Translate this JSON (part of a wellness plan) into ${langName(lang)}.
 Rules:
 - Translate EVERY human-readable string value into that language and script. Herb/food names may keep the common local name, written in that script.
@@ -419,49 +426,80 @@ Rules:
 - Reply with ONLY the JSON, nothing else.
 
 ${JSON.stringify(obj)}`;
-  try {
-    const resp = await fetch(API_URL, {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-api-key": KEY, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify({ model: MODEL, max_tokens: MAX_TOKENS, messages: [{ role: "user", content: prompt }] }),
-    });
-    if (!resp.ok) return null;
-    const data = await resp.json();
-    if (data.stop_reason === "max_tokens") return null; // kata hua jawab — bharosa nahi
-    const out = parseJson((data.content || []).map((c) => c.text || "").join(""));
-    return out && typeof out === "object" ? out : null;
-  } catch (_) { return null; }
+  for (let i = 0; i < 3; i++) {
+    try {
+      const resp = await fetch(API_URL, {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-api-key": KEY, "anthropic-version": "2023-06-01" },
+        body: JSON.stringify({ model: MODEL, max_tokens: MAX_TOKENS, messages: [{ role: "user", content: prompt }] }),
+      });
+      if (!resp.ok) {
+        const t = (await resp.text()).slice(0, 160);
+        trErr({ lang, keys: Object.keys(obj).join(","), status: resp.status, error: t });
+        if (resp.status === 429 || resp.status >= 500) { await wait(2000 * (i + 1)); continue; }
+        return { ok: false };
+      }
+      const data = await resp.json();
+      if (data.stop_reason === "max_tokens") { trErr({ lang, keys: Object.keys(obj).join(","), stop_reason: "max_tokens" }); return { ok: false, cut: true }; }
+      const out = parseJson((data.content || []).map((c) => c.text || "").join(""));
+      if (out && typeof out === "object") return { ok: true, data: out };
+      trErr({ lang, keys: Object.keys(obj).join(","), error: "JSON parse" });
+      return { ok: false };
+    } catch (e) { trErr({ lang, error: e.message }); await wait(1500); }
+  }
+  return { ok: false };
+}
+// Ek key ka anuvaad; list ho to 3-3 ke tukde, kata to aur chhota (1 item tak)
+async function translateKey(plan, k, lang) {
+  const v = plan[k];
+  if (!Array.isArray(v)) {
+    const r = await translateChunk({ [k]: v }, lang);
+    return r.ok && sameShape(v, r.data[k]) ? r.data[k] : null;
+  }
+  const out = [];
+  const run = async (items) => {
+    const r = await translateChunk({ [k]: items }, lang);
+    if (r.ok && Array.isArray(r.data[k]) && r.data[k].length === items.length) return r.data[k];
+    if (r.cut && items.length > 1) {
+      const h = Math.ceil(items.length / 2);
+      const a = await run(items.slice(0, h)); if (!a) return null;
+      const b = await run(items.slice(h)); if (!b) return null;
+      return a.concat(b);
+    }
+    return null;
+  };
+  for (let i = 0; i < v.length; i += TR_CHUNK) {
+    const part = await run(v.slice(i, i + TR_CHUNK));
+    if (!part) return null;
+    out.push(...part);
+  }
+  return out;
 }
 // Plan ki kaun si keys anuvaad layak hain (khaali chhod kar)
 function trKeys(plan) {
   return TR_PARTS.flat().filter((k) => plan && plan[k] != null && plan[k] !== "" && !(Array.isArray(plan[k]) && !plan[k].length));
 }
-const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-// Ek hissa — fail (rate-limit / kata jawab) ho to 2 baar aur koshish
-async function translatePartRetry(obj, lang) {
-  for (let i = 0; i < 3; i++) {
-    const r = await translatePart(obj, lang);
-    if (r) return r;
-    if (i < 2) await wait(1500 * (i + 1));
-  }
-  return null;
-}
-// base = pehle ka (adhoora) anuvaad, done = jo keys ho chuki hain — sirf baaki hisse dobara
+// base = pehle ka (adhoora) anuvaad, done = jo keys ho chuki hain — sirf baaki keys (routine pehle)
 async function translatePlan(plan, lang, base, done) {
   if (!KEY || !plan) return null;
   const all = trKeys(plan), have = new Set(done || []);
-  const parts = TR_PARTS.map((keys) => keys.filter((k) => all.includes(k) && !have.has(k))).filter((keys) => keys.length);
-  const results = await Promise.all(parts.map((keys, i) => wait(i * 400).then(() => translatePartRetry(Object.fromEntries(keys.map((k) => [k, plan[k]])), lang))));
+  const todo = all.filter((k) => !have.has(k)).sort((a, b) => (b === "daily_routine") - (a === "daily_routine") || (b === "summary") - (a === "summary"));
   const out = { ...(base || plan), meta: { ...(plan.meta || {}), language: lang } };
-  parts.forEach((keys, i) => {
-    const r = results[i];
-    keys.forEach((k) => { if (r && sameShape(plan[k], r[k])) { out[k] = r[k]; have.add(k); } });
-  });
+  let next = 0;
+  const worker = async () => {
+    while (next < todo.length) {
+      const k = todo[next++];
+      const r = await translateKey(plan, k, lang);
+      if (r != null) { out[k] = r; have.add(k); }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(TR_CONC, todo.length) }, worker));
   const keys = all.filter((k) => have.has(k));
   return { plan: out, keys, complete: keys.length === all.length };
 }
+function trErrors() { return trLog.slice(); }
 
 // Key available hai? (frontend ko batane ke liye route use karta hai)
 function aiAvailable() { return !!KEY; }
 
-module.exports = { generatePlan, fallbackPlan, translatePlan, trKeys, aiText, aiVision, aiAvailable, buildSystemPrompt, JSON_SHAPE, testAI, aiLast, MODEL, langName };
+module.exports = { generatePlan, fallbackPlan, translatePlan, trKeys, trErrors, aiText, aiVision, aiAvailable, buildSystemPrompt, JSON_SHAPE, testAI, aiLast, MODEL, langName };
