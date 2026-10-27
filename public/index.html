@@ -1187,7 +1187,7 @@ function applyLang(code){
  _tc=null;                 // merge cache reset
  try{stopSpeak();}catch(e){}
  renderStatic();
- try{renderMemberSel();}catch(e){}
+ try{renderMemberSel();renderWelcome();}catch(e){}
  refreshView();
 }
 /* bhasha badalne par current screen ka dynamic content dobara load ho */
@@ -1808,9 +1808,16 @@ const WELCOME={
 function showWelcome(){
  let done=false;try{done=localStorage.getItem("nh_welcomed")==="1";}catch(e){}
  if(done||document.getElementById("welcomeOv"))return;
- const w=WELCOME[lang]||WELCOME.en;
  const el=document.createElement("div");el.className="welcome-ov";el.id="welcomeOv";
+ document.body.appendChild(el);
+ renderWelcome();
+}
+/* Welcome popup: chuni bhasha me; popup ke andar se bhi bhasha badal sakte hain */
+function renderWelcome(){
+ const el=document.getElementById("welcomeOv");if(!el)return;
+ const w=WELCOME[lang]||WELCOME.en;
  el.innerHTML=`<div class="welcome-card">
+   <select id="welcomeLang" class="langsel" aria-label="${esc(tx("langLbl"))}" style="display:block;margin:0 0 10px auto">${LANGS.map(l=>`<option value="${l[0]}" ${l[0]===lang?"selected":""}>${l[1]}</option>`).join("")}</select>
    <div class="welcome-leaf">🌿</div>
    <div class="welcome-tag">${esc(w.tag)}</div>
    <h2 class="welcome-title">${esc(w.title)}</h2>
@@ -1818,7 +1825,7 @@ function showWelcome(){
    <div class="welcome-note">${esc(w.note)}</div>
    <button class="btn btn-primary" id="welcomeBtn" style="width:100%;margin-top:16px">${esc(w.btn)}</button>
  </div>`;
- document.body.appendChild(el);
+ $("welcomeLang").onchange=(e)=>{const v=e.target.value;if($("langSel"))$("langSel").value=v;applyLang(v);};
  $("welcomeBtn").onclick=()=>{try{localStorage.setItem("nh_welcomed","1");}catch(e){}el.remove();};
 }
 const OPT_LBL={
