@@ -1603,7 +1603,7 @@ async function makeCardFile({emoji,title,lines,withQr}){
  g.fillStyle="#fff";g.font="800 "+(qr?52:58)+"px "+SANS;let ty=PY+(qr?100:96);
  for(const l of wrapLines(g,tx("pAi")+" →",TW,qr?3:2)){g.fillText(l,TX0,ty);ty+=64;}
  g.fillStyle="#F4E9CE";g.font="800 34px "+SANS;
- g.fillText(qr?("📲 "+tx("pScan")):myRefLink().replace(/^https?:\/\//,"").slice(0,44),TX0,PY+PH-44);
+ g.fillText(wrapLines(g,qr?("📲 "+tx("pScan")):myRefLink().replace(/^https?:\/\//,""),TW,1)[0]||"",TX0,PY+PH-44);
  // jitna content utni lambai (khaali jagah na rahe)
  const HH=Math.min(H,PY+PH+64),out=document.createElement("canvas");out.width=W;out.height=HH;out.getContext("2d").drawImage(c,0,0);
  return new Promise(resolve=>{
