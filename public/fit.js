@@ -58,6 +58,7 @@ let fitData=null,fitForm={days:60,diet:"veg",place:"home",activity:"low",gender:
 async function loadFit(){
  if(!$("viewFit"))return;
  if(typeof fitSeg==="function"&&fitSeg()==="yoga"){loadYoga();return;}
+ if(typeof fitSeg==="function"&&fitSeg()==="gym"&&typeof loadGym==="function"){loadGym();return;}
  const v=fitBody();
  if(!fitData)v.innerHTML=`<div class="fit-card" style="text-align:center"><span class="spin" style="border-color:var(--accent-soft);border-top-color:var(--accent)"></span></div>`;
  try{fitData=await api("/fit/wl");}catch(e){v.innerHTML=`<div class="fit-card"><p class="sub" style="margin:0">${esc(e.message)}</p></div>`;return;}
@@ -66,6 +67,7 @@ async function loadFit(){
 function renderFit(){
  if(!$("viewFit"))return;
  if(typeof fitSeg==="function"&&fitSeg()==="yoga"){renderYoga();if(typeof yP!=="undefined"&&yP&&$("yPlay"))yPose(false);return;}
+ if(typeof fitSeg==="function"&&fitSeg()==="gym"&&typeof renderGym==="function"){gymData?renderGym():loadGym();return;}
  if(!fitData){loadFit();return;}
  fitData.program?renderWL():renderWLStart();
 }

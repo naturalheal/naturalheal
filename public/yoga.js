@@ -85,7 +85,7 @@ function fitBody(){
  const v=$("viewFit");
  if(!$("fitBody")){v.innerHTML=`<div class="fit-segbar" id="fitSegBar"></div><div id="fitBody"></div>`;}
  const seg=fitSeg();
- $("fitSegBar").innerHTML=[["wl","⚖️ "+ft("segWL")],["yoga","🧘 "+ft("segYoga")]].map(([k,l])=>`<button type="button" data-fseg="${k}" class="${seg===k?"on":""}">${esc(l)}</button>`).join("");
+ $("fitSegBar").innerHTML=[["wl","⚖️ "+ft("segWL")],["yoga","🧘 "+ft("segYoga")],["gym","🏋️ "+ft("segGym")]].map(([k,l])=>`<button type="button" data-fseg="${k}" class="${seg===k?"on":""}">${esc(l)}</button>`).join("");
  $("fitSegBar").querySelectorAll("[data-fseg]").forEach(b=>b.onclick=()=>{try{localStorage.setItem("nh_fitseg",b.dataset.fseg);}catch(_){}loadFit();});
  return $("fitBody");
 }

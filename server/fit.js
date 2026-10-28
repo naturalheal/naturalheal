@@ -200,4 +200,60 @@ function doneYoga(ctx) {
   return { ...yogaView(ctx.user.id), points_awarded: awarded };
 }
 
-module.exports = { getWL, startWL, logWL, stopWL, targets, TASKS, getYoga, doneYoga };
+// ---------------------------------------------------------------------------
+// Gym — lakshya/level/din/jagah ka profile; har workout ke sets (kg x reps) ka log.
+// App plan (split) khud banati hai; server pichhla set aur best (PR) har exercise ka deta hai.
+// ---------------------------------------------------------------------------
+const GYM_GOALS = ["fat", "muscle", "strength"], GYM_LEVELS = ["beg", "int", "adv"];
+function gymProfileOf(userId) { return db.gym_profiles.findBy("user_id", userId) || null; }
+function gymView(userId) {
+  const prof = gymProfileOf(userId);
+  const logs = db.gym_logs.filter((l) => l.user_id === userId).sort((a, b) => (a.created_at || "").localeCompare(b.created_at || ""));
+  const last = {}, best = {};
+  for (const l of logs) for (const e of l.entries || []) {
+    if (!e.sets || !e.sets.length) continue;
+    last[e.ex] = { date: l.date, sets: e.sets };
+    const top = Math.max(...e.sets.map((s) => Number(s.kg) || 0));
+    if (top > (best[e.ex] || 0)) best[e.ex] = top;
+  }
+  const today = istToday();
+  const since = (n) => new Date(Date.now() + 19800000 - n * 86400000).toISOString().slice(0, 10);
+  const mine = prof ? logs.filter((l) => (l.created_at || "") >= (prof.updated_at || prof.created_at || "")) : [];
+  const lastLog = logs[logs.length - 1];
+  return {
+    profile: prof ? { goal: prof.goal, level: prof.level, days: prof.days, place: prof.place } : null,
+    next: mine.length,                                       // split me agla din
+    last, best,
+    done_today: logs.some((l) => l.date === today),
+    week: logs.filter((l) => l.date >= since(6)).length,
+    month: new Set(logs.filter((l) => l.date >= since(29)).map((l) => l.date)).size,
+    total: logs.length,
+    last_session: lastLog ? { date: lastLog.date, day: lastLog.day, volume: Math.round((lastLog.entries || []).reduce((s, e) => s + (e.sets || []).reduce((a, x) => a + (Number(x.kg) || 0) * (Number(x.reps) || 0), 0), 0)) } : null,
+  };
+}
+function getGym(ctx) { return gymView(ctx.user.id); }
+function setupGym(ctx) {
+  const b = ctx.body || {};
+  const row = {
+    goal: GYM_GOALS.includes(b.goal) ? b.goal : "fat", level: GYM_LEVELS.includes(b.level) ? b.level : "beg",
+    days: [3, 4, 5].includes(Number(b.days)) ? Number(b.days) : 3, place: b.place === "home" ? "home" : "gym", updated_at: now(),
+  };
+  const cur = gymProfileOf(ctx.user.id);
+  if (cur) db.gym_profiles.update(cur.id, row); else db.gym_profiles.insert({ id: uid(), user_id: ctx.user.id, created_at: now(), ...row });
+  return gymView(ctx.user.id);
+}
+function logGym(ctx) {
+  const b = ctx.body || {};
+  const entries = (Array.isArray(b.entries) ? b.entries : []).slice(0, 15).map((e) => ({
+    ex: String(e.ex || "").slice(0, 30),
+    sets: (Array.isArray(e.sets) ? e.sets : []).slice(0, 8)
+      .map((s) => ({ kg: clamp(r1(Number(s.kg) || 0), 0, 400), reps: clamp(Math.round(Number(s.reps) || 0), 0, 100) }))
+      .filter((s) => s.reps > 0),
+  })).filter((e) => e.ex && e.sets.length);
+  if (!entries.length) throw new HttpError(400, "empty");
+  db.gym_logs.insert({ id: uid(), user_id: ctx.user.id, date: istToday(), day: String(b.day || "").slice(0, 20), entries, created_at: now() });
+  const awarded = points.award(ctx.user.id, "log", { note: "gym" }).awarded;
+  return { ...gymView(ctx.user.id), points_awarded: awarded };
+}
+
+module.exports = { getWL, startWL, logWL, stopWL, targets, TASKS, getYoga, doneYoga, getGym, setupGym, logGym };
