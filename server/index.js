@@ -20,6 +20,7 @@ const path = require("path");
 })();
 
 const routes = require("./routes");
+const fit = require("./fit");
 const billing = require("./billing");
 const admin = require("./admin");
 const kitchen = require("./kitchen");
@@ -38,6 +39,10 @@ const R = [
   ["POST", "/api/auth/login", routes.login],
   ["GET", "/api/me", routes.me, { auth: true }],
   ["PUT", "/api/me/language", routes.setLanguage, { auth: true }],
+  ["GET", "/api/fit/wl", fit.getWL, { auth: true }],
+  ["POST", "/api/fit/wl/start", fit.startWL, { auth: true }],
+  ["POST", "/api/fit/wl/log", fit.logWL, { auth: true }],
+  ["POST", "/api/fit/wl/stop", fit.stopWL, { auth: true }],
   ["PUT", "/api/profile", routes.putProfile, { auth: true }],
   ["POST", "/api/plan/generate", routes.generate, { auth: true }],
   ["GET", "/api/plans", routes.listPlans, { auth: true }],

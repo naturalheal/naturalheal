@@ -333,6 +333,11 @@ ul.items li b{color:var(--accent-ink)}
 .trpop .tp-s{font-size:12.5px;color:var(--muted);margin-top:2px;font-weight:700}
 .trpop .tp-bar{height:5px;border-radius:5px;background:var(--surface-2);margin-top:10px;overflow:hidden}
 .trpop .tp-bar i{display:block;height:100%;width:0;background:var(--accent);border-radius:5px;transition:width .9s linear}
+.fit-home{display:flex;align-items:center;gap:12px;width:100%;margin-top:14px;text-align:left;cursor:pointer;font:inherit;color:#fff;border:none;border-radius:16px;padding:14px 16px;background:linear-gradient(135deg,#C77D3A,#B07D22);box-shadow:var(--shadow)}
+.fit-home .fhi{font-size:28px}
+.fit-home b{display:block;font-size:15.5px}
+.fit-home small{display:block;opacity:.9;font-size:12.5px;font-weight:600;margin-top:2px}
+.fit-home .fha{margin-left:auto;font-size:26px;font-weight:300}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:11px 18px;border-radius:12px;font-weight:700;font-size:14px;box-shadow:var(--shadow);z-index:50}
 .icon{width:32px;height:32px;border-radius:9px;background:var(--accent-soft);color:var(--accent-ink);display:grid;place-items:center;flex:none}
 .icon svg{width:18px;height:18px}
@@ -464,6 +469,9 @@ ul.items li b{color:var(--accent-ink)}
     <!-- TRACKER -->
     <div id="viewTracker" class="hidden"></div>
 
+    <!-- FIT: weight loss program (fit.js) -->
+    <div id="viewFit" class="hidden"></div>
+
     <!-- KITCHEN REMEDY -->
     <div id="viewKitchen" class="hidden"></div>
 
@@ -474,6 +482,7 @@ ul.items li b{color:var(--accent-ink)}
     <div class="tabbar" id="tabbar">
       <button class="tabbtn on" data-tab="home" type="button"><span class="ti">🏠</span><span id="tabHome"></span></button>
       <button class="tabbtn" data-tab="plan" type="button"><span class="ti">🌿</span><span id="tabPlan"></span></button>
+      <button class="tabbtn" data-tab="fit" type="button"><span class="ti">⚖️</span><span id="tabFit"></span></button>
       <button class="tabbtn" data-tab="track" type="button"><span class="ti">📈</span><span id="tabTrack"></span></button>
       <button class="tabbtn" data-tab="kitchen" type="button"><span class="ti">🍲</span><span id="tabKitchen"></span></button>
       <button class="tabbtn" data-tab="community" type="button"><span class="ti">👥</span><span id="tabComm"></span></button>
@@ -486,6 +495,8 @@ ul.items li b{color:var(--accent-ink)}
 <div id="modalRoot"></div>
 <div id="sheetRoot"></div>
 
+<script src="/fit-i18n.js"></script>
+<script src="/fit.js"></script>
 <script>
 const API="/api";
 let lang=localStorage.getItem("nh_lang")||"hin";
@@ -1180,7 +1191,7 @@ function renderStatic(){
  $("payUpiBtn").textContent=x.payUpi;$("payRzpBtn").textContent=x.payRzp;$("payStripeBtn").textContent=x.payStripe;$("upCancel").textContent=x.cancel;
  if(pricing){const up=pricing.upi&&pricing.upi.enabled,rz=pricing.providers&&pricing.providers.razorpay,st=pricing.providers&&pricing.providers.stripe;
   $("payUpiBtn").style.display=up?"inline-flex":"none";$("payRzpBtn").style.display=rz?"inline-flex":"none";$("payStripeBtn").style.display=st?"inline-flex":"none";}
- $("tabHome").textContent=x.tabHome;$("tabPlan").textContent=x.tabPlan;$("tabTrack").textContent=x.tabTrack;$("tabKitchen").textContent=x.tabKitchen;$("tabComm").textContent=x.tabComm;
+ $("tabHome").textContent=x.tabHome;$("tabPlan").textContent=x.tabPlan;$("tabTrack").textContent=x.tabTrack;$("tabKitchen").textContent=x.tabKitchen;$("tabComm").textContent=x.tabComm;if($("tabFit")&&typeof ft==="function")$("tabFit").textContent=ft("tabFit");
  $("chatFabTxt").textContent=x.chatOpen;
  renderPlanStrip();
 }
@@ -1222,6 +1233,7 @@ function refreshView(){
   else if(tb==="track"&&typeof loadTracker==="function")loadTracker();
   else if(tb==="kitchen"&&typeof loadKitchen==="function")loadKitchen();
   else if(tb==="community"&&typeof loadCommunity==="function")loadCommunity();
+  else if(tb==="fit"&&typeof renderFit==="function")renderFit();
   else if(tb==="plan"&&window._lastPlan&&typeof renderPlan==="function")renderPlan(window._lastPlan,window._lastSrc,true);
  }catch(e){}
  try{if(window._lastPlan)ensurePlanLang();if(typeof loadHistory==="function"&&$("histList"))loadHistory();}catch(e){}
@@ -1760,14 +1772,16 @@ function setTab(name){
  $("viewPlan").classList.toggle("hidden",name!=="plan");
  $("viewTracker").classList.toggle("hidden",name!=="track");
  $("viewKitchen").classList.toggle("hidden",name!=="kitchen");
+ if($("viewFit"))$("viewFit").classList.toggle("hidden",name!=="fit");
  $("viewCommunity").classList.toggle("hidden",name!=="community");
- $("planStrip").classList.toggle("hidden",name==="track"||name==="kitchen"||name==="community");
+ $("planStrip").classList.toggle("hidden",name==="track"||name==="kitchen"||name==="community"||name==="fit");
  if(name!=="plan")$("upgradePanel").classList.add("hidden");
  window.scrollTo({top:0,behavior:"smooth"});
  if(name==="home")loadDashboard();
  if(name==="track")loadTracker();
  if(name==="kitchen")loadKitchen();
  if(name==="community")loadCommunity();
+ if(name==="fit"&&typeof loadFit==="function")loadFit();
 }
 document.querySelectorAll(".tabbtn").forEach(b=>b.addEventListener("click",()=>setTab(b.dataset.tab)));
 $("chatFab").addEventListener("click",openChat);
@@ -1958,6 +1972,7 @@ async function loadDashboard(){
    ${d.stats.streak>=1?`<button class="streak-share" id="streakShare">🔥 ${x.streakShare}</button>`:""}
    <div id="homeStat" class="home-stat"></div>
    ${adjust}
+   ${typeof ft==="function"?`<button class="fit-home" id="qFit" type="button"><span class="fhi">⚖️</span><span><b>${esc(ft("wlTitle"))}</b><small>${esc(ft("wlSub"))}</small></span><span class="fha">›</span></button>`:""}
    <div class="row" style="margin-top:14px">
      <button class="btn btn-primary" id="qNewPlan">${x.dNewPlan}</button>
      <button class="btn btn-gold" id="qLog">${x.dLogSym}</button>
@@ -1977,6 +1992,7 @@ async function loadDashboard(){
    <div class="card"><div class="d-bars">${bars}</div></div>
   `;
   $("qNewPlan").onclick=()=>setTab("plan");
+  if($("qFit"))$("qFit").onclick=()=>setTab("fit");
   $("qLog").onclick=()=>setTab("track");
   wireRoutineOpts($("viewHome"));
   if($("adjBtn"))$("adjBtn").onclick=()=>setTab("plan");
@@ -2282,7 +2298,7 @@ let deepLink={tab:"",post:""};
  const post=p.get("post");if(post){deepLink.post=post;deepLink.tab="community";}
 }catch(_){}})();
 function applyDeepLink(){
- if(deepLink.tab){const valid=["home","plan","track","kitchen","community"];if(valid.includes(deepLink.tab))setTab(deepLink.tab);}
+ if(deepLink.tab){const valid=["home","plan","fit","track","kitchen","community"];if(valid.includes(deepLink.tab))setTab(deepLink.tab);}
  if(deepLink.post){const id=deepLink.post;setTimeout(()=>{const el=document.querySelector('[data-post="'+CSS.escape(id)+'"]');if(el){el.scrollIntoView({behavior:"smooth",block:"center"});el.classList.add("post-hl");}},700);}
  deepLink={tab:"",post:""};
 }
