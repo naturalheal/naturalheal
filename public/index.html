@@ -122,6 +122,13 @@ body.big{zoom:1.18}
 .pt-opt{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:12px}
 .pt-opt>div:first-child{flex:1}
 .pt-opt .sub{font-size:12px}
+.qr-sheet{text-align:center}
+.qr-pv{min-height:240px;display:grid;place-items:center}
+.qr-pv img{width:100%;max-width:380px;border-radius:16px;box-shadow:var(--shadow);display:block;margin:0 auto}
+.qr-acts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.qr-link{margin-top:10px;width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--surface-2);border:1px dashed var(--line);border-radius:12px;padding:10px 12px;font:inherit;font-size:12.5px;color:var(--muted);cursor:pointer}
+.qr-link span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.qr-link b{color:var(--accent);white-space:nowrap}
 .qr-poster{text-align:center;background:linear-gradient(165deg,var(--accent-soft),var(--surface));border-radius:16px;padding:18px 12px}
 .qr-badge{display:inline-block;background:var(--accent);color:#fff;font-weight:800;font-size:13px;padding:5px 14px;border-radius:999px;letter-spacing:.03em}
 .qr-h{font-family:var(--f-head);font-weight:600;font-size:21px;margin:12px 0 10px;color:var(--accent-ink)}
@@ -965,6 +972,7 @@ let _tc=null,_tcLang=null;
 function t(){ if(_tc&&_tcLang===lang)return _tc; const cur=T[lang]||T.hi; _tc=Object.assign({},T.en,cur); _tcLang=lang; return _tc; }
 /* Chhote/dynamic text jo T me nahi the — har bhasha me (har key: {en,hi,hin,bn,mr,gu,ta,te,kn,pa,ml}) */
 const TX={
+ pDownload:{en:"Download",hi:"Download",hin:"डाउनलोड",bn:"ডাউনলোড",mr:"डाउनलोड",gu:"ડાઉનલોડ",ta:"பதிவிறக்கு",te:"డౌన్‌లోడ్",kn:"ಡೌನ್‌ಲೋಡ್",pa:"ਡਾਊਨਲੋਡ",ml:"ഡൗൺലോഡ്"},
  trLeft:{en:"About {n} sec left",hi:"Lagbhag {n} second baaki",hin:"लगभग {n} सेकंड बाकी",bn:"আর প্রায় {n} সেকেন্ড",mr:"सुमारे {n} सेकंद बाकी",gu:"લગભગ {n} સેકન્ડ બાકી",ta:"இன்னும் சுமார் {n} வினாடிகள்",te:"సుమారు {n} సెకన్లు మిగిలి ఉన్నాయి",kn:"ಸುಮಾರು {n} ಸೆಕೆಂಡ್ ಬಾಕಿ",pa:"ਲਗਭਗ {n} ਸਕਿੰਟ ਬਾਕੀ",ml:"ഏകദേശം {n} സെക്കൻഡ് കൂടി"},
  trAlmost:{en:"Almost done…",hi:"Bas ho gaya…",hin:"बस हो गया…",bn:"প্রায় হয়ে গেছে…",mr:"जवळजवळ झाले…",gu:"બસ થઈ ગયું…",ta:"கிட்டத்தட்ட முடிந்தது…",te:"దాదాపు అయిపోయింది…",kn:"ಬಹುತೇಕ ಆಯಿತು…",pa:"ਬੱਸ ਹੋ ਗਿਆ…",ml:"ഏതാണ്ട് കഴിഞ്ഞു…"},
  basicLbl:{en:"Basic",hi:"Basic",hin:"बेसिक",bn:"বেসিক",mr:"बेसिक",gu:"બેસિક",ta:"அடிப்படை",te:"బేసిక్",kn:"ಬೇಸಿಕ್",pa:"ਬੇਸਿਕ",ml:"ബേസിക്"},
@@ -1554,7 +1562,7 @@ function wrapLines(g,text,maxW,maxLines){
 function loadImg(src,ms){return new Promise(res=>{const im=new Image();im.crossOrigin="anonymous";const tm=setTimeout(()=>res(null),ms||4000);im.onload=()=>{clearTimeout(tm);res(im);};im.onerror=()=>{clearTimeout(tm);res(null);};im.src=src;});}
 function posterBenefits(){const b=tx("qrB")||[];return [b[0],"📋 "+tx("pAi"),b[2]].filter(Boolean);}
 async function makeCardFile({emoji,title,lines,withQr}){
- const W=1080,H=1500,c=document.createElement("canvas");c.width=W;c.height=H;const g=c.getContext("2d");
+ const W=1080,H=1700,c=document.createElement("canvas");c.width=W;c.height=H;const g=c.getContext("2d");
  const SANS='"Mulish","Segoe UI","Noto Sans",system-ui,sans-serif',HEAD='"Fraunces",Georgia,"Noto Serif",serif';
  const qr=withQr?await loadImg(qrImgUrl().replace("size=300x300","size=420x420")):null;
  // background + halki roshni (landing hero jaisa)
@@ -1582,8 +1590,9 @@ async function makeCardFile({emoji,title,lines,withQr}){
  // fayde (3 cards)
  y+=26;g.font="800 42px "+SANS;
  for(const b of posterBenefits()){
-  g.fillStyle="#fff";rrect(g,X,y,W-2*X,108,28);g.fill();g.strokeStyle="#D9E2D6";g.lineWidth=2;g.stroke();
-  g.fillStyle="#1E2823";g.textBaseline="middle";g.fillText(wrapLines(g,b,W-2*X-64,1)[0]||"",X+34,y+55);g.textBaseline="alphabetic";y+=128;
+  const bl=wrapLines(g,b,W-2*X-64,2),bh=bl.length>1?158:108;
+  g.fillStyle="#fff";rrect(g,X,y,W-2*X,bh,28);g.fill();g.strokeStyle="#D9E2D6";g.lineWidth=2;g.stroke();
+  g.fillStyle="#1E2823";g.textBaseline="middle";bl.forEach((l,i)=>g.fillText(l,X+34,y+(bl.length>1?52+i*54:55)));g.textBaseline="alphabetic";y+=bh+20;
  }
  // neeche hara CTA panel (QR wale poster me QR bhi)
  const PH=qr?340:220,PY=y+24;
@@ -1643,22 +1652,26 @@ function sharePostLink(p){
 function qrImgUrl(){return "https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=6&color=1C5A3E&data="+encodeURIComponent(myRefLink());}
 function showQR(){
  const x=t();logShareEvent("qr");
- const benefits=tx("qrB");
- openSheet(`<div class="qr-poster">
-   <div class="qr-badge">${appName()}</div>
-   <h3 class="qr-h">${x.qrHeadline}</h3>
-   <div class="qr-benes">${benefits.map(b=>`<div>${b}</div>`).join("")}</div>
-   <div class="qr-box"><img src="${qrImgUrl()}" alt="QR" style="width:220px;height:220px;display:block" onerror="this.parentElement.innerHTML='<div style=&quot;font-weight:700;word-break:break-all;padding:20px&quot;>'+${esc(JSON.stringify(myRefLink()))}+'</div>'"></div>
-   <div class="qr-cta">📲 ${x.qrScan2}</div>
-   <p class="sub" style="margin:8px 0 0;word-break:break-all;font-size:12px">${esc(myRefLink().replace(/^https?:\/\//,""))}</p>
- </div>
- <div id="qrPosterPv" style="margin-top:14px;text-align:center"><span class="spin"></span></div>
- <button class="btn btn-primary" id="qrPoster" style="width:100%;margin-top:12px">📤 ${esc(tx("pPoster"))}</button>`);
- // QR wala poster: dikhao bhi, share bhi
- let qf=null;const pv=$("qrPosterPv");
+ const link=myRefLink(),short=link.replace(/^https?:\/\//,"");
+ // Ek hi saaf poster (QR ke saath) + Share / Download / Copy. Poster na bane to sirf QR + link.
+ openSheet(`<div class="qr-sheet">
+   <div id="qrPosterPv" class="qr-pv"><span class="spin" style="border-color:var(--accent-soft);border-top-color:var(--accent);width:28px;height:28px"></span></div>
+   <div class="qr-acts">
+     <button class="btn btn-primary" id="qrShare">📤 ${esc(tx("pPoster"))}</button>
+     <button class="btn btn-ghost" id="qrSave">⬇️ ${esc(tx("pDownload"))}</button>
+   </div>
+   <button class="qr-link" id="qrCopy" title="${esc(x.invCopy)}"><span>${esc(short)}</span><b>⧉ ${esc(x.invCopy)}</b></button>
+ </div>`);
+ let qf=null;
  invitePoster(true).then(f=>{qf=f;const box=$("qrPosterPv");if(!box)return;
-  if(f){box.innerHTML="";const im=new Image();im.alt="";im.style.cssText="width:100%;max-width:360px;border-radius:14px;box-shadow:var(--shadow)";im.src=URL.createObjectURL(f);box.appendChild(im);}else box.innerHTML="";});
- const pb=$("qrPoster");if(pb)pb.onclick=async()=>{const f=qf||await invitePoster(true);shareContent({text:inviteText(),file:f,type:"qr"});};
+  if(f){const im=new Image();im.alt=x.qrHeadline||"";im.src=URL.createObjectURL(f);box.innerHTML="";box.appendChild(im);}
+  else box.innerHTML=`<div class="qr-box"><img src="${qrImgUrl()}" alt="QR" style="width:220px;height:220px;display:block"></div><div class="sub" style="margin-top:8px">📲 ${esc(tx("pScan"))}</div>`;
+ });
+ const getFile=async()=>qf||(qf=await invitePoster(true));
+ $("qrShare").onclick=async()=>{shareContent({text:inviteText(),file:await getFile(),type:"qr"});};
+ $("qrSave").onclick=async()=>{const f=await getFile();if(!f){toast(link);return;}
+  const u=URL.createObjectURL(f),el=document.createElement("a");el.href=u;el.download="naturalheal-qr.png";document.body.appendChild(el);el.click();el.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);logShareEvent("qr");};
+ $("qrCopy").onclick=copyLink;
 }
 /* PWA install */
 let deferredPrompt=null;
