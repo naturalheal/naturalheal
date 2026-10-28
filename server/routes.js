@@ -93,8 +93,9 @@ function publicStats() {
   };
 }
 
+const USER_LANGS = ["en", "hi", "hin", "bn", "mr", "gu", "ta", "te", "kn", "pa", "ml"];
 function register(ctx) {
-  const { name, email, password, phone, region } = ctx.body || {};
+  const { name, email, password, phone, region, language } = ctx.body || {};
   if (!name || !email || !password) throw new HttpError(400, "Naam, email aur password zaroori hain");
   if (String(password).length < 6) throw new HttpError(400, "Password kam se kam 6 akshar ka ho");
   const emailLc = String(email).toLowerCase();
@@ -103,7 +104,7 @@ function register(ctx) {
   const is_admin = (db.users.count() === 0 || (ADMIN_EMAIL && emailLc === ADMIN_EMAIL)) ? 1 : 0;
   // Referral: kisi ke link (?ref=CODE) se aaya ho to referrer set karo (khud ko refer nahi)
   const referrer = findReferrer((ctx.body || {}).ref);
-  const user = { id: uid(), name, email: emailLc, password_hash: hashPassword(password), phone: phone || null, region: region === "GLOBAL" ? "GLOBAL" : "IN", is_admin, plan: "free", plan_status: "none", plan_expires: null, provider: null, provider_sub_id: null, provider_customer_id: null, referred_by: referrer ? referrer.id : null, ref_code: null, created_at: now() };
+  const user = { id: uid(), name, email: emailLc, password_hash: hashPassword(password), phone: phone || null, region: region === "GLOBAL" ? "GLOBAL" : "IN", is_admin, plan: "free", plan_status: "none", plan_expires: null, provider: null, provider_sub_id: null, provider_customer_id: null, referred_by: referrer ? referrer.id : null, ref_code: null, language: USER_LANGS.includes(language) ? language : "hin", created_at: now() };
   db.users.insert(user);
   return { token: signToken({ id: user.id, email: user.email }), user: pubUser(user) };
 }
@@ -120,12 +121,19 @@ function login(ctx) {
   return { token: signToken({ id: user.id, email: user.email }), user: pubUser(user) };
 }
 
-function pubUser(u) { return { id: u.id, name: u.name, email: u.email, region: u.region, is_admin: u.is_admin, plan: u.plan, plan_status: u.plan_status, plan_expires: u.plan_expires, premium: isPremium(u) }; }
+function pubUser(u) { return { id: u.id, name: u.name, email: u.email, region: u.region, language: u.language || null, is_admin: u.is_admin, plan: u.plan, plan_status: u.plan_status, plan_expires: u.plan_expires, premium: isPremium(u) }; }
 
 function me(ctx) {
   const u = ctx.user;
   const prof = db.profiles.findBy("user_id", u.id);
   return { user: pubUser(u), profile: prof ? unpackProfile(prof) : null, features: featuresFor(u), custom_concerns: getSettings().custom_concerns || [] };
+}
+// User ki bhasha account me save — har device par wahi, plan seedha isi bhasha me banta hai
+function setLanguage(ctx) {
+  const l = (ctx.body || {}).language;
+  if (!USER_LANGS.includes(l)) throw new HttpError(400, "language?");
+  db.users.update(ctx.user.id, { language: l });
+  return { ok: true, language: l };
 }
 // User apni samasya/bimari add kare -> sabki list me aa jaati hai
 function addConcernRoute(ctx) {
@@ -507,4 +515,4 @@ async function chat(ctx) {
   return { reply: txt || i18n.pick(rawLang, "chatFail"), source: txt ? "ai" : "basic" };
 }
 
-module.exports = { health, publicStats, register, login, me, putProfile, generate, listPlans, getPlan, translatePlanRoute, deletePlan, logSymptom, listSymptoms, deleteSymptom, dashboard, insight, listMembers, addMember, updateMember, deleteMember, season, progress, explain, chat, addConcernRoute };
+module.exports = { health, publicStats, register, login, me, setLanguage, putProfile, generate, listPlans, getPlan, translatePlanRoute, deletePlan, logSymptom, listSymptoms, deleteSymptom, dashboard, insight, listMembers, addMember, updateMember, deleteMember, season, progress, explain, chat, addConcernRoute };

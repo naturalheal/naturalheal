@@ -37,6 +37,7 @@ const R = [
   ["POST", "/api/auth/register", routes.register],
   ["POST", "/api/auth/login", routes.login],
   ["GET", "/api/me", routes.me, { auth: true }],
+  ["PUT", "/api/me/language", routes.setLanguage, { auth: true }],
   ["PUT", "/api/profile", routes.putProfile, { auth: true }],
   ["POST", "/api/plan/generate", routes.generate, { auth: true }],
   ["GET", "/api/plans", routes.listPlans, { auth: true }],

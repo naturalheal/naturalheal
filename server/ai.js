@@ -407,7 +407,7 @@ const TR_PARTS = [
   ["home_remedies", "diet", "yoga"],
   ["daily_routine", "lifestyle_tips", "weight_plan", "red_flags", "disclaimer"],
 ];
-const TR_CHUNK = 4, TR_CONC = 3;
+const TR_CHUNK = 4, TR_CONC = 10;
 const trLog = []; // aakhri anuvaad galtiyan (admin AI test me dikhti hain)
 function trErr(e) { trLog.unshift({ at: new Date().toISOString(), ...e }); trLog.length = Math.min(trLog.length, 12); }
 function sameShape(a, b) {
@@ -449,31 +449,20 @@ ${JSON.stringify(obj)}`;
   }
   return { ok: false };
 }
-// Ek key ka anuvaad; list ho to 3-3 ke tukde, kata to aur chhota (1 item tak)
-async function translateKey(plan, k, lang) {
-  const v = plan[k];
+// Ek tukda (list ka hissa ya poori key); kata jawab ho to aadha karke (1 item tak)
+async function translatePiece(k, v, lang) {
   if (!Array.isArray(v)) {
     const r = await translateChunk({ [k]: v }, lang);
-    return r.ok && sameShape(v, r.data[k]) ? r.data[k] : null;
+    return r.ok && r.data[k] != null && typeof r.data[k] === typeof v ? r.data[k] : null;
   }
-  const out = [];
-  const run = async (items) => {
-    const r = await translateChunk({ [k]: items }, lang);
-    if (r.ok && Array.isArray(r.data[k]) && r.data[k].length === items.length) return r.data[k];
-    if (r.cut && items.length > 1) {
-      const h = Math.ceil(items.length / 2);
-      const a = await run(items.slice(0, h)); if (!a) return null;
-      const b = await run(items.slice(h)); if (!b) return null;
-      return a.concat(b);
-    }
-    return null;
-  };
-  for (let i = 0; i < v.length; i += TR_CHUNK) {
-    const part = await run(v.slice(i, i + TR_CHUNK));
-    if (!part) return null;
-    out.push(...part);
+  const r = await translateChunk({ [k]: v }, lang);
+  if (r.ok && Array.isArray(r.data[k]) && r.data[k].length === v.length) return r.data[k];
+  if (r.cut && v.length > 1) {
+    const h = Math.ceil(v.length / 2);
+    const [a, b] = await Promise.all([translatePiece(k, v.slice(0, h), lang), translatePiece(k, v.slice(h), lang)]);
+    return a && b ? a.concat(b) : null;
   }
-  return out;
+  return null;
 }
 // Plan ki kaun si keys anuvaad layak hain (khaali chhod kar)
 function trKeys(plan) {
@@ -485,15 +474,30 @@ async function translatePlan(plan, lang, base, done) {
   const all = trKeys(plan), have = new Set(done || []);
   const todo = all.filter((k) => !have.has(k)).sort((a, b) => (b === "daily_routine") - (a === "daily_routine") || (b === "summary") - (a === "summary"));
   const out = { ...(base || plan), meta: { ...(plan.meta || {}), language: lang } };
+  // Saari keys ke saare tukde ek hi kataar me — 6 ek saath (pehle key-key karke, isliye der lagti thi)
+  const tasks = [];
+  for (const k of todo) {
+    const v = plan[k];
+    if (Array.isArray(v)) for (let i = 0; i < v.length; i += TR_CHUNK) tasks.push({ k, i, v: v.slice(i, i + TR_CHUNK) });
+    else tasks.push({ k, i: -1, v });
+  }
+  const got = {}, bad = new Set();
   let next = 0;
   const worker = async () => {
-    while (next < todo.length) {
-      const k = todo[next++];
-      const r = await translateKey(plan, k, lang);
-      if (r != null) { out[k] = r; have.add(k); }
+    while (next < tasks.length) {
+      const t = tasks[next++];
+      if (bad.has(t.k)) continue;
+      const r = await translatePiece(t.k, t.v, lang);
+      if (r == null) { bad.add(t.k); continue; }
+      if (t.i < 0) got[t.k] = r; else { got[t.k] = got[t.k] || []; got[t.k][t.i / TR_CHUNK] = r; }
     }
   };
-  await Promise.all(Array.from({ length: Math.min(TR_CONC, todo.length) }, worker));
+  await Promise.all(Array.from({ length: Math.min(TR_CONC, tasks.length) }, worker));
+  for (const k of todo) {
+    if (bad.has(k) || got[k] == null) continue;
+    const v = Array.isArray(plan[k]) ? [].concat(...got[k]) : got[k];
+    if (sameShape(plan[k], v)) { out[k] = v; have.add(k); }
+  }
   const keys = all.filter((k) => have.has(k));
   return { plan: out, keys, complete: keys.length === all.length };
 }

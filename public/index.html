@@ -370,6 +370,7 @@ ul.items li b{color:var(--accent-ink)}
       <div id="regRegion" style="margin-bottom:13px"><label id="aRegion"></label>
         <select id="rRegion"><option value="IN">India</option><option value="GLOBAL">Global / Other</option></select>
       </div>
+      <div id="regLang" style="margin-bottom:13px"><label id="aLang" for="rLang"></label><select id="rLang"></select></div>
       <p id="forgotWrap" style="text-align:right;margin:2px 0 0"><button type="button" class="link" id="forgotLink" style="font-size:12.5px"></button></p>
       <div class="err" id="authErr"></div>
       <button class="btn btn-primary" id="authGo"></button>
@@ -1133,6 +1134,9 @@ function renderStatic(){
  $("authSub").textContent=authMode==="login"?x.subLogin:x.subReg;
  $("regFields").classList.toggle("hidden",authMode==="login");
  $("regRegion").classList.toggle("hidden",authMode==="login");
+ if($("regLang")){$("regLang").classList.toggle("hidden",authMode==="login");$("aLang").textContent="🌐 "+tx("langLbl");
+  const rl=$("rLang");if(!rl.options.length){rl.innerHTML=LANGS.map(l=>`<option value="${l[0]}">${l[1]}</option>`).join("");rl.onchange=()=>{if($("langSel"))$("langSel").value=rl.value;applyLang(rl.value);};}
+  rl.value=lang;}
  $("aName").textContent=x.name;$("aEmail").textContent=x.email;$("aPass").textContent=x.pass;$("aRegion").textContent=x.region;
  $("authGo").textContent=authMode==="login"?x.goLogin:x.goReg;
  if($("aPeye"))$("aPeye").textContent=$("aPassIn").type==="password"?x.pwShow:x.pwHide;
@@ -1191,8 +1195,10 @@ function renderPlanStrip(){
  sel.value=lang;
  sel.onchange=()=>applyLang(sel.value);
 })();
+function saveUserLang(code){if(!token)return;try{api("/me/language",{method:"PUT",body:JSON.stringify({language:code})}).then(()=>{if(me)me.language=code;}).catch(()=>{});}catch(_){}}
 function applyLang(code){
  trPopHide();
+ if(me&&me.language!==code)saveUserLang(code);
  lang=code;try{localStorage.setItem("nh_lang",code);}catch(e){}
  _tc=null;                 // merge cache reset
  try{stopSpeak();}catch(e){}
@@ -1224,7 +1230,7 @@ $("authGo").onclick=async()=>{
   }else{
    const name=$("rName").value.trim();
    if(!name||!email||!pass){$("authErr").textContent=x.errName;return;}
-   res=await api("/auth/register",{method:"POST",body:JSON.stringify({name,email,password:pass,region:$("rRegion").value,ref:pendingRef()})});
+   res=await api("/auth/register",{method:"POST",body:JSON.stringify({name,email,password:pass,region:$("rRegion").value,language:lang,ref:pendingRef()})});
    try{localStorage.removeItem("nh_ref");}catch(_){}
   }
   token=res.token;localStorage.setItem("nh_token",token);
@@ -1237,6 +1243,9 @@ $("logoutBtn").onclick=()=>{token=null;me=null;localStorage.removeItem("nh_token
 async function loadMe(){
  try{
   const d=await api("/me");me=d.user;feats=d.features;
+  // Account me save bhasha hi chalegi (har device par); purane account me ab wali save kar do
+  if(me.language&&me.language!==lang&&LANGS.find(l=>l[0]===me.language)){lang=me.language;try{localStorage.setItem("nh_lang",lang);}catch(_){}_tc=null;if($("langSel"))$("langSel").value=lang;}
+  else if(!me.language)saveUserLang(lang);
   customConcerns=d.custom_concerns||[];buildChips();renderStatic();
   $("region").value=me.region||"IN";
   if(d.profile)fillProfile(d.profile);
