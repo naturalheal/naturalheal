@@ -13,9 +13,9 @@
  if(other||s||navigator.standalone||localStorage.getItem("nh_token"))location.replace("/app"+q+location.hash);
 }catch(e){}})();
 </script>
-<title>NaturalHeal AI — आयुर्वेदिक AI हेल्थ प्लान, लैब रिपोर्ट आसान भाषा में | Ayurvedic AI Health Plan</title>
-<meta name="description" content="NaturalHeal AI आपकी उम्र, वज़न, तकलीफ़ और लैब रिपोर्ट देखकर आयुर्वेदिक हेल्थ प्लान बनाता है — दोष, आहार, योग, घरेलू उपाय, दिनचर्या। 11 भारतीय भाषाओं में, फ्री शुरुआत। Personalised Ayurvedic wellness plan app in Hindi & 10 Indian languages.">
-<meta name="keywords" content="ayurvedic health plan, ayurveda app, AI health app India, dosha test, vata pitta kapha, lab report in Hindi, gharelu upay, home remedies app, आयुर्वेदिक उपाय, घरेलू नुस्खे, दोष जांच, हेल्थ ऐप हिंदी, yoga routine, diet plan Hindi">
+<title>NaturalHeal AI — वज़न घटाना, योग, जिम और आयुर्वेदिक AI हेल्थ प्लान | Weight Loss, Yoga & Gym App</title>
+<meta name="description" content="NaturalHeal AI: 30/60/90 दिन का वज़न घटाओ प्रोग्राम, आवाज़ के साथ गाइडेड योग कक्षा, जिम कोच (प्लान, सेट, प्रोग्रेस), आयुर्वेदिक AI हेल्थ प्लान और लैब रिपोर्ट आसान भाषा में — 11 भारतीय भाषाओं में। Weight loss program, yoga classes and gym coach app in Hindi & Indian languages.">
+<meta name="keywords" content="weight loss app India, weight loss diet plan Hindi, vajan kam kaise kare, वज़न कम करने का तरीका, yoga app Hindi, yoga for back pain, yoga for thyroid, योग आसन, gym workout plan, gym diet plan India, home workout dumbbell, जिम वर्कआउट प्लान, ayurvedic health plan, ayurveda app, AI health app India, dosha test, vata pitta kapha, lab report in Hindi, gharelu upay, home remedies app, आयुर्वेदिक उपाय, घरेलू नुस्खे, दोष जांच, हेल्थ ऐप हिंदी, yoga routine, diet plan Hindi">
 <link rel="canonical" href="{{ORIGIN}}/">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <meta name="theme-color" content="#2E7D5B">
@@ -172,6 +172,21 @@ section{padding:78px 0}
 @media (max-width:900px){.fgrid{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:600px){.fgrid{grid-template-columns:1fr}}
 
+/* fit programs */
+.fitgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.fc{border-radius:22px;padding:26px;color:#fff;position:relative;overflow:hidden;box-shadow:0 18px 40px rgba(30,40,35,.18)}
+.fc:before{content:"";position:absolute;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.08);right:-70px;top:-80px}
+.fc-wl{background:linear-gradient(150deg,#C77D3A,#8A5F14)}
+.fc-yoga{background:linear-gradient(150deg,#6B4A92,#3E2A63)}
+.fc-gym{background:linear-gradient(150deg,#2F3B4C,#16202C)}
+.fc .fe{font-size:40px;line-height:1}
+.fc h3{font-size:24px;margin:12px 0 6px;position:relative}
+.fc p{margin:0 0 14px;opacity:.9;position:relative}
+.fc ul{list-style:none;padding:0;margin:0;display:grid;gap:9px;position:relative}
+.fc li{display:flex;gap:9px;font-weight:700;font-size:14.5px}
+.fc li:before{content:"✓";flex:none;width:22px;height:22px;border-radius:7px;background:rgba(255,255,255,.18);display:grid;place-items:center;font-size:12px}
+@media (max-width:900px){.fitgrid{grid-template-columns:1fr}}
+
 /* steps */
 .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;counter-reset:s}
 .step{background:var(--surface);border-radius:20px;padding:28px;border:1px solid var(--line);position:relative}
@@ -262,7 +277,7 @@ footer{padding:40px 0 50px;color:var(--muted);font-size:14px}
 
 <nav id="nav"><div class="wrap nav">
  <a href="/" class="logo" aria-label="NaturalHeal AI"><div class="leaf"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/></svg></div><span>NaturalHeal AI</span></a>
- <div class="nlinks"><a href="#features" data-k="nF">फ़ीचर</a><a href="#how" data-k="nH">कैसे काम करता है</a><a href="#plans" data-k="nP">प्लान</a><a href="#faq" data-k="nQ">सवाल</a></div>
+ <div class="nlinks"><a href="#fit" data-k="nFit">वज़न · योग · जिम</a><a href="#features" data-k="nF">फ़ीचर</a><a href="#how" data-k="nH">कैसे काम करता है</a><a href="#plans" data-k="nP">प्लान</a><a href="#faq" data-k="nQ">सवाल</a></div>
  <div class="nright">
   <div class="lsw" role="group" aria-label="Language"><button data-l="hi" class="on">हिं</button><button data-l="en">EN</button></div>
   <a href="/app?auth=login" class="btn btn-p nlogin" data-k="login">लॉगिन</a>
@@ -271,7 +286,7 @@ footer{padding:40px 0 50px;color:var(--muted);font-size:14px}
 
 <header class="hero"><div class="wrap hgrid">
  <div class="rv">
-  <span class="kick"><i></i><span data-k="kick">आयुर्वेद + AI · 11 भारतीय भाषाओं में</span></span>
+  <span class="kick"><i></i><span data-k="kick">वज़न घटाना · योग · जिम · आयुर्वेद — 11 भाषाओं में</span></span>
   <h1 data-k="h1">आयुर्वेद की समझ, <em>AI की ताकत</em> — आपका अपना हेल्थ प्लान</h1>
   <p class="lead" data-k="lead">अपनी उम्र, वज़न, तकलीफ़ बताइए या लैब रिपोर्ट की फ़ोटो डालिए — NaturalHeal AI आपके दोष को समझकर आहार, योग, दिनचर्या और घरेलू उपाय का पूरा प्लान आपकी भाषा में बनाता है।</p>
   <div class="ctas">
@@ -311,7 +326,7 @@ footer{padding:40px 0 50px;color:var(--muted);font-size:14px}
 
 <div class="band"><div class="wrap bgrid">
  <div><b>11</b><span data-k="b1">भारतीय भाषाएं</span></div>
- <div><b>3</b><span data-k="b2">दोष — वात, पित्त, कफ</span></div>
+ <div><b>3</b><span data-k="b2">फ़िट प्रोग्राम — वज़न, योग, जिम</span></div>
  <div><b>20+</b><span data-k="b3">रसोई की चीज़ों से नुस्खे</span></div>
  <div><b>₹0</b><span data-k="b4">से शुरुआत</span></div>
 </div></div>
@@ -332,6 +347,19 @@ footer{padding:40px 0 50px;color:var(--muted);font-size:14px}
   <article class="f rv"><div class="ic c5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4zM15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg></div><h3 data-k="f11h">बोलकर सुनें, बोलकर लिखें</h3><p data-k="f11p">पढ़ना मुश्किल हो तो प्लान सुन लीजिए। बड़े अक्षर वाला मोड भी — बुज़ुर्गों के लिए आसान।</p></article>
   <article class="f rv"><div class="ic c6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg></div><h3 data-k="f12h">कम्युनिटी और हीलिंग पॉइंट्स</h3><p data-k="f12p">दूसरों के अनुभव पढ़िए, अपना शेयर कीजिए। रोज़ ट्रैक करने और दोस्तों को बुलाने पर पॉइंट्स भी।</p></article>
  </div>
+</div></section>
+
+<section id="fit"><div class="wrap">
+ <div class="sh rv"><div class="k" data-k="fitK">नया · फ़िट प्रोग्राम</div><h2 data-k="fitH">वज़न घटाना, योग और जिम — एक ही ऐप में</h2><p data-k="fitP">इन तीनों पर लोग सबसे ज़्यादा समय और पैसा लगाते हैं, फिर भी सही प्लान और रोज़ का साथ नहीं मिलता। अब मिलेगा — आपकी भाषा में, नतीजे के साथ।</p></div>
+ <div class="fitgrid">
+  <article class="fc fc-wl rv"><div class="fe">⚖️</div><h3 data-k="w1h">वज़न घटाओ प्रोग्राम</h3><p data-k="w1p">30/60/90 दिन का पूरा प्लान, जो हर हफ़्ते आपके नतीजे देखकर खुद बदलता है।</p>
+   <ul><li data-k="w1a">रोज़ का कैलोरी, प्रोटीन, पानी और कदम का लक्ष्य</li><li data-k="w1b">भारतीय खाने का प्लान — वेज, अंडा या नॉन-वेज</li><li data-k="w1c">घर या जिम का रोज़ का वर्कआउट</li><li data-k="w1d">वज़न का ग्राफ़, रोज़ की चेकलिस्ट और स्ट्रीक</li></ul></article>
+  <article class="fc fc-yoga rv"><div class="fe">🧘</div><h3 data-k="w2h">योग कक्षा</h3><p data-k="w2p">10 गाइडेड सेशन — टाइमर और आवाज़ के साथ, घर बैठे।</p>
+   <ul><li data-k="w2a">कमर दर्द, नींद, शुगर, थायरॉइड, BP, PCOD के लिए अलग सेशन</li><li data-k="w2b">24 आसन और प्राणायाम — चलती तस्वीर के साथ</li><li data-k="w2c">आपकी भाषा में बोलकर बताता है, अपने-आप अगला आसन</li><li data-k="w2d">आपकी तकलीफ़ के हिसाब से सुझाव</li></ul></article>
+  <article class="fc fc-gym rv"><div class="fe">🏋️</div><h3 data-k="w3h">जिम कोच</h3><p data-k="w3p">आपके लक्ष्य के हिसाब से हफ़्ते का प्लान — जिम में या घर पर डम्बल से।</p>
+   <ul><li data-k="w3a">हर सेट का kg और रेप्स लिखें, आराम का टाइमर</li><li data-k="w3b">हर हफ़्ते सुझाव — "आज +2.5 kg ट्राई करें"</li><li data-k="w3c">30 एक्सरसाइज़ — सही तरीका, तस्वीर और वीडियो</li><li data-k="w3d">प्रोटीन लक्ष्य और आपकी बेस्ट लिफ़्ट</li></ul></article>
+ </div>
+ <div style="text-align:center;margin-top:28px" class="rv"><a href="/app?auth=register" class="btn btn-p" data-k="fitCta">फ्री में शुरू करें</a></div>
 </div></section>
 
 <section id="how" style="background:var(--surface-2)"><div class="wrap">
@@ -413,14 +441,20 @@ footer{padding:40px 0 50px;color:var(--muted);font-size:14px}
 </div></div>
 
 <script>
-var EN={nF:"Features",nH:"How it works",nP:"Plans",nQ:"FAQ",login:"Login",
-kick:"Ayurveda + AI · in 11 Indian languages",
+var EN={nFit:"Weight · Yoga · Gym",
+fitK:"New · Fit programs",fitH:"Weight loss, yoga and gym — in one app",fitP:"People spend the most time and money on these three, yet rarely get the right plan or daily support. Now you do — in your language, with results.",
+w1h:"Weight-loss program",w1p:"A full 30/60/90-day plan that adjusts itself every week based on your results.",w1a:"Daily calorie, protein, water and step targets",w1b:"Indian food plan — veg, egg or non-veg",w1c:"Daily workout for home or gym",w1d:"Weight chart, daily checklist and streaks",
+w2h:"Yoga classes",w2p:"10 guided sessions — with timer and voice, at home.",w2a:"Separate sessions for back pain, sleep, sugar, thyroid, BP, PCOD",w2b:"24 poses and breathing practices — with moving illustrations",w2c:"Speaks in your language, moves to the next pose by itself",w2d:"Suggestions based on your health concerns",
+w3h:"Gym coach",w3p:"A weekly plan for your goal — at the gym or at home with dumbbells.",w3a:"Log kg and reps for every set, with a rest timer",w3b:"Weekly nudges — “try +2.5 kg today”",w3c:"30 exercises — correct form, illustration and video",w3d:"Protein target and your best lifts",
+fitCta:"Start free",
+nF:"Features",nH:"How it works",nP:"Plans",nQ:"FAQ",login:"Login",
+kick:"Weight loss · Yoga · Gym · Ayurveda — in 11 languages",
 h1:'Ayurvedic wisdom, <em>AI power</em> — your own health plan',
 lead:"Tell us your age, weight and concerns, or snap your lab report — NaturalHeal AI reads your dosha and builds a complete plan of diet, yoga, daily routine and home remedies, in your language.",
 cta1:"Create free plan",cta2:"Download app",t1:"Free to start",t2:"No Play Store needed",t3:"Listen aloud too",
 fl1:"Report read",fl1s:"in simple words",fl2:"Pitta balance",fl2s:"7-day plan",fl3:"12-day streak",fl3s:"Well done!",
 m1:"AI PERSONALISED PLAN",m2:"Namaste, Seema 🙏",m3:"Pitta 45%",m4:"Vata 30%",m5:"Kapha 25%",m6:"Dosha balance",m7:"Vata",m8:"Pitta",m9:"Kapha",m10:"Today's routine",m11:"Warm water + sit quietly 5 min",m12:"Anulom-vilom, 10 min",m13:"Breakfast: poha + coconut water",m14:"Home remedies",m15:"Fennel water",m16:"Amla",m17:"Buttermilk",m18:"Triphala",
-b1:"Indian languages",b2:"doshas — vata, pitta, kapha",b3:"kitchen-item remedies",b4:"to get started",
+b1:"Indian languages",b2:"Fit programs — weight, yoga, gym",b3:"kitchen-item remedies",b4:"to get started",
 fk:"Features",fh:"Everything your health needs, in one app",fp:"A plan built from your body, your report and the season — that stays with you every day.",
 f1h:"AI dosha analysis",f1p:"Your vata, pitta and kapha balance in percent — and a simple explanation of why you feel the way you do.",
 nw:"Special",nw2:"New",

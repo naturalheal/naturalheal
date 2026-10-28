@@ -988,6 +988,10 @@ let _tc=null,_tcLang=null;
 function t(){ if(_tc&&_tcLang===lang)return _tc; const cur=T[lang]||T.hi; _tc=Object.assign({},T.en,cur); _tcLang=lang; return _tc; }
 /* Chhote/dynamic text jo T me nahi the — har bhasha me (har key: {en,hi,hin,bn,mr,gu,ta,te,kn,pa,ml}) */
 const TX={
+ pWL:{en:"Weight-loss program (30/60/90 days)",hi:"Weight loss program (30/60/90 din)",hin:"वज़न घटाओ प्रोग्राम (30/60/90 दिन)",bn:"ওজন কমানোর প্রোগ্রাম (30/60/90 দিন)",mr:"वजन कमी कार्यक्रम (30/60/90 दिवस)",gu:"વજન ઘટાડો પ્રોગ્રામ (30/60/90 દિવસ)",ta:"எடை குறைப்புத் திட்டம் (30/60/90 நாட்கள்)",te:"బరువు తగ్గింపు ప్రోగ్రామ్ (30/60/90 రోజులు)",kn:"ತೂಕ ಇಳಿಕೆ ಕಾರ್ಯಕ್ರಮ (30/60/90 ದಿನ)",pa:"ਭਾਰ ਘਟਾਓ ਪ੍ਰੋਗਰਾਮ (30/60/90 ਦਿਨ)",ml:"ഭാരം കുറയ്ക്കൽ പ്രോഗ്രാം (30/60/90 ദിവസം)"},
+ pYoga:{en:"Guided yoga classes with voice",hi:"Awaaz ke saath guided yoga class",hin:"आवाज़ के साथ गाइडेड योग कक्षा",bn:"কণ্ঠস্বরসহ গাইডেড যোগ ক্লাস",mr:"आवाजासह मार्गदर्शित योग वर्ग",gu:"અવાજ સાથે ગાઇડેડ યોગ ક્લાસ",ta:"குரலுடன் வழிகாட்டும் யோகா வகுப்புகள்",te:"వాయిస్‌తో గైడెడ్ యోగా తరగతులు",kn:"ಧ್ವನಿಯೊಂದಿಗೆ ಮಾರ್ಗದರ್ಶಿ ಯೋಗ ತರಗತಿ",pa:"ਆਵਾਜ਼ ਨਾਲ ਗਾਈਡਡ ਯੋਗ ਕਲਾਸ",ml:"ശബ്ദത്തോടെ ഗൈഡഡ് യോഗ ക്ലാസുകൾ"},
+ pGym:{en:"Gym coach — plan, sets & progress",hi:"Gym coach — plan, sets aur progress",hin:"जिम कोच — प्लान, सेट और प्रोग्रेस",bn:"জিম কোচ — প্ল্যান, সেট ও অগ্রগতি",mr:"जिम कोच — प्लॅन, सेट आणि प्रगती",gu:"જિમ કોચ — પ્લાન, સેટ અને પ્રોગ્રેસ",ta:"ஜிம் கோச் — திட்டம், செட், முன்னேற்றம்",te:"జిమ్ కోచ్ — ప్లాన్, సెట్లు, పురోగతి",kn:"ಜಿಮ್ ಕೋಚ್ — ಯೋಜನೆ, ಸೆಟ್, ಪ್ರಗತಿ",pa:"ਜਿਮ ਕੋਚ — ਪਲਾਨ, ਸੈੱਟ ਅਤੇ ਤਰੱਕੀ",ml:"ജിം കോച്ച് — പ്ലാൻ, സെറ്റുകൾ, പുരോഗതി"},
+ pFit:{en:"⚖️ Weight loss · 🧘 Yoga · 🏋️ Gym — all in one app",hi:"⚖️ Weight loss · 🧘 Yoga · 🏋️ Gym — sab ek app me",hin:"⚖️ वज़न घटाओ · 🧘 योग · 🏋️ जिम — सब एक ऐप में",bn:"⚖️ ওজন কমানো · 🧘 যোগ · 🏋️ জিম — সব এক অ্যাপে",mr:"⚖️ वजन कमी · 🧘 योग · 🏋️ जिम — सर्व एका अ‍ॅपमध्ये",gu:"⚖️ વજન ઘટાડો · 🧘 યોગ · 🏋️ જિમ — બધું એક એપમાં",ta:"⚖️ எடை குறைப்பு · 🧘 யோகா · 🏋️ ஜிம் — அனைத்தும் ஒரே செயலியில்",te:"⚖️ బరువు తగ్గింపు · 🧘 యోగా · 🏋️ జిమ్ — అన్నీ ఒకే యాప్‌లో",kn:"⚖️ ತೂಕ ಇಳಿಕೆ · 🧘 ಯೋಗ · 🏋️ ಜಿಮ್ — ಎಲ್ಲವೂ ಒಂದೇ ಆ್ಯಪ್‌ನಲ್ಲಿ",pa:"⚖️ ਭਾਰ ਘਟਾਓ · 🧘 ਯੋਗ · 🏋️ ਜਿਮ — ਸਭ ਇੱਕ ਐਪ ਵਿੱਚ",ml:"⚖️ ഭാരം കുറയ്ക്കൽ · 🧘 യോഗ · 🏋️ ജിം — എല്ലാം ഒരേ ആപ്പിൽ"},
  pDownload:{en:"Download",hi:"Download",hin:"डाउनलोड",bn:"ডাউনলোড",mr:"डाउनलोड",gu:"ડાઉનલોડ",ta:"பதிவிறக்கு",te:"డౌన్‌లోడ్",kn:"ಡೌನ್‌ಲೋಡ್",pa:"ਡਾਊਨਲੋਡ",ml:"ഡൗൺലോഡ്"},
  trLeft:{en:"About {n} sec left",hi:"Lagbhag {n} second baaki",hin:"लगभग {n} सेकंड बाकी",bn:"আর প্রায় {n} সেকেন্ড",mr:"सुमारे {n} सेकंद बाकी",gu:"લગભગ {n} સેકન્ડ બાકી",ta:"இன்னும் சுமார் {n} வினாடிகள்",te:"సుమారు {n} సెకన్లు మిగిలి ఉన్నాయి",kn:"ಸುಮಾರು {n} ಸೆಕೆಂಡ್ ಬಾಕಿ",pa:"ਲਗਭਗ {n} ਸਕਿੰਟ ਬਾਕੀ",ml:"ഏകദേശം {n} സെക്കൻഡ് കൂടി"},
  trAlmost:{en:"Almost done…",hi:"Bas ho gaya…",hin:"बस हो गया…",bn:"প্রায় হয়ে গেছে…",mr:"जवळजवळ झाले…",gu:"બસ થઈ ગયું…",ta:"கிட்டத்தட்ட முடிந்தது…",te:"దాదాపు అయిపోయింది…",kn:"ಬಹುತೇಕ ಆಯಿತು…",pa:"ਬੱਸ ਹੋ ਗਿਆ…",ml:"ഏതാണ്ട് കഴിഞ്ഞു…"},
@@ -1554,7 +1558,7 @@ function inviteVideo(){return (pricing&&pricing.invite_video)||"";}
 async function loadRef(){try{refInfo=await api("/share/referral");}catch(e){refInfo=null;}return refInfo;}
 function logShareEvent(type){try{api("/share/event",{method:"POST",body:JSON.stringify({type})}).then(r=>pointToast(r)).catch(()=>{});}catch(_){}}
 function waLink(text){return "https://wa.me/?text="+encodeURIComponent(text);}
-function inviteText(){const vid=inviteVideo();return `🌿 ${appName()}\n${shareTagline()}\n\n👉 ${myRefLink()}`+(vid?`\n\n▶️ ${vid}`:"");}
+function inviteText(){const vid=inviteVideo();return `🌿 ${appName()}\n${shareTagline()}\n${tx("pFit")}\n\n👉 ${myRefLink()}`+(vid?`\n\n▶️ ${vid}`:"");}
 async function shareContent({text,file,type}){
  logShareEvent(type||"other");
  try{
@@ -1577,7 +1581,7 @@ function wrapLines(g,text,maxW,maxLines){
  return out;
 }
 function loadImg(src,ms){return new Promise(res=>{const im=new Image();im.crossOrigin="anonymous";const tm=setTimeout(()=>res(null),ms||4000);im.onload=()=>{clearTimeout(tm);res(im);};im.onerror=()=>{clearTimeout(tm);res(null);};im.src=src;});}
-function posterBenefits(){const b=tx("qrB")||[];return [b[0],"📋 "+tx("pAi"),b[2]].filter(Boolean);}
+function posterBenefits(){return ["⚖️ "+tx("pWL"),"🧘 "+tx("pYoga"),"🏋️ "+tx("pGym"),"📋 "+tx("pAi")];}
 async function makeCardFile({emoji,title,lines,withQr}){
  const W=1080,H=1700,c=document.createElement("canvas");c.width=W;c.height=H;const g=c.getContext("2d");
  const SANS='"Mulish","Segoe UI","Noto Sans",system-ui,sans-serif',HEAD='"Fraunces",Georgia,"Noto Serif",serif';
