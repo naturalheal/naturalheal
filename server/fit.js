@@ -165,4 +165,39 @@ function stopWL(ctx) {
   return { ok: true };
 }
 
-module.exports = { getWL, startWL, logWL, stopWL, targets, TASKS };
+// ---------------------------------------------------------------------------
+// Yoga — guided session poore hone par minute likho; streak, hafte ke minute, aaj ke session
+// ---------------------------------------------------------------------------
+const YOGA_SESSIONS = ["morning", "back", "stress", "weight", "digest", "diabetes", "thyroid", "knee", "women", "bp"];
+function yogaView(userId) {
+  const logs = db.yoga_logs.filter((l) => l.user_id === userId);
+  const today = istToday();
+  const byDay = {};
+  logs.forEach((l) => { byDay[l.date] = (byDay[l.date] || 0) + (l.minutes || 0); });
+  const week = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(Date.now() + 19800000 - i * 86400000).toISOString().slice(0, 10);
+    week.push({ date: d, min: byDay[d] || 0 });
+  }
+  let streak = 0;
+  for (let i = 0; i < 400; i++) {
+    const d = new Date(Date.now() + 19800000 - i * 86400000).toISOString().slice(0, 10);
+    if (byDay[d]) streak++; else if (i > 0) break;
+  }
+  return {
+    today_min: byDay[today] || 0, streak, week,
+    total_sessions: logs.length, total_min: logs.reduce((s, l) => s + (l.minutes || 0), 0),
+    done_today: [...new Set(logs.filter((l) => l.date === today).map((l) => l.session))],
+  };
+}
+function getYoga(ctx) { return yogaView(ctx.user.id); }
+function doneYoga(ctx) {
+  const b = ctx.body || {};
+  if (!YOGA_SESSIONS.includes(b.session)) throw new HttpError(400, "session?");
+  const minutes = clamp(Math.round(Number(b.minutes) || 0), 1, 90);
+  db.yoga_logs.insert({ id: uid(), user_id: ctx.user.id, date: istToday(), session: b.session, minutes, created_at: now() });
+  const awarded = points.award(ctx.user.id, "log", { note: "yoga" }).awarded;
+  return { ...yogaView(ctx.user.id), points_awarded: awarded };
+}
+
+module.exports = { getWL, startWL, logWL, stopWL, targets, TASKS, getYoga, doneYoga };

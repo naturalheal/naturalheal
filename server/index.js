@@ -43,6 +43,8 @@ const R = [
   ["POST", "/api/fit/wl/start", fit.startWL, { auth: true }],
   ["POST", "/api/fit/wl/log", fit.logWL, { auth: true }],
   ["POST", "/api/fit/wl/stop", fit.stopWL, { auth: true }],
+  ["GET", "/api/fit/yoga", fit.getYoga, { auth: true }],
+  ["POST", "/api/fit/yoga/done", fit.doneYoga, { auth: true }],
   ["PUT", "/api/profile", routes.putProfile, { auth: true }],
   ["POST", "/api/plan/generate", routes.generate, { auth: true }],
   ["GET", "/api/plans", routes.listPlans, { auth: true }],

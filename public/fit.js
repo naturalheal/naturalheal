@@ -56,19 +56,26 @@
 
 let fitData=null,fitForm={days:60,diet:"veg",place:"home",activity:"low",gender:""};
 async function loadFit(){
- const v=$("viewFit");if(!v)return;
+ if(!$("viewFit"))return;
+ if(typeof fitSeg==="function"&&fitSeg()==="yoga"){loadYoga();return;}
+ const v=fitBody();
  if(!fitData)v.innerHTML=`<div class="fit-card" style="text-align:center"><span class="spin" style="border-color:var(--accent-soft);border-top-color:var(--accent)"></span></div>`;
  try{fitData=await api("/fit/wl");}catch(e){v.innerHTML=`<div class="fit-card"><p class="sub" style="margin:0">${esc(e.message)}</p></div>`;return;}
  renderFit();
 }
-function renderFit(){if(!fitData||!$("viewFit"))return;fitData.program?renderWL():renderWLStart();}
+function renderFit(){
+ if(!$("viewFit"))return;
+ if(typeof fitSeg==="function"&&fitSeg()==="yoga"){renderYoga();if(typeof yP!=="undefined"&&yP&&$("yPlay"))yPose(false);return;}
+ if(!fitData){loadFit();return;}
+ fitData.program?renderWL():renderWLStart();
+}
 
 /* ---------- shuru karne ka form ---------- */
 function renderWLStart(){
  const p=(typeof gather==="function")?gather():{};
  if(!fitForm.gender)fitForm.gender=p.gender==="female"?"female":"male";
  const seg=(name,opts)=>`<div class="fit-seg" data-seg="${name}">${opts.map(([v,l])=>`<button type="button" data-v="${v}" class="${String(fitForm[name])===String(v)?"on":""}">${esc(l)}</button>`).join("")}</div>`;
- $("viewFit").innerHTML=`
+ fitBody().innerHTML=`
  <div class="fit-hero"><div class="fh-k">⚖️ ${esc(ft("tabFit"))}</div><h2>${esc(ft("wlTitle"))}</h2><p class="fh-s">${esc(ft("wlSub"))}</p>
   <ul class="fit-pts">${ft("wlPts").split(" · ").map(x=>`<li>✓ ${esc(x)}</li>`).join("")}</ul></div>
  <div class="fit-card fit-form"><h3>🎯 ${esc(ft("startH"))}</h3>
@@ -163,7 +170,7 @@ function renderWL(){
  const done=["water","walk","workout","diet","sleep","nosugar"].filter(k=>k==="water"?(tk.water||0)>=1:!!tk[k]).length;
  const adj=d.adjust;const adjTxt=adj?(adj.action==="slow"?ft("adjSlow"):adj.action==="fast"?ft("adjFast"):adj.action==="ontrack"?ft("adjOn"):ft("adjNo")):"";
  const finished=d.day>=P.days&&d.today>=addDays(P.start_date,P.days-1);
- $("viewFit").innerHTML=`
+ fitBody().innerHTML=`
  <div class="fit-hero">
   <div class="fh-k">⚖️ ${esc(ft("wlTitle"))} · ${esc(ft("dayOf",{d:d.day,n:P.days}))}</div>
   <div class="fh-big"><b>${d.lost>0?d.lost:0}</b><span>${esc(ft("lostLbl"))} · ${esc(ft("goalLbl"))} ${P.expected_loss} kg</span></div>
