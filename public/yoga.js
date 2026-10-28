@@ -38,6 +38,8 @@
 .y-body{flex:1;max-width:560px;width:100%;margin:0 auto;padding:16px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px}
 .y-cnt{font-size:12.5px;font-weight:800;color:var(--muted)}
 .y-emo{font-size:64px;line-height:1}
+.y-fig{color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:6px 10px;line-height:0}
+.y-vid,.g-vid{display:inline-flex;align-items:center;gap:6px;font-weight:800;font-size:13.5px;color:#C4302B;background:#FDECEC;border-radius:99px;padding:7px 14px;text-decoration:none}
 .y-name{font-family:var(--f-head);font-size:24px;margin:0}
 .y-ring{position:relative;width:150px;height:150px}
 .y-ring svg{transform:rotate(-90deg)}
@@ -136,10 +138,11 @@ function yPose(say){
   <div class="y-prog"><i style="width:${Math.round(yP.i/S.p.length*100)}%"></i></div>
   <div class="y-body">
    <div class="y-cnt">${yP.i+1} / ${S.p.length}</div>
-   <div class="y-emo">${P.e||"🧘"}</div>
+   <div class="y-fig">${typeof figSVG==="function"&&figSVG(pid,220)||`<div class="y-emo">${P.e||"🧘"}</div>`}</div>
    <h2 class="y-name">${esc(ft("p_"+pid+"_n"))}</h2>
    <div class="y-ring"><svg width="150" height="150" viewBox="0 0 150 150"><circle cx="75" cy="75" r="${r}" fill="none" stroke="var(--surface-2)" stroke-width="10"/><circle id="yArc" cx="75" cy="75" r="${r}" fill="none" stroke="#6B4A92" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-frac)}" style="transition:stroke-dashoffset 1s linear"/></svg><b id="yLeft">${yFmt(yP.left)}</b></div>
    <div class="y-how">${esc(ft("p_"+pid+"_h"))}</div>
+   ${typeof figVideoUrl==="function"?`<a class="y-vid" href="${figVideoUrl("p_"+pid+"_n")}" target="_blank" rel="noopener">▶ ${esc(ft("vWatch"))}</a>`:""}
    <div class="y-tag b">✨ <b>${esc(ft("yBen"))}:</b> ${esc(ft("p_"+pid+"_b"))}</div>
    ${(P.c||[]).length?`<div class="y-tag c">⚠️ <b>${esc(ft("yCare"))}:</b> ${(P.c||[]).map(c=>esc(ft(c))).join(" ")}</div>`:""}
    ${nxt?`<div class="y-up">${esc(ft("yUp",{p:ft("p_"+nxt[0]+"_n")}))}</div>`:""}

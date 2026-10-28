@@ -12,7 +12,9 @@
 .g-chips button{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 11px;font:inherit;font-size:12.5px;font-weight:800;color:var(--muted);cursor:pointer}
 .g-chips button.on{background:#2F3B4C;border-color:#2F3B4C;color:#fff}
 .g-ex{border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px;background:var(--surface)}
-.g-ex .gh{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.g-ex .gh{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.g-ex .gfig{flex:none;width:84px;color:var(--fg);background:var(--surface-2);border-radius:12px;line-height:0;cursor:pointer}
+.g-ex .gbig{color:var(--fg);text-align:center;line-height:0;margin-bottom:8px}
 .g-ex .gh b{font-size:15px}
 .g-ex .gi{border:none;background:var(--surface-2);border-radius:8px;width:28px;height:28px;font-weight:900;cursor:pointer;color:var(--fg);flex:none}
 .g-ex .gs{font-size:12.5px;color:var(--muted);font-weight:700;margin-top:2px}
@@ -98,8 +100,8 @@ function renderGym(){
     <input type="number" inputmode="decimal" step="0.5" placeholder="${body?"—":esc(ft("gKg"))}" value="${kgv}" ${body?"disabled":""} aria-label="${esc(ft("gKg"))}" data-f="kg">
     <input type="number" inputmode="numeric" placeholder="${D.lo}-${D.hi}" value="${rpv}" aria-label="${esc(ft("gReps"))}" data-f="reps">
     <button type="button" class="ok" aria-label="✓">${s.done?"✓":""}</button></div>`;}).join("");
-  return `<div class="g-ex"><div class="gh"><div><b>${esc(ft("g_"+ex+"_n"))}</b><div class="gs">${esc(ex==="cardio"?D.lo+"-"+D.hi+" "+ft("min"):ft("gSets",{s:D.s,r:D.lo+"-"+D.hi,t:D.rest}))}</div></div><button type="button" class="gi" data-how="${ex}" aria-label="?">?</button></div>
-   <div class="ghow hidden" id="how_${ex}">${esc(ft("g_"+ex+"_h"))}</div>
+  return `<div class="g-ex"><div class="gh"><div class="gfig" data-how="${ex}">${typeof figSVG==="function"?figSVG(ex,84):""}</div><div style="flex:1;min-width:0"><b>${esc(ft("g_"+ex+"_n"))}</b><div class="gs">${esc(ex==="cardio"?D.lo+"-"+D.hi+" "+ft("min"):ft("gSets",{s:D.s,r:D.lo+"-"+D.hi,t:D.rest}))}</div></div><button type="button" class="gi" data-how="${ex}" aria-label="?">?</button></div>
+   <div class="ghow hidden" id="how_${ex}"><div class="gbig">${typeof figSVG==="function"?figSVG(ex,200):""}</div>${esc(ft("g_"+ex+"_h"))}${typeof figVideoUrl==="function"?`<div style="margin-top:8px"><a class="g-vid" href="${figVideoUrl("g_"+ex+"_n")}" target="_blank" rel="noopener">▶ ${esc(ft("vWatch"))}</a></div>`:""}</div>
    ${lastTxt?`<div class="gl">${esc(lastTxt)}</div>`:""}${upTxt?`<div class="gu">${esc(upTxt)}</div>`:""}${rows}</div>`;
  }).join("");
  const prs=Object.entries(d.best||{}).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).slice(0,6);
