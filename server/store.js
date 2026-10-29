@@ -133,6 +133,8 @@ module.exports = {
   gym_logs: collection("gym_logs"),
   fit_ai: collection("fit_ai"),
   _raw: () => data,
+  // Backup se poora data wapas (restore) — file + Upstash dono me save
+  replaceAll: (obj) => { data = obj; for (const k of KEYS) if (!data[k]) data[k] = []; save(); },
   init,
   remoteOn,
   onDisk: path.isAbsolute(DBF),

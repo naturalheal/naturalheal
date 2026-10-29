@@ -22,6 +22,7 @@ const path = require("path");
 const routes = require("./routes");
 const fit = require("./fit");
 const fitAi = require("./fit-ai");
+const backup = require("./backup");
 const billing = require("./billing");
 const admin = require("./admin");
 const kitchen = require("./kitchen");
@@ -103,6 +104,10 @@ const R = [
   ["PUT", "/api/admin/settings", admin.writeSettings, { admin: true }],
   ["POST", "/api/admin/reset-data", admin.resetData, { admin: true }],
   ["GET", "/api/admin/backup", admin.backup, { admin: true }],
+  ["GET", "/api/admin/backups", backup.adminStatus, { admin: true }],
+  ["POST", "/api/admin/backups/run", backup.adminRun, { admin: true }],
+  ["GET", "/api/admin/backups/download", backup.adminDownload, { admin: true }],
+  ["POST", "/api/admin/backups/restore", backup.adminRestore, { admin: true }],
   ["POST", "/api/admin/users/:id/password", admin.resetPassword, { admin: true }],
   ["POST", "/api/admin/concerns", admin.addConcern, { admin: true }],
   ["DELETE", "/api/admin/concerns/:id", admin.deleteConcern, { admin: true }],
@@ -253,6 +258,7 @@ function boot() {
     console.log(`  Admin panel:        http://localhost:${PORT}/admin`);
     console.log(`  AI mode: ${process.env.ANTHROPIC_API_KEY ? "Claude API (live)" : "Offline fallback (no API key)"}`);
     console.log(`  Data: ${db.remoteOn ? "Upstash permanent ✓" : db.onDisk ? ("Permanent disk ✓ (" + db.dbPath + ")") : "local file (free host par reset ho sakta hai)"}`);
+    backup.startScheduler();
     console.log(`  Payments: Razorpay ${process.env.RAZORPAY_KEY_ID ? "on" : "off"} · Stripe ${process.env.STRIPE_SECRET_KEY ? "on" : "off"}\n`);
   });
 }
