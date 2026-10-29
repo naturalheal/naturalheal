@@ -149,7 +149,7 @@ async function kitchenRemedy(ctx) {
   if (isPremium(ctx.user)) {
     const haveNames = labelItems(have, lang).join(", ");
     const prompt = `You are a careful Indian home-remedy (dadi-nani ke nuskhe) helper. The user has ONLY these kitchen items available: ${haveNames}. Their problem: "${concernLabel}". Suggest 1-2 safe home remedies USING ONLY those items (do not use anything they didn't list). For EACH remedy give a short title and simple how-to. Write in ${langName(lang)}, very simple words a non-reader could follow if read aloud. No medicines, no doses, no diagnosis. Reply as ONLY a JSON array like [{"title":"...","how":"...","uses":["item"]}]. No text outside JSON.`;
-    const txt = await aiText(prompt, 400);
+    const txt = await aiText(prompt, 400, "kitchen");
     const parsed = safeArr(txt);
     if (parsed && parsed.length) {
       return { concern: concernLabel, benefit, items: labelItems(have, lang), steps: parsed.slice(0, 3), caution, source: "ai" };
@@ -207,7 +207,7 @@ Reply as ONLY this JSON (no text outside): {"detected":["id","id"],"steps":[{"ti
 If no useful item is visible, return {"detected":[],"steps":[]}.
 Write titles/how in ${langName(lang)}.`;
 
-  const txt = await aiVision(prompt, { media_type: img.media_type, data: img.data }, 600);
+  const txt = await aiVision(prompt, { media_type: img.media_type, data: img.data }, 600, "kitchen-scan");
   const parsed = safeObj(txt) || {};
   const detectedIds = (Array.isArray(parsed.detected) ? parsed.detected : []).filter((id) => ITEM_MAP[id]);
   let steps = Array.isArray(parsed.steps) ? parsed.steps.filter((s) => s && s.title && s.how).slice(0, 3) : [];

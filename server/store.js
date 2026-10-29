@@ -14,7 +14,7 @@ const path = require("path");
 // warna project folder ke andar (free host).
 const DBF = process.env.DB_FILE || "naturalheal-data.json";
 const FILE = path.isAbsolute(DBF) ? DBF : path.join(__dirname, "..", DBF);
-const KEYS = ["users", "health_profiles", "ai_plans", "payments", "symptoms", "members", "settings", "posts", "shares", "points_ledger", "redemptions", "upi_payments", "wl_programs", "wl_logs", "yoga_logs", "gym_profiles", "gym_logs", "fit_ai"];
+const KEYS = ["users", "health_profiles", "ai_plans", "payments", "symptoms", "members", "settings", "posts", "shares", "points_ledger", "redemptions", "upi_payments", "wl_programs", "wl_logs", "yoga_logs", "gym_profiles", "gym_logs", "fit_ai", "ai_usage"];
 
 let data = {};
 for (const k of KEYS) data[k] = [];
@@ -132,6 +132,7 @@ module.exports = {
   gym_profiles: collection("gym_profiles"),
   gym_logs: collection("gym_logs"),
   fit_ai: collection("fit_ai"),
+  ai_usage: collection("ai_usage"),
   _raw: () => data,
   // Backup se poora data wapas (restore) — file + Upstash dono me save
   replaceAll: (obj) => { data = obj; for (const k of KEYS) if (!data[k]) data[k] = []; save(); },

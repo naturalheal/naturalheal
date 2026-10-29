@@ -282,6 +282,7 @@ function fallbackIn(p, ql, user) {
 // Plan ko chuni hui bhasha me badlo (ek baar AI, phir save — dobara kharcha nahi)
 const TR_LANGS = ["en", "hi", "hin", "bn", "mr", "gu", "ta", "te", "kn", "pa", "ml"];
 const trBusy = new Map();
+const trCount = new Map(); // userId -> { d: din, n: aaj kitne naye anuvaad }
 async function translatePlanRoute(ctx) {
   const p = db.plans.get(ctx.params.id);
   if (!p || p.user_id !== ctx.user.id) throw new HttpError(404, "Plan nahi mila");
@@ -291,6 +292,12 @@ async function translatePlanRoute(ctx) {
   if (trDone(p, ql)) return { plan: trFor(p, ql), plan_lang: ql };
   // Basic plan: AI ki zaroorat nahi — usi jaankari se nayi bhasha me dobara banao
   if (p.source === "fallback") return { plan: fallbackIn(p, ql, ctx.user), plan_lang: ql };
+  // Roz ki seema: ek user itne hi naye AI anuvaad (bhasha baar-baar badalne se kharcha na bhaage)
+  const capTr = Number(getSettings().translate_per_day) || 0;
+  const today = istToday();
+  const tc = trCount.get(ctx.user.id);
+  if (capTr > 0 && tc && tc.d === today && tc.n >= capTr) return { plan: p.plan, plan_lang: p.lang || null, failed: true, capped: true };
+  if (!trBusy.has(p.id + ":" + ql)) trCount.set(ctx.user.id, { d: today, n: (tc && tc.d === today ? tc.n : 0) + 1 });
   const key = p.id + ":" + ql;
   const prevKeys = p.tr_keys && p.tr_keys[ql];
   const base = prevKeys ? p.tr[ql] : null;
@@ -458,7 +465,7 @@ async function insight(ctx) {
   const summary = symptomSummary(user.id, mem.id, mem.isSelf, 15);
   if (isPremium(user)) {
     const prompt = `You are a caring natural-wellness coach. Based ONLY on these recent symptom logs, write ONE short, warm, practical insight (max 2 sentences) in ${langName(rawLang)}, using that language's native script. Mention the trend and ONE gentle home/ayurvedic suggestion. No medicines, no diagnosis.\n\nRecent symptoms: ${summary || "no logs yet"}.\nName: ${user.name}.`;
-    const txt = await aiText(prompt, 160);
+    const txt = await aiText(prompt, 160, "insight");
     if (txt) return { insight: txt, source: "ai" };
   }
   let msg; let first = null;
@@ -482,7 +489,7 @@ async function explain(ctx) {
   const dosha = latest && latest.plan && latest.plan.dosha_analysis ? latest.plan.dosha_analysis.primary_dosha : "";
   if (isPremium(user)) {
     const prompt = `In ${langName(rawLang)} (use that language's native script), explain in 2 short sentences WHY this wellness item helps THIS user. Be warm and simple. No medicines, no diagnosis.\nItem: "${text}"\nUser's primary dosha: ${dosha || "not known"}.`;
-    const txt = await aiText(prompt, 140);
+    const txt = await aiText(prompt, 140, "explain");
     if (txt) return { text, explanation: txt, source: "ai" };
   }
   // Offline: aam items ka specific fayda (free users ko bhi accha jawab) — sab bhashaon me i18n.js se
@@ -507,7 +514,7 @@ async function chat(ctx) {
   const planCtx = latest && latest.plan ? JSON.stringify({ summary: latest.plan.summary, dosha: latest.plan.dosha_analysis, diet: latest.plan.diet }).slice(0, 1500) : "no plan yet";
   const convo = msgs.map((m) => `${m.role === "user" ? "User" : "Coach"}: ${String(m.content).slice(0, 500)}`).join("\n");
   const prompt = `You are "NaturalHeal", a warm natural-wellness coach. Answer the user's question in ${langName(rawLang)} (use that language's native script), short and practical (2-4 sentences). Base answers on their plan context. No medicines, no diagnosis; for anything serious tell them to see a doctor.\n\nUser's plan context: ${planCtx}\n\nConversation:\n${convo}\nCoach:`;
-  const txt = await aiText(prompt, 320);
+  const txt = await aiText(prompt, 320, "chat");
   return { reply: txt || i18n.pick(rawLang, "chatFail"), source: txt ? "ai" : "basic" };
 }
 

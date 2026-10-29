@@ -108,7 +108,7 @@ Health concerns: ${prof.conditions.join(", ") || "none"}. Allergies / avoid: ${p
 Rules: 4 meals a day — B (breakfast), L (lunch), S (evening snack), D (dinner). Different meals on different days. Give a home-measure quantity (katori, roti count, glass, pieces). No supplements or medicines${kind === "gym" ? " (whey only as an optional note)" : ""}. Keep sugar and fried food low.
 Write every food name, quantity and tip in ${langName(lang)} (that language's script). Numbers stay as digits.
 Reply ONLY with JSON: {"days":[{"meals":[{"s":"B","name":"...","qty":"...","kcal":300,"p":15}, ...4 meals]}, ...7 days], "tips":["...","...","..."]}`;
-  const text = await aiText(prompt, 9000);
+  const text = await aiText(prompt, 9000, "fit-diet");
   const out = parseJson(text);
   const days = out && Array.isArray(out.days) ? out.days.slice(0, 7).map((d) => ({
     meals: (Array.isArray(d.meals) ? d.meals : []).slice(0, 5).map((m) => ({
@@ -141,7 +141,7 @@ Choose ONLY from these pose ids (id: description): ${allowed.map((k) => `${k}: $
 Order: gentle warm-up first, breathing near the end, finish with shava. Respect every "avoid" note for this person. Each pose 30-300 seconds.
 Write "title" (max 6 words) and "why" (2 short sentences on why this suits them) in ${langName(lang)} (that language's script).
 Reply ONLY with JSON: {"title":"...","why":"...","poses":[["id",seconds], ...]}`;
-  const out = parseJson(await aiText(prompt, 1500));
+  const out = parseJson(await aiText(prompt, 1500, "fit-yoga"));
   let poses = out && Array.isArray(out.poses) ? out.poses.filter((p) => Array.isArray(p) && allowed.includes(p[0])).map((p) => [p[0], clamp(Math.round(Number(p[1]) || 60), 30, 300)]) : [];
   if (poses.length < 4) throw new HttpError(502, "ai_fail");
   poses = poses.slice(0, 14);
@@ -164,7 +164,7 @@ Recent workouts (exercise kg×reps per set):
 ${hist}
 Give 3-4 short, specific tips: what improved, what to change next week (weight/reps/rest/recovery), and one safety or nutrition point. No medicines or supplements except optional whey.
 Write in ${langName(lang)} (that language's script). Reply ONLY with JSON: {"tips":["...","..."]}`;
-  const out = parseJson(await aiText(prompt, 1500));
+  const out = parseJson(await aiText(prompt, 1500, "fit-coach"));
   const tips = out && Array.isArray(out.tips) ? out.tips.slice(0, 5).map((x) => String(x).slice(0, 240)).filter(Boolean) : [];
   if (!tips.length) throw new HttpError(502, "ai_fail");
   const data = { tips, at: istToday() };

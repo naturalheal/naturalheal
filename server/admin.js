@@ -27,6 +27,24 @@ function stats() {
 const maskSecret = (v) => (v ? "••••" + String(v).slice(-4) : "");
 function readSettings() { const s = { ...getSettings() }; s.resend_api_key = maskSecret(s.resend_api_key); return { settings: s }; }
 function writeSettings(ctx) { saveSettings(ctx.body || {}); return readSettings(); }
+// AI kharcha report: aaj / 7 din / 30 din, kaam ke hisaab se + roz ka graph
+function aiUsage() {
+  const { aiModel, priceOf } = require("./ai");
+  const istDay = (n) => new Date(Date.now() + 19800000 - n * 86400000).toISOString().slice(0, 10);
+  const rows = db.ai_usage.all();
+  const sum = (from) => {
+    const by = {}; let tot = { c: 0, i: 0, o: 0, usd: 0, err: 0 };
+    for (const r of rows) if (r.id >= from) for (const [k, v] of Object.entries(r.f || {})) {
+      const x = (by[k] = by[k] || { c: 0, i: 0, o: 0, usd: 0, err: 0 });
+      for (const f of ["c", "i", "o", "usd", "err"]) { x[f] += v[f] || 0; tot[f] += v[f] || 0; }
+    }
+    return { by, tot };
+  };
+  const days = [];
+  for (let n = 29; n >= 0; n--) { const d = istDay(n); const r = rows.find((x) => x.id === d); days.push({ d, usd: r ? Object.values(r.f || {}).reduce((a, v) => a + (v.usd || 0), 0) : 0 }); }
+  const model = aiModel();
+  return { model, price: priceOf(model), today: sum(istDay(0)), week: sum(istDay(6)), month: sum(istDay(29)), all: sum(""), days };
+}
 // Email test — chhota sandesh, bina attachment
 async function mailTest() {
   const { sendMail } = require("./mailer");
@@ -170,9 +188,9 @@ async function notifyTest() {
   return { ok: true };
 }
 // AI live test — asli Claude API call, exact natija (ok / error)
-async function aiTest() {
+async function aiTest(ctx) {
   const { testAI } = require("./ai");
-  return await testAI();
+  return await testAI(!!(ctx && ctx.body && ctx.body.full));
 }
 
 function upiSet(ctx) {
@@ -198,4 +216,4 @@ function resetData(ctx) {
   return { ok: true, kept_admin: ctx.user.id };
 }
 
-module.exports = { stats, listUsers, userDetail, setPremium, deleteUser, recentPayments, readSettings, writeSettings, plansReport, symptomsReport, membersReport, userMembers, adminUpdateMember, adminDeleteMember, resetData, backup, resetPassword, addConcern, deleteConcern, upiList, upiSet, notifyTest, aiTest, mailTest };
+module.exports = { stats, listUsers, userDetail, setPremium, deleteUser, recentPayments, readSettings, writeSettings, plansReport, symptomsReport, membersReport, userMembers, adminUpdateMember, adminDeleteMember, resetData, backup, resetPassword, addConcern, deleteConcern, upiList, upiSet, notifyTest, aiTest, mailTest, aiUsage };

@@ -9,7 +9,30 @@ const MODEL = process.env.ANTHROPIC_MODEL || "claude-haiku-4-5";
 const MAX_TOKENS = Number(process.env.ANTHROPIC_MAX_TOKENS) || 16000; // poora plan JSON kat na jaaye (Devanagari/regional script tokens zyada lete hain)
 const KEY = process.env.ANTHROPIC_API_KEY || "";
 const API_URL = "https://api.anthropic.com/v1/messages";
-let lastAI = null; // aakhri AI plan-call ka natija (admin diagnostics ke liye)
+let lastAI = null;
+
+// ---- AI kharcha: har call ke tokens + anumanit $ (din aur kaam ke hisaab se) ----
+// $ per 1M tokens [input, output] — Anthropic ki public price; model naam se milao (specific pehle)
+const PRICE = [["haiku-4", 1, 5], ["3-5-haiku", 0.8, 4], ["3-haiku", 0.25, 1.25], ["sonnet", 3, 15], ["opus-4-5", 5, 25], ["opus-4-6", 5, 25], ["opus", 15, 75]];
+function priceOf(model) { const m = String(model || "").toLowerCase(); const p = PRICE.find((x) => m.includes(x[0])); return p ? [p[1], p[2]] : [1, 5]; }
+function track(feature, data, failed) {
+  try {
+    const db = require("./store");
+    const u = (data && data.usage) || {};
+    const inT = (u.input_tokens || 0) + (u.cache_creation_input_tokens || 0) + (u.cache_read_input_tokens || 0), outT = u.output_tokens || 0;
+    const [pi, po] = priceOf((data && data.model) || MODEL);
+    const usd = (inT * pi + outT * po) / 1e6;
+    const day = new Date(Date.now() + 19800000).toISOString().slice(0, 10);
+    const row = db.ai_usage.get(day) || db.ai_usage.insert({ id: day, f: {} });
+    const f = { ...(row.f || {}) };
+    const x = { c: 0, i: 0, o: 0, usd: 0, err: 0, ...(f[feature] || {}) };
+    x.c++; x.i += inT; x.o += outT; x.usd = Math.round((x.usd + usd) * 1e6) / 1e6; if (failed) x.err++;
+    f[feature] = x;
+    db.ai_usage.update(day, { f, model: (data && data.model) || MODEL });
+  } catch (_) {}
+}
+// Fail hui call (HTTP error) bhi gino — token nahi lagte par pata chale
+async function trackFail(feature, resp) { track(feature, null, true); return resp; } // aakhri AI plan-call ka natija (admin diagnostics ke liye)
 
 // Bhasha code -> AI ko batane ke liye naam + script
 const LANGS = {
@@ -147,8 +170,9 @@ async function generatePlan(profile, opts = {}) {
           messages: [{ role: "user", content }],
         }),
       });
-      if (!resp.ok) throw new Error("API " + resp.status + ": " + (await resp.text()).slice(0, 200));
+      if (!resp.ok) { track("plan", null, true); throw new Error("API " + resp.status + ": " + (await resp.text()).slice(0, 200)); }
       const data = await resp.json();
+      track("plan", data);
       const text = (data.content || []).map((c) => c.text || "").join("");
       const plan = parseJson(text);
       if (plan) { lastAI = { at: new Date().toISOString(), ok: true, stop_reason: data.stop_reason }; return { plan, source: "ai" }; }
@@ -163,8 +187,18 @@ async function generatePlan(profile, opts = {}) {
 }
 
 // ---- Live AI test (admin): asli plan-call jaisa test — poora system prompt + parse ----
-async function testAI() {
+async function testAI(full) {
   if (!KEY) return { ok: false, model: MODEL, error: "ANTHROPIC_API_KEY set nahi hai (Render Environment me daalein)" };
+  if (!full) { // sasta test: key + model chal rahe hain? (~20 tokens)
+    try {
+      const resp = await fetch(API_URL, { method: "POST", headers: { "content-type": "application/json", "x-api-key": KEY, "anthropic-version": "2023-06-01" },
+        body: JSON.stringify({ model: MODEL, max_tokens: 5, messages: [{ role: "user", content: "Reply with: OK" }] }) });
+      const txt = await resp.text();
+      if (!resp.ok) { let msg = txt.slice(0, 300); try { const j = JSON.parse(txt); if (j.error && j.error.message) msg = j.error.message; } catch (_) {} track("test", null, true); return { ok: false, model: MODEL, status: resp.status, error: msg, tr_errors: trErrors() }; }
+      const data = JSON.parse(txt); track("test", data);
+      return { ok: true, model: MODEL, summary: "API key + model OK", tr_errors: trErrors() };
+    } catch (e) { return { ok: false, model: MODEL, error: e.message }; }
+  }
   // Devanagari (hin) sabse bhaari script hai — isi se test karo taaki truncation pakda jaaye
   const profile = { name: "Test", region: "IN", language: "hin", age: 35, gender: "male", height_cm: 170, weight_kg: 85, conditions: ["weight", "acidity"], allergies: [], report: [], notes: "", wake: "06:30", weight_goal: { target_kg: 5, days: 30 } };
   try {
@@ -181,6 +215,7 @@ async function testAI() {
       return { ok: false, model: MODEL, status: resp.status, error: msg, tr_errors: trErrors() };
     }
     const data = JSON.parse(txt);
+    track("test", data);
     const text = (data.content || []).map((c) => c.text || "").join("");
     const plan = parseJson(text);
     if (plan) return { ok: true, model: MODEL, stop_reason: data.stop_reason, summary: (plan.summary || "").slice(0, 90), tr_errors: trErrors() };
@@ -365,7 +400,7 @@ function fallbackPlanHi(p) {
 }
 
 // Chhota text jawab (insight/nudge ke liye). Key na ho to null.
-async function aiText(prompt, maxTokens = 220) {
+async function aiText(prompt, maxTokens = 220, feature = "other") {
   if (!KEY) return null;
   try {
     const resp = await fetch(API_URL, {
@@ -373,14 +408,15 @@ async function aiText(prompt, maxTokens = 220) {
       headers: { "content-type": "application/json", "x-api-key": KEY, "anthropic-version": "2023-06-01" },
       body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, messages: [{ role: "user", content: prompt }] }),
     });
-    if (!resp.ok) return null;
+    if (!resp.ok) { track(feature, null, true); return null; }
     const data = await resp.json();
+    track(feature, data);
     return (data.content || []).map((c) => c.text || "").join("").trim() || null;
   } catch (_) { return null; }
 }
 
 // Photo + prompt -> text (kitchen scan jaisa). image = {media_type, data(base64)}. Key na ho to null.
-async function aiVision(prompt, image, maxTokens = 500) {
+async function aiVision(prompt, image, maxTokens = 500, feature = "kitchen-scan") {
   if (!KEY || !image || !image.data) return null;
   try {
     const content = [{ type: "text", text: prompt }];
@@ -392,8 +428,9 @@ async function aiVision(prompt, image, maxTokens = 500) {
       headers: { "content-type": "application/json", "x-api-key": KEY, "anthropic-version": "2023-06-01" },
       body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, messages: [{ role: "user", content }] }),
     });
-    if (!resp.ok) return null;
+    if (!resp.ok) { track(feature, null, true); return null; }
     const data = await resp.json();
+    track(feature, data);
     return (data.content || []).map((c) => c.text || "").join("").trim() || null;
   } catch (_) { return null; }
 }
@@ -407,7 +444,7 @@ const TR_PARTS = [
   ["home_remedies", "diet", "yoga"],
   ["daily_routine", "lifestyle_tips", "weight_plan", "red_flags", "disclaimer"],
 ];
-const TR_CHUNK = 4, TR_CONC = 10;
+const TR_CHUNK = 12, TR_CONC = 5;   // bade tukde = kam calls, kam baar-baar ka prompt
 const trLog = []; // aakhri anuvaad galtiyan (admin AI test me dikhti hain)
 function trErr(e) { trLog.unshift({ at: new Date().toISOString(), ...e }); trLog.length = Math.min(trLog.length, 12); }
 function sameShape(a, b) {
@@ -418,15 +455,9 @@ function sameShape(a, b) {
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 // Ek tukda: { ok, data } | { ok:false, cut:true } (kata) | { ok:false } (fail)
 async function translateChunk(obj, lang) {
-  const prompt = `Translate this JSON (part of a wellness plan) into ${langName(lang)}.
-Rules:
-- Translate EVERY human-readable string value into that language and script. Herb/food names may keep the common local name, written in that script.
-- Keep ALL keys exactly the same. Keep numbers, times (like "06:30 AM"), units and these values unchanged: status, primary_dosha, secondary_dosha, balance_percent, region_availability, marker, value, type, priority.
-- Keep the same structure and the same number of items in every array.
-- Reply with ONLY the JSON, nothing else.
-
+  const prompt = `Translate all human-readable string values of this JSON into ${langName(lang)}. Keep keys, numbers, times and these values unchanged: status, primary_dosha, secondary_dosha, balance_percent, region_availability, marker, value, type, priority. Same array lengths. Reply with JSON only.
 ${JSON.stringify(obj)}`;
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 2; i++) {
     try {
       const resp = await fetch(API_URL, {
         method: "POST",
@@ -434,12 +465,14 @@ ${JSON.stringify(obj)}`;
         body: JSON.stringify({ model: MODEL, max_tokens: MAX_TOKENS, messages: [{ role: "user", content: prompt }] }),
       });
       if (!resp.ok) {
+        track("translate", null, true);
         const t = (await resp.text()).slice(0, 160);
         trErr({ lang, keys: Object.keys(obj).join(","), status: resp.status, error: t });
         if (resp.status === 429 || resp.status >= 500) { await wait(2000 * (i + 1)); continue; }
         return { ok: false };
       }
       const data = await resp.json();
+      track("translate", data);
       if (data.stop_reason === "max_tokens") { trErr({ lang, keys: Object.keys(obj).join(","), stop_reason: "max_tokens" }); return { ok: false, cut: true }; }
       const out = parseJson((data.content || []).map((c) => c.text || "").join(""));
       if (out && typeof out === "object") return { ok: true, data: out };
@@ -506,4 +539,5 @@ function trErrors() { return trLog.slice(); }
 // Key available hai? (frontend ko batane ke liye route use karta hai)
 function aiAvailable() { return !!KEY; }
 
-module.exports = { parseJson, generatePlan, fallbackPlan, translatePlan, trKeys, trErrors, aiText, aiVision, aiAvailable, buildSystemPrompt, JSON_SHAPE, testAI, aiLast, MODEL, langName };
+function aiModel() { return MODEL; }
+module.exports = { priceOf, aiModel, parseJson, generatePlan, fallbackPlan, translatePlan, trKeys, trErrors, aiText, aiVision, aiAvailable, buildSystemPrompt, JSON_SHAPE, testAI, aiLast, MODEL, langName };

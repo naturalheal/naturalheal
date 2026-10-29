@@ -1434,7 +1434,7 @@ function trPopShow(){
 function trPopHide(){clearInterval(_trPopIv);_trPopIv=null;const el=$("trPop");if(el){const b=$("tpBar");if(b)b.style.width="100%";setTimeout(()=>el.remove(),250);}}
 /* Anuvaad adhoora/fail ho to apne-aap dobara (har plan+bhasha ke liye kuch hi baar) — refresh ki zaroorat nahi */
 const _trTries={};
-function trRetry(id,want,fn){const k=id+":"+want;_trTries[k]=(_trTries[k]||0)+1;if(_trTries[k]<=4)setTimeout(()=>{if(lang===want)fn();},3000*_trTries[k]);else{trPopHide();toast(tx("plTransFail"));}}
+function trRetry(id,want,fn){const k=id+":"+want;_trTries[k]=(_trTries[k]||0)+1;if(_trTries[k]<=2)setTimeout(()=>{if(lang===want)fn();},3000*_trTries[k]);else{trPopHide();toast(tx("plTransFail"));}}
 async function ensurePlanLang(){
  const id=window._lastPlanId;if(!id||!window._lastPlan||window._lastPlanLang===lang)return;
  const want=lang,seq=++_trSeq;

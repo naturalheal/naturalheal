@@ -132,6 +132,7 @@ const SECTIONS=[
  {key:"pay",title:"Payments",icon:"pay"},
  {key:"upi",title:"Payment requests (UPI)",icon:"pay"},
  {key:"plans",title:"Plans report",icon:"plans"},
+ {key:"aicost",title:"AI kharcha (tokens / $)",icon:"pay"},
  {key:"symptoms",title:"Symptoms report",icon:"symptoms"},
  {key:"members",title:"Family members",icon:"members"},
  {key:"community",title:"Community (moderation)",icon:"community"},
@@ -161,10 +162,28 @@ function show(key){
  $("navBtns").querySelectorAll(".navbtn").forEach(b=>b.classList.toggle("on",b.dataset.sec===key));
  $("secIc").innerHTML=svg(s.icon);$("secTitle").textContent=s.title;
  $("secBody").innerHTML='<p class="sub">Loading…</p>';
- ({overview:secOverview,users:secUsers,pay:secPay,upi:secUpi,plans:secPlans,symptoms:secSymptoms,members:secMembers,community:secCommunity,referral:secReferral,points:secPoints,settings:secSettings}[key])();
+ ({overview:secOverview,users:secUsers,pay:secPay,upi:secUpi,plans:secPlans,symptoms:secSymptoms,members:secMembers,community:secCommunity,referral:secReferral,points:secPoints,settings:secSettings,aicost:secAiCost}[key])();
 }
 
 /* ===== sections ===== */
+const AI_FEAT={plan:"AI plan banana",translate:"Plan ka anuvaad (bhasha badalna)",chat:"AI chat",explain:"\"Ye kyun?\" jawab",insight:"AI insight",kitchen:"Rasoi nuskha","kitchen-scan":"Rasoi photo scan","fit-diet":"Fit: AI diet chart","fit-yoga":"Fit: AI yoga session","fit-coach":"Fit: AI gym coach",test:"Admin AI test",other:"Baaki"};
+async function secAiCost(){
+ const d=await api("/admin/ai-usage");
+ const usd=v=>"$"+(v||0).toFixed(v>=1?2:4),inr=v=>"≈ ₹"+Math.round((v||0)*85),tok=n=>n>=1e6?(n/1e6).toFixed(2)+"M":n>=1e3?(n/1e3).toFixed(1)+"k":String(n||0);
+ const card=(k,t)=>`<div class="stat"><div class="k">${k}</div><div class="v">${usd(t.tot.usd)}</div><div class="sub" style="margin:2px 0 0;font-size:12px">${inr(t.tot.usd)} · ${t.tot.c} calls</div></div>`;
+ const rows=Object.entries(d.month.by).sort((a,b)=>b[1].usd-a[1].usd);
+ const max=Math.max(0.0001,...d.days.map(x=>x.usd));
+ $("secBody").innerHTML=`<div class="stats" style="margin-bottom:14px">${card("Aaj",d.today)}${card("Pichhle 7 din",d.week)}${card("Pichhle 30 din",d.month)}${card("Shuru se (app ka hisaab)",d.all)}</div>
+ <div class="card"><h3 style="margin:0 0 6px;font-size:16px">Kis cheez par kitna (30 din)</h3>
+  <p class="sub" style="margin:0 0 10px">Model: <b>${esc(d.model)}</b> · rate: ${"$"+d.price[0]} / 1M input, ${"$"+d.price[1]} / 1M output tokens. Ye app ka <b>anumaan</b> hai — asli bill console.anthropic.com → Usage par.</p>
+  ${rows.length?`<table style="width:100%;border-collapse:collapse;font-size:13.5px"><tr style="text-align:left;color:#666"><th style="padding:6px 4px">Kaam</th><th>Calls</th><th>Input</th><th>Output</th><th>Kharcha</th><th>%</th></tr>${rows.map(([k,v])=>`<tr style="border-top:1px solid #eee"><td style="padding:7px 4px">${esc(AI_FEAT[k]||k)}${v.err?` <span style="color:#c0392b;font-size:12px">(${v.err} fail)</span>`:""}</td><td>${v.c}</td><td>${tok(v.i)}</td><td>${tok(v.o)}</td><td><b>${usd(v.usd)}</b></td><td>${d.month.tot.usd?Math.round(v.usd/d.month.tot.usd*100):0}%</td></tr>`).join("")}</table>`:'<p class="sub">Abhi koi AI call record nahi hui (ye report ab se ginti shuru karti hai).</p>'}
+ </div>
+ <div class="card" style="margin-top:14px"><h3 style="margin:0 0 10px;font-size:16px">Roz ka kharcha (30 din)</h3>
+  <div style="display:flex;align-items:flex-end;gap:3px;height:110px">${d.days.map(x=>`<div title="${x.d}: ${usd(x.usd)}" style="flex:1;background:${x.usd?"#2E7D5B":"#e5e5e5"};height:${Math.max(2,Math.round(x.usd/max*100))}px;border-radius:3px 3px 0 0"></div>`).join("")}</div>
+  <div class="sub" style="display:flex;justify-content:space-between;font-size:11px;margin-top:4px"><span>${d.days[0].d}</span><span>${d.days[29].d}</span></div></div>
+ <div class="card" style="margin-top:14px"><h3 style="margin:0 0 6px;font-size:16px">Kharcha kaise kam rakhein</h3>
+  <ul class="sub" style="margin:0;padding-left:18px;line-height:1.7"><li>Model sasta rakhein: Render env <b>ANTHROPIC_MODEL</b> khaali ya <b>claude-haiku-4-5</b>.</li><li>"Plan ka anuvaad" zyada ho to Settings me <b>roz ke anuvaad ki seema</b> kam karein.</li><li>Premium ki AI limit (plan/mahina) Settings se.</li><li>Admin "AI test" ab sasta (5 token) hai — poora test kabhi-kabhi hi.</li></ul></div>`;
+}
 async function secOverview(){
  const s=await api("/admin/stats");
  const rev=(s.revenue||[]).map(r=>`${r.currency||""} ${(r.total||0).toFixed(0)}`).join(" · ")||"—";
@@ -334,12 +353,14 @@ async function secSettings(){
     <div class="field"><label>Premium: emergency plan/din</label><input id="sPem" type="number" value="${s.premium_emergency_per_day!=null?s.premium_emergency_per_day:1}"></div>
   </div>
   <div class="field"><label>Premium: max plan/mahina</label><input id="sPpm" type="number" value="${s.premium_plans_per_month!=null?s.premium_plans_per_month:15}"><p class="sub" style="margin:4px 0 0;font-size:12px">Ek recharge (mahine) me itne AI plan. Naye recharge par phir se poore. 0 = koi limit nahi. User ko app me "kitne baaki" dikhta hai.</p></div>
+  <div class="field"><label>Plan ka anuvaad: ek user roz kitni baar (naya AI anuvaad)</label><input id="sTrDay" type="number" min="0" max="50" value="${s.translate_per_day!=null?s.translate_per_day:6}"><p class="sub" style="margin:4px 0 0;font-size:12px">Bhasha baar-baar badalne se AI kharcha na bhaage. Ek baar bana anuvaad save rehta hai — dobara us bhasha me free. 0 = koi seema nahi.</p></div>
   <div class="field"><label>Fit AI (diet chart / yoga session / coach): kitne din me ek baar badle</label><input id="sFitDays" type="number" min="1" max="60" value="${s.fit_ai_days!=null?s.fit_ai_days:7}"><p class="sub" style="margin:4px 0 0;font-size:12px">7 = hafte me ek baar. Premium khatam to ye bhi band; naye recharge par phir chalu.</p></div>
   <p class="sub" style="margin:-4px 0 10px;font-size:12px">Premium user: roz max = normal + emergency (abhi 1+1 = 2/din), aur ek recharge-mahine me max (upar wali setting). Dono me se jo pehle pure ho jaye; mahine wali ginti naye recharge par phir se shuru. Agar user kuch na badle to dobara "update" par purana plan hi aata hai — tab kharcha bhi nahi aur limit bhi nahi katti.</p>
   <div class="field"><label>App ka public URL (sharing link ke liye)</label><input id="sUrl" value="${esc(s.app_url||"")}" placeholder="https://yourapp.com"><p class="sub" style="margin:4px 0 0;font-size:12px">Jab app online ho, yahan uska address daalein — share links isi se banenge. Khali chhodne par abhi wale address se.</p></div>
   <h3 style="font-family:var(--f-head);font-weight:600;font-size:16px;margin:18px 0 8px">🤖 AI engine — status</h3>
   <p class="sub" style="margin:0 0 10px">Yahan dabao to app asli Claude API ko ek chhota test bhejta hai. Agar "chaalu ✓" aaye to premium plan AI se banega; agar error aaye to usi error ko mujhe bata dena, main theek kar dunga. (Error aane par app apne aap basic plan deta hai — isiliye free aur premium same lagte hain.)</p>
   <button class="btn ghost" id="aiTest" style="width:auto">🤖 AI test karo</button>
+  <button class="btn ghost" id="aiTestFull" style="width:auto;margin-left:6px;font-size:12px">Poora test (Hindi plan, mehenga)</button>
   <div id="aiTestOut" class="sub" style="margin-top:8px;font-size:13px"></div>
   <h3 style="font-family:var(--f-head);font-weight:600;font-size:16px;margin:18px 0 8px">UPI direct payment (gateway-free)</h3>
   <p class="sub" style="margin:0 0 10px">Yahan apna UPI daalo — user "UPI se pay" par QR scan karke seedha aapke UPI pe pay karega (0 fee, paisa turant). Khali chhodne par UPI option band rahega.</p>
@@ -451,11 +472,13 @@ async function secSettings(){
  if($("addConc"))$("addConc").onclick=async()=>{const v=($("newConc").value||"").trim();if(!v)return;try{const r=await api("/admin/concerns",{method:"POST",body:JSON.stringify({label:v})});concs=r.custom_concerns||concs;$("newConc").value="";renderConc();toast("Add ho gaya ✓");}catch(e){toast(e.message);}};
  if($("tgTest"))$("tgTest").onclick=async()=>{try{await api("/admin/settings",{method:"PUT",body:JSON.stringify({telegram_bot_token:$("sTgTok").value.trim(),telegram_chat_id:$("sTgChat").value.trim()})});await api("/admin/notify-test",{method:"POST",body:JSON.stringify({})});toast("Test message bhej diya ✓ Telegram dekho");}catch(e){toast(e.message);}};
  function trErrHtml(r){const e=r.tr_errors||[];return e.length?"<br><br><b>Bhasha-anuvaad ki aakhri galtiyan:</b><br>"+e.map(x=>esc((x.at||"").slice(0,16).replace("T"," ")+" · "+(x.lang||"")+" · "+(x.keys||"")+" · "+(x.status?"HTTP "+x.status+" ":"")+(x.stop_reason||"")+" "+(x.error||""))).join("<br>"):"<br><span style='color:#555'>Bhasha-anuvaad: koi galti nahi.</span>";}
-if($("aiTest"))$("aiTest").onclick=async()=>{const b=$("aiTest"),o=$("aiTestOut");b.disabled=true;o.style.color="";o.textContent="Test ho raha hai…";try{const r=await api("/admin/ai-test",{method:"POST",body:JSON.stringify({})});if(r.ok){o.style.color="#1C5A3E";o.innerHTML="✅ AI poora plan bana raha hai — premium/admin ko asli AI plan milega. (model: <b>"+esc(r.model||"")+"</b>)"+(r.summary?"<br><span style='color:#555'>Namoona: “"+esc(r.summary)+"…”</span>":"")+trErrHtml(r);}else{o.style.color="#b00020";o.innerHTML="❌ AI nahi chala"+(r.status?" (HTTP "+r.status+")":"")+":<br><b>"+esc(r.error||"unknown")+"</b><br>model: "+esc(r.model||"")+"<br><span style='color:#555'>Ye error mujhe bhej dena.</span>";}}catch(e){o.style.color="#b00020";o.textContent=e.message;}b.disabled=false;};
+const aiTestRun=async(full)=>{const b=$("aiTest"),o=$("aiTestOut");b.disabled=true;o.style.color="";o.textContent="Test ho raha hai…";try{const r=await api("/admin/ai-test",{method:"POST",body:JSON.stringify({full})});if(r.ok){o.style.color="#1C5A3E";o.innerHTML="✅ AI poora plan bana raha hai — premium/admin ko asli AI plan milega. (model: <b>"+esc(r.model||"")+"</b>)"+(r.summary?"<br><span style='color:#555'>Namoona: “"+esc(r.summary)+"…”</span>":"")+trErrHtml(r);}else{o.style.color="#b00020";o.innerHTML="❌ AI nahi chala"+(r.status?" (HTTP "+r.status+")":"")+":<br><b>"+esc(r.error||"unknown")+"</b><br>model: "+esc(r.model||"")+"<br><span style='color:#555'>Ye error mujhe bhej dena.</span>";}}catch(e){o.style.color="#b00020";o.textContent=e.message;}b.disabled=false;};
+ if($("aiTest"))$("aiTest").onclick=()=>aiTestRun(false);
+ if($("aiTestFull"))$("aiTestFull").onclick=()=>aiTestRun(true);
  $("sSave").onclick=async()=>{try{
    const pk=["referral","plan","profile","post","log","share","like","member","member_max_awards","share_daily_cap","like_daily_cap","redeem_premium_month","rupee_per_point","product_min_points"];
    const points={};pk.forEach(k=>{const el=$("pt_"+k);if(el)points[k]=el.value;});
-   await api("/admin/settings",{method:"PUT",body:JSON.stringify({app_name:$("sName").value,price_inr:$("sInr").value,price_usd:$("sUsd").value,free_plan_limit:$("sLimit").value,premium_plans_per_day:$("sPpd").value,premium_emergency_per_day:$("sPem").value,premium_plans_per_month:$("sPpm").value,fit_ai_days:$("sFitDays").value,upi_id:$("sUpiId").value,upi_name:$("sUpiName").value,upi_auto_approve:$("sUpiAuto").checked,telegram_bot_token:$("sTgTok").value,telegram_chat_id:$("sTgChat").value,premium_blurb_hi:$("sBhi").value,premium_blurb_en:$("sBen").value,app_url:$("sUrl").value,share_tagline_hi:$("sTagHi").value,share_tagline_en:$("sTagEn").value,share_taglines:(()=>{const m={};["hi","bn","mr","gu","ta","te","kn","pa","ml"].forEach(k=>{const el=$("sTag_"+k);if(el)m[k]=el.value;});return m;})(),invite_video:$("sVid").value,points,coupon_enabled:$("sCoupon").checked})});
+   await api("/admin/settings",{method:"PUT",body:JSON.stringify({app_name:$("sName").value,price_inr:$("sInr").value,price_usd:$("sUsd").value,free_plan_limit:$("sLimit").value,premium_plans_per_day:$("sPpd").value,premium_emergency_per_day:$("sPem").value,premium_plans_per_month:$("sPpm").value,fit_ai_days:$("sFitDays").value,translate_per_day:$("sTrDay").value,upi_id:$("sUpiId").value,upi_name:$("sUpiName").value,upi_auto_approve:$("sUpiAuto").checked,telegram_bot_token:$("sTgTok").value,telegram_chat_id:$("sTgChat").value,premium_blurb_hi:$("sBhi").value,premium_blurb_en:$("sBen").value,app_url:$("sUrl").value,share_tagline_hi:$("sTagHi").value,share_tagline_en:$("sTagEn").value,share_taglines:(()=>{const m={};["hi","bn","mr","gu","ta","te","kn","pa","ml"].forEach(k=>{const el=$("sTag_"+k);if(el)m[k]=el.value;});return m;})(),invite_video:$("sVid").value,points,coupon_enabled:$("sCoupon").checked})});
    toast("Settings save ho gayi ✓");
   }catch(e){$("sErr").textContent=e.message;}};
 }
