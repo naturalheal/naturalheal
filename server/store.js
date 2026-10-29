@@ -14,7 +14,7 @@ const path = require("path");
 // warna project folder ke andar (free host).
 const DBF = process.env.DB_FILE || "naturalheal-data.json";
 const FILE = path.isAbsolute(DBF) ? DBF : path.join(__dirname, "..", DBF);
-const KEYS = ["users", "health_profiles", "ai_plans", "payments", "symptoms", "members", "settings", "posts", "shares", "points_ledger", "redemptions", "upi_payments", "wl_programs", "wl_logs", "yoga_logs", "gym_profiles", "gym_logs"];
+const KEYS = ["users", "health_profiles", "ai_plans", "payments", "symptoms", "members", "settings", "posts", "shares", "points_ledger", "redemptions", "upi_payments", "wl_programs", "wl_logs", "yoga_logs", "gym_profiles", "gym_logs", "fit_ai"];
 
 let data = {};
 for (const k of KEYS) data[k] = [];
@@ -131,6 +131,7 @@ module.exports = {
   yoga_logs: collection("yoga_logs"),
   gym_profiles: collection("gym_profiles"),
   gym_logs: collection("gym_logs"),
+  fit_ai: collection("fit_ai"),
   _raw: () => data,
   init,
   remoteOn,
@@ -143,7 +144,7 @@ module.exports = {
     data.health_profiles = (data.health_profiles || []).filter((p) => p.user_id === adminId);
     data.ai_plans = []; data.payments = []; data.symptoms = [];
     data.posts = []; data.shares = []; data.points_ledger = []; data.redemptions = []; data.upi_payments = [];
-    data.wl_programs = []; data.wl_logs = []; data.yoga_logs = []; data.gym_profiles = []; data.gym_logs = [];
+    data.wl_programs = []; data.wl_logs = []; data.yoga_logs = []; data.gym_profiles = []; data.gym_logs = []; data.fit_ai = [];
     save();
   },
 };

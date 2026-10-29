@@ -168,7 +168,7 @@ function stopWL(ctx) {
 // ---------------------------------------------------------------------------
 // Yoga — guided session poore hone par minute likho; streak, hafte ke minute, aaj ke session
 // ---------------------------------------------------------------------------
-const YOGA_SESSIONS = ["morning", "back", "stress", "weight", "digest", "diabetes", "thyroid", "knee", "women", "bp"];
+const YOGA_SESSIONS = ["ai", "morning", "back", "stress", "weight", "digest", "diabetes", "thyroid", "knee", "women", "bp"];
 function yogaView(userId) {
   const logs = db.yoga_logs.filter((l) => l.user_id === userId);
   const today = istToday();

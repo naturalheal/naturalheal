@@ -21,6 +21,7 @@ const path = require("path");
 
 const routes = require("./routes");
 const fit = require("./fit");
+const fitAi = require("./fit-ai");
 const billing = require("./billing");
 const admin = require("./admin");
 const kitchen = require("./kitchen");
@@ -48,6 +49,9 @@ const R = [
   ["GET", "/api/fit/gym", fit.getGym, { auth: true }],
   ["POST", "/api/fit/gym/setup", fit.setupGym, { auth: true }],
   ["POST", "/api/fit/gym/log", fit.logGym, { auth: true }],
+  ["POST", "/api/fit/ai/diet", fitAi.aiDiet, { auth: true }],
+  ["POST", "/api/fit/ai/yoga", fitAi.aiYoga, { auth: true }],
+  ["POST", "/api/fit/ai/coach", fitAi.aiCoach, { auth: true }],
   ["PUT", "/api/profile", routes.putProfile, { auth: true }],
   ["POST", "/api/plan/generate", routes.generate, { auth: true }],
   ["GET", "/api/plans", routes.listPlans, { auth: true }],

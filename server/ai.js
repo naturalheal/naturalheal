@@ -506,4 +506,4 @@ function trErrors() { return trLog.slice(); }
 // Key available hai? (frontend ko batane ke liye route use karta hai)
 function aiAvailable() { return !!KEY; }
 
-module.exports = { generatePlan, fallbackPlan, translatePlan, trKeys, trErrors, aiText, aiVision, aiAvailable, buildSystemPrompt, JSON_SHAPE, testAI, aiLast, MODEL, langName };
+module.exports = { parseJson, generatePlan, fallbackPlan, translatePlan, trKeys, trErrors, aiText, aiVision, aiAvailable, buildSystemPrompt, JSON_SHAPE, testAI, aiLast, MODEL, langName };
