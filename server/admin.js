@@ -24,8 +24,16 @@ function stats() {
 }
 
 // ---- Settings (edit/customize) ----
-function readSettings() { return { settings: getSettings() }; }
-function writeSettings(ctx) { return { settings: saveSettings(ctx.body || {}) }; }
+const maskSecret = (v) => (v ? "••••" + String(v).slice(-4) : "");
+function readSettings() { const s = { ...getSettings() }; s.resend_api_key = maskSecret(s.resend_api_key); s.smtp_pass = maskSecret(s.smtp_pass); return { settings: s }; }
+function writeSettings(ctx) { saveSettings(ctx.body || {}); return readSettings(); }
+// Email test — chhota sandesh, bina attachment
+async function mailTest() {
+  const { sendMail } = require("./mailer");
+  try { await sendMail({ subject: "✅ NaturalHeal: backup email chalu hai", text: "Ye test email hai. Ab se roz ka backup isi email par file ke saath aayega." }); }
+  catch (e) { throw new HttpError(400, e.message); }
+  return { ok: true };
+}
 
 // ---- Plans report ----
 function plansReport() {
@@ -190,4 +198,4 @@ function resetData(ctx) {
   return { ok: true, kept_admin: ctx.user.id };
 }
 
-module.exports = { stats, listUsers, userDetail, setPremium, deleteUser, recentPayments, readSettings, writeSettings, plansReport, symptomsReport, membersReport, userMembers, adminUpdateMember, adminDeleteMember, resetData, backup, resetPassword, addConcern, deleteConcern, upiList, upiSet, notifyTest, aiTest };
+module.exports = { stats, listUsers, userDetail, setPremium, deleteUser, recentPayments, readSettings, writeSettings, plansReport, symptomsReport, membersReport, userMembers, adminUpdateMember, adminDeleteMember, resetData, backup, resetPassword, addConcern, deleteConcern, upiList, upiSet, notifyTest, aiTest, mailTest };

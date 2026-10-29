@@ -52,6 +52,15 @@ function defaults() {
     // Admin ko turant alert — Telegram (free). Payment aate hi phone par message.
     telegram_bot_token: process.env.TELEGRAM_BOT_TOKEN || "",
     telegram_chat_id: process.env.TELEGRAM_CHAT_ID || "",
+    // Roz ka backup email par bhi (admin ka email). Resend (HTTPS, sujhav) ya SMTP (Gmail app password).
+    backup_email: process.env.BACKUP_EMAIL || "",
+    mail_provider: process.env.MAIL_PROVIDER || "resend",
+    resend_api_key: process.env.RESEND_API_KEY || "",
+    mail_from: process.env.MAIL_FROM || "",
+    smtp_host: process.env.SMTP_HOST || "smtp.gmail.com",
+    smtp_port: num("SMTP_PORT", 465),
+    smtp_user: process.env.SMTP_USER || "",
+    smtp_pass: process.env.SMTP_PASS || "",
     // Extra bimariyan/samasyaein — admin ya user add karte hain, sabko chip ke roop me dikhti hain
     custom_concerns: [],         // [{id, label}]
   };
@@ -93,6 +102,14 @@ function saveSettings(patch) {
   if (patch.upi_auto_approve != null) clean.upi_auto_approve = !!patch.upi_auto_approve;
   if (patch.telegram_bot_token != null) clean.telegram_bot_token = String(patch.telegram_bot_token).trim().slice(0, 120);
   if (patch.telegram_chat_id != null) clean.telegram_chat_id = String(patch.telegram_chat_id).trim().slice(0, 40);
+  if (patch.backup_email != null) { const e = String(patch.backup_email).trim().slice(0, 120); clean.backup_email = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) ? e : ""; }
+  if (patch.mail_provider != null) clean.mail_provider = patch.mail_provider === "smtp" ? "smtp" : "resend";
+  if (patch.mail_from != null) clean.mail_from = String(patch.mail_from).trim().slice(0, 120);
+  if (patch.smtp_host != null) clean.smtp_host = String(patch.smtp_host).trim().slice(0, 120);
+  if (patch.smtp_port != null) clean.smtp_port = Math.max(1, Math.min(65535, parseInt(patch.smtp_port, 10) || 465));
+  if (patch.smtp_user != null) clean.smtp_user = String(patch.smtp_user).trim().slice(0, 120);
+  // secret: admin ko chhupa hua (••••1234) dikhta hai — wahi wapas aaye to purana hi rakho
+  for (const k of ["resend_api_key", "smtp_pass"]) if (patch[k] != null && !String(patch[k]).startsWith("••••")) clean[k] = String(patch[k]).trim().slice(0, 200);
   const cur = db.settings.get("app");
   // Points rules (nested) — sirf valid number keys merge
   let pointsMerged;

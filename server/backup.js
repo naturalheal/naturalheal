@@ -63,6 +63,20 @@ async function toTelegram(name, gz, meta) {
   if (!r.ok) throw new Error("telegram HTTP " + r.status);
   return true;
 }
+async function toEmail(name, gz, meta) {
+  const { sendMail, mailReady } = require("./mailer");
+  if (!mailReady()) return null;
+  const s = getSettings(), total = Object.values(meta.counts).reduce((a, b) => a + b, 0);
+  const big = gz.length > 20 * 1024 * 1024;
+  await sendMail({
+    subject: `🗄️ ${s.app_name || "NaturalHeal"} backup ${meta.date_ist} (${meta.reason})`,
+    text: `Roz ka automatic backup.\n\nDate: ${meta.date_ist}\nUsers: ${meta.counts.users || 0}\nRecords: ${total}\nSize: ${(gz.length / 1024).toFixed(0)} KB\n\n` +
+      (big ? "File 20MB se badi hai — admin panel se download karein." : "File attached hai (.json.gz). Restore: Admin → Settings → Backup → File se restore.") +
+      "\n\nIs file me sabka data hai — kisi ke saath share na karein.",
+    attachments: big ? [] : [{ filename: `naturalheal-backup-${name}.json.gz`, content: gz, type: "application/gzip" }],
+  });
+  return true;
+}
 function toDisk(name, gz) {
   try {
     fs.mkdirSync(DIR, { recursive: true });
@@ -84,7 +98,8 @@ async function runBackup(reason = "auto") {
     sent.disk = toDisk(name, gz);
     try { sent.upstash = await toUpstash(name, gz, meta); } catch (e) { sent.upstash = false; sent.upstash_err = e.message; }
     try { sent.telegram = await toTelegram(name, gz, meta); } catch (e) { sent.telegram = false; sent.telegram_err = e.message; }
-    const ok = sent.upstash || sent.telegram || sent.disk;
+    if (reason !== "pre-restore") { try { sent.email = await toEmail(name, gz, meta); } catch (e) { sent.email = false; sent.email_err = e.message; } }
+    const ok = sent.upstash || sent.telegram || sent.email || sent.disk;
     status = { ...status, last: new Date().toISOString(), last_name: name, size: gz.length, counts: meta.counts, sent, last_error: ok ? null : "kahin save nahi hua" };
     if (ok) status.last_ok = status.last;
     if (reason === "auto" && ok && remoteOn()) { try { await upstash(["SET", UP_PREFIX + "lastauto", istDate()]); } catch (_) {} }
@@ -127,7 +142,8 @@ async function listBackups() {
 }
 async function adminStatus() {
   const s = getSettings();
-  return { status, hour_ist: HOUR_IST, keep_days: KEEP_DAYS, where: { upstash: remoteOn(), telegram: !!(s.telegram_bot_token && s.telegram_chat_id), disk: db.onDisk }, list: await listBackups() };
+  const { mailReady } = require("./mailer");
+  return { status, hour_ist: HOUR_IST, keep_days: KEEP_DAYS, where: { upstash: remoteOn(), telegram: !!(s.telegram_bot_token && s.telegram_chat_id), email: mailReady() ? s.backup_email : "", disk: db.onDisk }, list: await listBackups() };
 }
 async function adminRun() { await runBackup("manual"); return adminStatus(); }
 async function loadBackup(name) {

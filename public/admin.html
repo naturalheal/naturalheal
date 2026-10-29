@@ -389,6 +389,24 @@ async function secSettings(){
  <div class="card" style="max-width:560px;margin-top:16px">
   <h3 style="font-family:var(--f-head);font-weight:600;font-size:16px;margin:0 0 6px">💾 Roz ka automatic backup</h3>
   <p class="sub" style="margin:0 0 10px">Har raat ~3 baje (IST) poore data ka backup apne-aap banta hai aur 3 jagah jaata hai: Upstash (30 din), aapka Telegram (file), aur server disk. Kuch gadbad ho to neeche se kisi bhi din ka backup wapas laga sakte hain.</p>
+  <details style="margin:0 0 12px;border:1px solid #e5e5e5;border-radius:10px;padding:8px 10px" ${s.backup_email?"":"open"}><summary style="cursor:pointer;font-weight:700">📧 Email par bhi roz backup ${s.backup_email?"— "+esc(s.backup_email):"(set karein)"}</summary>
+   <div class="field" style="margin-top:8px"><label>Backup kis email par aaye</label><input id="mlTo" type="email" value="${esc(s.backup_email||"")}" placeholder="aapka@gmail.com"></div>
+   <div class="field"><label>Email kaise bhejein</label><select id="mlProv"><option value="resend" ${s.mail_provider!=="smtp"?"selected":""}>Resend (sujhav — free, sabse pakka)</option><option value="smtp" ${s.mail_provider==="smtp"?"selected":""}>Gmail / SMTP (App password)</option></select></div>
+   <div id="mlResend">
+    <div class="field"><label>Resend API key</label><input id="mlKey" value="${esc(s.resend_api_key||"")}" placeholder="re_xxxxxxxx"></div>
+    <p class="sub" style="margin:0 0 8px;font-size:12px">resend.com par free account banayein → API Keys → key copy karein. Jis email se Resend account banaya, <b>wahi email</b> upar daalein (domain ki zaroorat nahi). Doosre email par bhejna ho to Resend me apna domain verify karke "From" bharein.</p>
+    <div class="field"><label>From (optional)</label><input id="mlFrom" value="${esc(s.mail_from||"")}" placeholder="NaturalHeal &lt;backup@aapka-domain.com&gt;"></div>
+   </div>
+   <div id="mlSmtp">
+    <div class="field"><label>SMTP host</label><input id="mlHost" value="${esc(s.smtp_host||"smtp.gmail.com")}"></div>
+    <div class="field"><label>Port</label><input id="mlPort" type="number" value="${s.smtp_port||465}"></div>
+    <div class="field"><label>Email / username</label><input id="mlUser" value="${esc(s.smtp_user||"")}" placeholder="aapka@gmail.com"></div>
+    <div class="field"><label>Password (Gmail: App password)</label><input id="mlPass" value="${esc(s.smtp_pass||"")}" placeholder="16 akshar ka app password"></div>
+    <p class="sub" style="margin:0 0 8px;font-size:12px">Gmail: Google Account → Security → 2-Step Verification on → "App passwords" → naya banayein. Dhyaan: kuch free hosting (Render free bhi) SMTP port band rakhti hai — na chale to Resend use karein.</p>
+   </div>
+   <button class="btn" id="mlSave" style="width:auto">💾 Save + test email bhejo</button>
+   <div id="mlMsg" class="sub" style="margin-top:6px"></div>
+  </details>
   <div id="bkStatus" class="sub" style="margin:0 0 10px">…</div>
   <div style="display:flex;gap:8px;flex-wrap:wrap">
    <button class="btn" id="bkRun" style="width:auto">⏺ Abhi backup lo</button>
@@ -414,12 +432,18 @@ async function secSettings(){
  async function bkRestore(body){$("bkErr").textContent="";const c=prompt("Restore se ABHI ka data is backup se badal jayega (pehle abhi wala bhi backup hoga). Pakka? Likhein: RESTORE");if(c!=="RESTORE")return;try{const r=await api("/admin/backups/restore",{method:"POST",body:JSON.stringify({...body,confirm:"RESTORE"})});alert("Restore ho gaya ✓ Users: "+(r.counts.users||0)+", plans: "+(r.counts.ai_plans||0));location.reload();}catch(err){$("bkErr").textContent=err.message;}}
  async function bkLoad(){try{const d=await api("/admin/backups");const st=d.status||{};const w=d.where||{};
   $("bkStatus").innerHTML=(st.last_ok?"✅ Aakhri backup: <b>"+esc(new Date(st.last_ok).toLocaleString("en-IN"))+"</b>"+(st.size?" · "+bkKB(st.size):""):"⏳ Abhi tak koi backup nahi (server chalu hone ke kuch der baad aur roz "+d.hour_ist+":00 IST par banta hai)")
-   +"<br>Kahan jaata hai: Upstash "+(w.upstash?"✅":"❌ (env set nahi)")+" · Telegram "+(w.telegram?"✅":"❌ (upar Telegram bot token + chat id bharein)")+" · Disk "+(w.disk?"✅":"➖ (free host par temporary)")
-   +(st.last_error?"<br><span style='color:#c0392b'>⚠ "+esc(st.last_error)+"</span>":"")+(st.sent&&st.sent.telegram_err?"<br><span style='color:#c0392b'>Telegram: "+esc(st.sent.telegram_err)+"</span>":"")+(st.sent&&st.sent.upstash_err?"<br><span style='color:#c0392b'>Upstash: "+esc(st.sent.upstash_err)+"</span>":"");
+   +"<br>Kahan jaata hai: Upstash "+(w.upstash?"✅":"❌ (env set nahi)")+" · Telegram "+(w.telegram?"✅":"❌ (upar Telegram bot token + chat id bharein)")+" · Email "+(w.email?"✅ "+esc(w.email):"❌ (upar email set karein)")+" · Disk "+(w.disk?"✅":"➖ (free host par temporary)")
+   +(st.last_error?"<br><span style='color:#c0392b'>⚠ "+esc(st.last_error)+"</span>":"")+(st.sent&&st.sent.telegram_err?"<br><span style='color:#c0392b'>Telegram: "+esc(st.sent.telegram_err)+"</span>":"")+(st.sent&&st.sent.email_err?"<br><span style='color:#c0392b'>Email: "+esc(st.sent.email_err)+"</span>":"")+(st.sent&&st.sent.upstash_err?"<br><span style='color:#c0392b'>Upstash: "+esc(st.sent.upstash_err)+"</span>":"");
   $("bkList").innerHTML=(d.list||[]).length?"<b style='font-size:13px'>Purane backup ("+d.keep_days+" din tak):</b>"+d.list.slice(0,30).map(x=>"<div style='display:flex;gap:8px;align-items:center;justify-content:space-between;border-bottom:1px solid #eee;padding:6px 0;font-size:13px'><span>"+esc(x.name)+" <span style='color:#777'>"+bkKB(x.size)+(x.counts?" · users "+(x.counts.users||0):"")+"</span></span><span style='display:flex;gap:6px'><button class='btn ghost' style='width:auto;padding:5px 10px' data-bkd='"+esc(x.name)+"'>⬇️</button><button class='btn ghost' style='width:auto;padding:5px 10px;color:#c0392b' data-bkr='"+esc(x.name)+"'>♻️ Restore</button></span></div>").join(""):"<p class='sub' style='margin:0'>Abhi koi purana backup nahi.</p>";
   document.querySelectorAll("[data-bkd]").forEach(b=>b.onclick=()=>bkDownload(b.dataset.bkd));
   document.querySelectorAll("[data-bkr]").forEach(b=>b.onclick=()=>bkRestore({name:b.dataset.bkr}));
  }catch(err){$("bkStatus").textContent=err.message;}}
+ const mlToggle=()=>{const smtp=$("mlProv").value==="smtp";$("mlSmtp").style.display=smtp?"":"none";$("mlResend").style.display=smtp?"none":"";};
+ $("mlProv").onchange=mlToggle;mlToggle();
+ $("mlSave").onclick=async()=>{const b=$("mlSave"),m=$("mlMsg");b.disabled=true;m.style.color="";m.textContent="Save ho raha hai…";
+  try{await api("/admin/settings",{method:"PUT",body:JSON.stringify({backup_email:$("mlTo").value.trim(),mail_provider:$("mlProv").value,resend_api_key:$("mlKey").value.trim(),mail_from:$("mlFrom").value.trim(),smtp_host:$("mlHost").value.trim(),smtp_port:$("mlPort").value,smtp_user:$("mlUser").value.trim(),smtp_pass:$("mlPass").value})});
+   m.textContent="Test email bhej rahe hain…";await api("/admin/mail-test",{method:"POST",body:"{}"});m.style.color="#1C5A3E";m.textContent="✅ Test email chala gaya — inbox (aur spam) dekh lein. Ab roz ka backup isi par aayega.";bkLoad();}
+  catch(err){m.style.color="#c0392b";m.textContent="❌ "+err.message;}b.disabled=false;};
  bkLoad();
  $("bkRun").onclick=async()=>{const b=$("bkRun");b.disabled=true;b.textContent="Backup ho raha hai…";try{await api("/admin/backups/run",{method:"POST",body:"{}"});await bkLoad();}catch(err){$("bkErr").textContent=err.message;}b.disabled=false;b.textContent="⏺ Abhi backup lo";};
  $("bkFileGo").onclick=async()=>{const f=$("bkFile").files[0];if(!f){$("bkErr").textContent="Pehle file chunein";return;}const buf=new Uint8Array(await f.arrayBuffer());let s="";for(let i=0;i<buf.length;i+=32768)s+=String.fromCharCode.apply(null,buf.subarray(i,i+32768));bkRestore({file_b64:btoa(s)});};
