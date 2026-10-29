@@ -8,6 +8,26 @@
 const db = require("./store");
 const { HttpError, uid } = require("./util");
 const { isPremium } = require("./plans");
+const { getSettings } = require("./settings");
+const lockDays = () => Math.max(1, Number(getSettings().fit_ai_days) || 7);
+// Is cheez (diet-wl / diet-gym / yoga / coach) ka is-daur wala record: pichhle N din me bana ho to wahi daur
+function periodOf(userId, kind) {
+  const since = new Date(Date.now() - lockDays() * 864e5).toISOString();
+  const rows = db.fit_ai.filter((x) => x.user_id === userId && x.key.split(":")[0] === kind && (x.period || x.created_at || "") >= since)
+    .sort((a, b) => (a.period || a.created_at || "").localeCompare(b.period || b.created_at || ""));
+  if (!rows.length) return null;
+  const start = rows[0].period || rows[0].created_at;
+  return { start, next_at: new Date(new Date(start).getTime() + lockDays() * 864e5).toISOString(), rows };
+}
+// Pehle se bana ho to wahi (is bhasha me na ho to bhasha badlne par usi daur me ek baar ban sakta hai)
+function lockedOrNull(userId, kind, lang, peek) {
+  const per = periodOf(userId, kind);
+  if (!per) return peek ? { none: true } : null;
+  const same = per.rows.filter((r) => r.key.split(":")[1] === lang).pop();
+  if (same) return { ...same.data, locked: true, next_at: per.next_at };
+  if (peek) return { none: true, locked: true, next_at: per.next_at };
+  return { _per: per };
+}
 const { aiText, aiAvailable, langName, parseJson } = require("./ai");
 const fit = require("./fit");
 
@@ -35,12 +55,12 @@ const YOGA_POSES = {
   sheetali: "cooling breath", dhyan: "meditation", shava: "deep relaxation",
 };
 
-function cacheGet(userId, key) { return db.fit_ai.filter((x) => x.user_id === userId && x.key === key)[0] || null; }
-function cacheSet(userId, key, data) {
-  db.fit_ai.remove((x) => x.user_id === userId && x.key.split(":")[0] === key.split(":")[0] && x.key !== key && (x.created_at || "") < new Date(Date.now() - 30 * 86400000).toISOString());
-  const cur = cacheGet(userId, key);
-  if (cur) db.fit_ai.update(cur.id, { data, created_at: now() });
-  else db.fit_ai.insert({ id: uid(), user_id: userId, key, data, created_at: now() });
+// key = "<kind>:<lang>"; period = daur ki shuruaat (bhasha ke liye bana copy usi daur me gina jaata hai)
+function cacheSet(userId, kind, lang, data, per) {
+  db.fit_ai.remove((x) => x.user_id === userId && (x.created_at || "") < new Date(Date.now() - 60 * 864e5).toISOString());
+  const period = per ? per.start : now();
+  db.fit_ai.insert({ id: uid(), user_id: userId, key: kind + ":" + lang, period, data, created_at: now() });
+  return { ...data, locked: true, next_at: new Date(new Date(period).getTime() + lockDays() * 864e5).toISOString() };
 }
 function guard(ctx) {
   if (!isPremium(ctx.user)) throw new HttpError(402, "premium", { premium: true });
@@ -77,10 +97,8 @@ async function aiDiet(ctx) {
     t = { goal: { fat: "fat loss with gym training", muscle: "muscle gain with gym training", strength: "strength and fitness training" }[g.profile.goal], kcal, protein: w ? Math.round(w * k) : null, diet: (ctx.body && ctx.body.diet) || "veg", weight: w || null };
   }
   const diet = ["veg", "egg", "nonveg"].includes(t.diet) ? t.diet : "veg";
-  const sig = [t.kcal, t.protein, diet, prof.conditions.join("."), prof.allergies.join(".")].join("|");
-  const key = `diet-${kind}:${weekKey()}:${lang}:${sig}`;
-  const hit = cacheGet(ctx.user.id, key);
-  if (hit && !(ctx.body && ctx.body.refresh)) return { ...hit.data, cached: true };
+  const lk = lockedOrNull(ctx.user.id, "diet-" + kind, lang, ctx.body && ctx.body.peek);
+  if (lk && !lk._per) return lk;
 
   const prompt = `You are an Indian dietitian. Make a 7-day meal plan.
 Goal: ${t.goal}. ${t.kcal ? `Daily calories: about ${t.kcal} kcal.` : ""} ${t.protein ? `Daily protein: about ${t.protein} g.` : ""}
@@ -100,9 +118,8 @@ Reply ONLY with JSON: {"days":[{"meals":[{"s":"B","name":"...","qty":"...","kcal
     })).filter((m) => m.name),
   })).filter((d) => d.meals.length >= 3) : [];
   if (days.length < 7) throw new HttpError(502, "ai_fail");
-  const data = { kind, days, tips: (out.tips || []).slice(0, 4).map((x) => String(x).slice(0, 200)), kcal: t.kcal, protein: t.protein, week: weekKey() };
-  cacheSet(ctx.user.id, key, data);
-  return data;
+  const data = { kind, days, tips: (out.tips || []).slice(0, 4).map((x) => String(x).slice(0, 200)), kcal: t.kcal, protein: t.protein, diet };
+  return cacheSet(ctx.user.id, "diet-" + kind, lang, data, lk && lk._per);
 }
 
 // ---------------- AI yoga session ----------------
@@ -111,9 +128,8 @@ async function aiYoga(ctx) {
   const minutes = [10, 20, 30].includes(Number(ctx.body && ctx.body.minutes)) ? Number(ctx.body.minutes) : 20;
   const prof = profileOf(ctx.user.id);
   const conds = prof.conditions;
-  const key = `yoga:${weekKey()}:${lang}:${minutes}:${conds.join(".")}`;
-  const hit = cacheGet(ctx.user.id, key);
-  if (hit && !(ctx.body && ctx.body.refresh)) return { ...hit.data, cached: true };
+  const lk = lockedOrNull(ctx.user.id, "yoga", lang, ctx.body && ctx.body.peek);
+  if (lk && !lk._per) return lk;
   const banned = new Set();
   if (conds.includes("bp")) { banned.add("kapal"); banned.add("surya"); }
   if (conds.includes("backpain")) { banned.add("nauka"); banned.add("shalabha"); }
@@ -131,19 +147,17 @@ Reply ONLY with JSON: {"title":"...","why":"...","poses":[["id",seconds], ...]}`
   poses = poses.slice(0, 14);
   if (poses[poses.length - 1][0] !== "shava") poses.push(["shava", 120]);
   const data = { title: String(out.title || "").slice(0, 60), why: String(out.why || "").slice(0, 300), poses, minutes };
-  cacheSet(ctx.user.id, key, data);
-  return data;
+  return cacheSet(ctx.user.id, "yoga", lang, data, lk && lk._per);
 }
 
 // ---------------- AI gym coach ----------------
 async function aiCoach(ctx) {
   const lang = guard(ctx);
+  const lk = lockedOrNull(ctx.user.id, "coach", lang, ctx.body && ctx.body.peek);
+  if (lk && !lk._per) return lk;
   const logs = db.gym_logs.filter((l) => l.user_id === ctx.user.id).sort((a, b) => (b.created_at || "").localeCompare(a.created_at || "")).slice(0, 6);
   if (!logs.length) throw new HttpError(400, "no_logs");
   const g = fit.getGym(ctx);
-  const key = `coach:${logs[0].id}:${lang}`;
-  const hit = cacheGet(ctx.user.id, key);
-  if (hit) return { ...hit.data, cached: true };
   const hist = logs.reverse().map((l) => `${l.date} ${l.day}: ` + (l.entries || []).map((e) => `${e.ex} ${e.sets.map((s) => (s.kg ? s.kg + "kg×" : "") + s.reps).join(",")}`).join("; ")).join("\n");
   const prompt = `You are a friendly, safety-first gym coach. Goal: ${g.profile ? g.profile.goal : "fitness"}, level: ${g.profile ? g.profile.level : "beginner"}, ${g.profile ? g.profile.days : 3} days/week.
 Recent workouts (exercise kg×reps per set):
@@ -154,8 +168,7 @@ Write in ${langName(lang)} (that language's script). Reply ONLY with JSON: {"tip
   const tips = out && Array.isArray(out.tips) ? out.tips.slice(0, 5).map((x) => String(x).slice(0, 240)).filter(Boolean) : [];
   if (!tips.length) throw new HttpError(502, "ai_fail");
   const data = { tips, at: istToday() };
-  cacheSet(ctx.user.id, key, data);
-  return data;
+  return cacheSet(ctx.user.id, "coach", lang, data, lk && lk._per);
 }
 
 module.exports = { aiDiet, aiYoga, aiCoach };

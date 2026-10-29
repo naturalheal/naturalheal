@@ -5,7 +5,7 @@ const db = require("./store");
 const { HttpError, uid } = require("./util");
 const { hashPassword, checkPassword, signToken } = require("./auth");
 const { generatePlan, fallbackPlan, translatePlan, trKeys, aiText, aiAvailable, langName } = require("./ai");
-const { featuresFor, isPremium } = require("./plans");
+const { featuresFor, isPremium, planQuota } = require("./plans");
 const { getSettings } = require("./settings");
 const { findReferrer } = require("./share");
 const points = require("./points");
@@ -126,7 +126,7 @@ function pubUser(u) { return { id: u.id, name: u.name, email: u.email, region: u
 function me(ctx) {
   const u = ctx.user;
   const prof = db.profiles.findBy("user_id", u.id);
-  return { user: pubUser(u), profile: prof ? unpackProfile(prof) : null, features: featuresFor(u), custom_concerns: getSettings().custom_concerns || [] };
+  return { user: pubUser(u), profile: prof ? unpackProfile(prof) : null, features: featuresFor(u), quota: planQuota(u, db.plans), custom_concerns: getSettings().custom_concerns || [] };
 }
 // User ki bhasha account me save — har device par wahi, plan seedha isi bhasha me banta hai
 function setLanguage(ctx) {
@@ -206,14 +206,10 @@ async function generate(ctx) {
     if (cap > 0 && usedToday >= cap) {
       throw new HttpError(429, i18n.pick(lang, "capDay", { n: cap }), { capped: true });
     }
-    // 3) Monthly cap — is mahine itne se zyada nahi
-    const capMonth = Number(s.premium_plans_per_month) || 0;
-    if (capMonth > 0) {
-      const thisMonth = istToday().slice(0, 7);
-      const usedMonth = db.plans.count((p) => p.user_id === user.id && p.source === "ai" && istDay(p.created_at).slice(0, 7) === thisMonth);
-      if (usedMonth >= capMonth) {
-        throw new HttpError(429, i18n.pick(lang, "capMonth", { n: capMonth }), { capped: true });
-      }
+    // 3) Recharge-mahine ki limit (admin: premium_plans_per_month) — naye recharge par phir se poori
+    const q = planQuota(user, db.plans);
+    if (q && q.limit > 0 && q.used >= q.limit) {
+      throw new HttpError(429, i18n.pick(lang, "capMonth", { n: q.limit }), { capped: true, quota: q });
     }
     const ss = symptomSummary(user.id, mem.id, mem.isSelf);
     if (ss) profile.symptom_context = ss;
@@ -227,7 +223,7 @@ async function generate(ctx) {
   // Healing Points: pehla plan banane par, aur referral wale ko bhi (jab referred-user active ho)
   const awarded = points.award(user.id, "plan").awarded;
   if (priorPlans === 0 && user.referred_by) points.award(user.referred_by, "referral", { ref: user.id, note: "referral active" });
-  return { id, source, plan, plan_lang: lang, points_awarded: awarded };
+  return { id, source, plan, plan_lang: lang, points_awarded: awarded, quota: planQuota(user, db.plans) };
 }
 
 function listPlans(ctx) {

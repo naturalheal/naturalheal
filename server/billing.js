@@ -18,7 +18,7 @@ const APP_URL = process.env.APP_URL || "http://localhost:3000";
 
 function grantPremium(userId, { provider, sub_id, customer_id, days = 31 } = {}) {
   const expires = new Date(Date.now() + days * 864e5).toISOString();
-  const patch = { plan: "premium", plan_status: "active", plan_expires: expires };
+  const patch = { plan: "premium", plan_status: "active", plan_expires: expires, plan_period_start: new Date().toISOString() }; // naye recharge se nayi AI limit
   if (provider) patch.provider = provider;
   if (sub_id) patch.provider_sub_id = sub_id;
   if (customer_id) patch.provider_customer_id = customer_id;

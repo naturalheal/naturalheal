@@ -16,7 +16,8 @@ function defaults() {
     // Premium user kitne AI plan-update kar sakta hai (cost control).
     premium_plans_per_day: num("PREMIUM_PLANS_PER_DAY", 1),       // normal/din
     premium_emergency_per_day: num("PREMIUM_EMERGENCY_PER_DAY", 1), // emergency/din
-    premium_plans_per_month: num("PREMIUM_PLANS_PER_MONTH", 15),    // mahine ki max limit (0 = no monthly limit)
+    premium_plans_per_month: num("PREMIUM_PLANS_PER_MONTH", 10),    // ek recharge-mahine me max AI plan (0 = koi limit nahi)
+    fit_ai_days: num("FIT_AI_DAYS", 7),                             // Fit ka AI diet/yoga/coach itne din me ek hi baar badle
     premium_blurb_hi: "Premium mein: AI gehra plan + report analysis + unlimited plans + AI chat.",
     premium_blurb_en: "Premium unlocks: deeper AI plan + report analysis + unlimited plans + AI chat.",
     app_url: process.env.APP_URL || "",
@@ -57,6 +58,12 @@ function defaults() {
 }
 function getSettings() {
   const s = db.settings.get("app");
+  // Ek baar: purani 15/mahina default ko nayi 10/mahina par (admin ne jaan-boojh kar alag rakha ho to nahi chhedte)
+  if (s && s.data && !s.data._quota_v2) {
+    if (Number(s.data.premium_plans_per_month) === 15) s.data.premium_plans_per_month = 10;
+    s.data._quota_v2 = true;
+    db.settings.update("app", { data: s.data });
+  }
   return { ...defaults(), ...(s && s.data ? s.data : {}) };
 }
 function saveSettings(patch) {
@@ -68,6 +75,7 @@ function saveSettings(patch) {
   if (patch.premium_plans_per_day != null) clean.premium_plans_per_day = Math.max(0, parseInt(patch.premium_plans_per_day, 10) || 0);
   if (patch.premium_emergency_per_day != null) clean.premium_emergency_per_day = Math.max(0, parseInt(patch.premium_emergency_per_day, 10) || 0);
   if (patch.premium_plans_per_month != null) clean.premium_plans_per_month = Math.max(0, parseInt(patch.premium_plans_per_month, 10) || 0);
+  if (patch.fit_ai_days != null) clean.fit_ai_days = Math.max(1, Math.min(60, parseInt(patch.fit_ai_days, 10) || 7));
   if (patch.premium_blurb_hi != null) clean.premium_blurb_hi = String(patch.premium_blurb_hi).slice(0, 200);
   if (patch.premium_blurb_en != null) clean.premium_blurb_en = String(patch.premium_blurb_en).slice(0, 200);
   if (patch.app_url != null) clean.app_url = String(patch.app_url).trim().replace(/\/+$/, "").slice(0, 200);

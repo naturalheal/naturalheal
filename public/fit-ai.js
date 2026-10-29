@@ -19,6 +19,8 @@ Object.assign(FT,{
  aiYogaSub:["AI picks safe poses for your health concerns and the time you have.","AI aapki takleef aur samay ke hisaab se surakshit aasan chunta hai.","AI आपकी तकलीफ़ और समय के हिसाब से सुरक्षित आसन चुनता है।","AI আপনার সমস্যা আর সময় অনুযায়ী নিরাপদ আসন বাছে।","AI तुमच्या त्रासानुसार आणि वेळेनुसार सुरक्षित आसने निवडते.","AI તમારી તકલીફ અને સમય મુજબ સુરક્ષિત આસન પસંદ કરે છે.","AI உங்கள் உடல்நலப் பிரச்சனை, நேரத்திற்கு ஏற்ப பாதுகாப்பான ஆசனங்களைத் தேர்ந்தெடுக்கும்.","AI మీ సమస్యలు, సమయానికి తగ్గట్టు సురక్షిత ఆసనాలను ఎంచుకుంటుంది.","AI ನಿಮ್ಮ ತೊಂದರೆ ಮತ್ತು ಸಮಯಕ್ಕೆ ತಕ್ಕ ಸುರಕ್ಷಿತ ಆಸನಗಳನ್ನು ಆರಿಸುತ್ತದೆ.","AI ਤੁਹਾਡੀ ਤਕਲੀਫ਼ ਅਤੇ ਸਮੇਂ ਮੁਤਾਬਕ ਸੁਰੱਖਿਅਤ ਆਸਣ ਚੁਣਦਾ ਹੈ।","AI നിങ്ങളുടെ പ്രശ്നങ്ങൾക്കും സമയത്തിനും അനുസരിച്ച് സുരക്ഷിത ആസനങ്ങൾ തിരഞ്ഞെടുക്കും."],
  aiYogaBtn:["Make my session","Mera session banao","मेरा सेशन बनाओ","আমার সেশন বানাও","माझे सत्र बनवा","મારું સેશન બનાવો","என் அமர்வை உருவாக்கு","నా సెషన్ తయారు చేయండి","ನನ್ನ ಅವಧಿ ಮಾಡಿ","ਮੇਰਾ ਸੈਸ਼ਨ ਬਣਾਓ","എന്റെ സെഷൻ ഉണ്ടാക്കൂ"],
  aiCoachH:["AI coach review","AI coach ki review","AI कोच की समीक्षा","AI কোচের পর্যালোচনা","AI कोचचे पुनरावलोकन","AI કોચનો રિવ્યૂ","AI கோச் மதிப்பாய்வு","AI కోచ్ సమీక్ష","AI ಕೋಚ್ ವಿಮರ್ಶೆ","AI ਕੋਚ ਦੀ ਸਮੀਖਿਆ","AI കോച്ച് റിവ്യൂ"],
+ fitNext:["Ready for this week ✓ Next change from {d}","Is hafte ka ban gaya ✓ Agla badlaav {d} se","इस हफ़्ते का बन गया ✓ अगला बदलाव {d} से","এই সপ্তাহের তৈরি ✓ পরের পরিবর্তন {d} থেকে","या आठवड्याचे तयार ✓ पुढचा बदल {d} पासून","આ અઠવાડિયાનું તૈયાર ✓ આગળનો ફેરફાર {d} થી","இந்த வாரத்துக்குத் தயார் ✓ அடுத்த மாற்றம் {d} முதல்","ఈ వారానికి సిద్ధం ✓ తదుపరి మార్పు {d} నుండి","ಈ ವಾರದ್ದು ಸಿದ್ಧ ✓ ಮುಂದಿನ ಬದಲಾವಣೆ {d} ರಿಂದ","ਇਸ ਹਫ਼ਤੇ ਦਾ ਤਿਆਰ ✓ ਅਗਲਾ ਬਦਲਾਅ {d} ਤੋਂ","ഈ ആഴ്ചത്തേത് തയ്യാർ ✓ അടുത്ത മാറ്റം {d} മുതൽ"],
+ fitOnce:["Changes once a week — stick with it 7 days to see real results.","Hafte me ek baar badlega — 7 din follow karein, tabhi asli nateeja dikhega.","हफ़्ते में एक बार बदलेगा — 7 दिन फ़ॉलो करें, तभी असली नतीजा दिखेगा।","সপ্তাহে একবার বদলাবে — 7 দিন মেনে চলুন, তবেই আসল ফল দেখবেন।","आठवड्यातून एकदा बदलेल — 7 दिवस पाळा, तेव्हाच खरा परिणाम दिसेल.","અઠવાડિયે એક વાર બદલાશે — 7 દિવસ અનુસરો, ત્યારે જ સાચું પરિણામ દેખાશે.","வாரம் ஒருமுறை மாறும் — 7 நாட்கள் பின்பற்றினால்தான் உண்மையான பலன் தெரியும்.","వారానికి ఒకసారి మారుతుంది — 7 రోజులు పాటిస్తేనే అసలు ఫలితం కనిపిస్తుంది.","ವಾರಕ್ಕೊಮ್ಮೆ ಬದಲಾಗುತ್ತದೆ — 7 ದಿನ ಪಾಲಿಸಿದರೆ ಮಾತ್ರ ನಿಜವಾದ ಫಲಿತಾಂಶ ಕಾಣುತ್ತದೆ.","ਹਫ਼ਤੇ ਵਿੱਚ ਇੱਕ ਵਾਰ ਬਦਲੇਗਾ — 7 ਦਿਨ ਪਾਲਣਾ ਕਰੋ, ਤਾਂ ਹੀ ਅਸਲ ਨਤੀਜਾ ਦਿਖੇਗਾ।","ആഴ്ചയിൽ ഒരിക്കൽ മാറും — 7 ദിവസം പിന്തുടർന്നാലേ യഥാർത്ഥ ഫലം കാണൂ."],
  aiCoachBtn:["Review my workouts","Mere workout dekho","मेरे वर्कआउट देखो","আমার ওয়ার্কআউট দেখো","माझे व्यायाम तपासा","મારાં વર્કઆઉટ જુઓ","என் பயிற்சிகளை மதிப்பாய்வு செய்","నా వ్యాయామాలు చూడండి","ನನ್ನ ವ್ಯಾಯಾಮ ಪರಿಶೀಲಿಸಿ","ਮੇਰੀਆਂ ਕਸਰਤਾਂ ਦੇਖੋ","എന്റെ വ്യായാമങ്ങൾ പരിശോധിക്കൂ"],
 });
 
@@ -45,39 +47,53 @@ function aiBindUpsell(root){(root||document).querySelectorAll(".ai-see").forEach
 .ai-list li{margin-bottom:6px;font-size:14px}
 .ai-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
 .ai-row .btn{width:auto;padding:9px 16px}
+.ai-next{margin:10px 0 0;font-size:13px;font-weight:800;color:var(--accent-ink);background:var(--accent-soft);border-radius:10px;padding:7px 10px}
 `;document.head.appendChild(st);})();
 function aiSpin(){return `<p class="sub" style="margin:10px 0 0;display:flex;gap:8px;align-items:center"><span class="spin" style="border-color:#EBE3F4;border-top-color:#6B4A92;width:18px;height:18px"></span>${esc(ft("aiMaking"))}</p>`;}
 
 /* ---------- AI diet chart (weight loss / gym) ---------- */
+/* ---------- har cheez N din me ek baar: pehle se bana dikhao + agla badlaav kab ---------- */
+function aiDate(iso){try{return new Date(iso).toLocaleDateString(typeof langLocale==="function"?langLocale():"en-IN",{day:"numeric",month:"short"});}catch(_){return String(iso||"").slice(0,10);}}
+function aiNextLine(d){return d&&d.next_at?`<p class="ai-next">${esc(ft("fitNext",{d:aiDate(d.next_at)}))}</p>`:"";}
+function aiOnceLine(){return `<p class="sub" style="margin:6px 0 0;font-size:12.5px">🔒 ${esc(ft("fitOnce"))}</p>`;}
+async function aiPeek(path,body){try{return await api(path,{method:"POST",body:JSON.stringify({...body,language:lang,peek:true})});}catch(e){return {none:true};}}
+
+/* ---------- AI diet chart (weight loss / gym) ---------- */
 const aiDietCache={};
 function aiDietHTML(kind){
- const d=aiDietCache[kind];
+ aiLangCheck();
  if(!aiPrem())return aiUpsell();
- const dietSeg=kind==="gym"?`<div class="fit-seg" data-aidiet style="margin-top:8px">${[["veg",ft("dVeg")],["egg",ft("dEgg")],["nonveg",ft("dNon")]].map(([v,l])=>`<button type="button" data-v="${v}" class="${aiGymDiet()===v?"on":""}">${esc(l)}</button>`).join("")}</div>`:"";
- if(!d||d.err||d.loading)return `<div class="ai-box" id="aiDiet_${kind}"><div class="ai-tag">${esc(ft("aiTag"))}</div><h4>🥗 ${esc(ft("aiDietH"))}</h4><p class="sub" style="margin:0">${esc(ft("aiDietSub"))}</p>${dietSeg}
-  ${d&&d.loading?aiSpin():`<div class="ai-row"><button type="button" class="btn btn-primary" style="background:#6B4A92" data-aimk="${kind}">✨ ${esc(ft("aiDietBtn"))}</button></div>`}
-  ${d&&d.err?`<p style="color:var(--danger);font-weight:700;margin:8px 0 0">${esc(ft("aiErr"))}</p>`:""}</div>`;
+ let d=aiDietCache[kind];
+ if(!d){aiDietCache[kind]={peeking:true};aiPeek("/fit/ai/diet",{kind,diet:aiGymDiet()}).then(r=>{aiDietCache[kind]=r;aiDietRefresh(kind);});d=aiDietCache[kind];}
+ const head=`<div class="ai-tag">${esc(ft("aiTag"))}</div><h4>🥗 ${esc(ft("aiDietH"))}</h4>`;
+ if(d.peeking||d.loading)return `<div class="ai-box" id="aiDiet_${kind}">${head}${aiSpin()}</div>`;
+ if(!d.days){ // abhi bana nahi (ya naya ban sakta hai)
+  const dietSeg=kind==="gym"?`<div class="fit-seg" data-aidiet style="margin-top:8px">${[["veg",ft("dVeg")],["egg",ft("dEgg")],["nonveg",ft("dNon")]].map(([v,l])=>`<button type="button" data-v="${v}" class="${aiGymDiet()===v?"on":""}">${esc(l)}</button>`).join("")}</div>`:"";
+  return `<div class="ai-box" id="aiDiet_${kind}">${head}<p class="sub" style="margin:0">${esc(ft("aiDietSub"))}</p>${dietSeg}
+   <div class="ai-row"><button type="button" class="btn btn-primary" style="background:#6B4A92" data-aimk="${kind}">✨ ${esc(ft("aiDietBtn"))}</button></div>${aiOnceLine()}
+   ${d.err?`<p style="color:var(--danger);font-weight:700;margin:8px 0 0">${esc(ft("aiErr"))}</p>`:""}</div>`;
+ }
  const di=Math.min(d.days.length-1,d.pick!=null?d.pick:((new Date().getDay()+6)%7));
  const day=d.days[di],tk=day.meals.reduce((s,m)=>s+m.kcal,0),tp=day.meals.reduce((s,m)=>s+m.p,0);
- return `<div class="ai-box" id="aiDiet_${kind}"><div class="ai-tag">${esc(ft("aiTag"))}</div><h4>🥗 ${esc(ft("aiDietH"))}</h4>
+ return `<div class="ai-box" id="aiDiet_${kind}">${head}
   <div class="ai-days">${d.days.map((_,i)=>`<button type="button" data-aid="${i}" class="${i===di?"on":""}">${esc(ft("aiDay",{n:i+1}))}</button>`).join("")}</div>
   ${day.meals.map(m=>`<div class="ai-meal"><div class="mh"><span>${esc(ft("m"+m.s))}</span><span>${m.kcal?`~${m.kcal} kcal`:""}${m.p?` · ${m.p} g`:""}</span></div><div class="mb">${esc(m.name)}</div>${m.qty?`<div class="mq">${esc(m.qty)}</div>`:""}</div>`).join("")}
   <p class="sub" style="margin:8px 0 0;font-weight:800">${esc(ft("aiTotal",{k:tk,p:tp}))}</p>
   ${(d.tips||[]).length?`<ul class="ai-list">${d.tips.map(t=>`<li>${esc(t)}</li>`).join("")}</ul>`:""}
-  ${dietSeg}<div class="ai-row"><button type="button" class="btn btn-ghost" data-aimk="${kind}" data-redo="1">🔄 ${esc(ft("aiRedo"))}</button></div></div>`;
+  ${aiNextLine(d)}</div>`;
 }
 function aiGymDiet(){try{return localStorage.getItem("nh_gymdiet")||"veg";}catch(_){return "veg";}}
-async function aiMakeDiet(kind,redo){
+async function aiMakeDiet(kind){
  aiDietCache[kind]={loading:true};aiDietRefresh(kind);
- try{const d=await api("/fit/ai/diet",{method:"POST",body:JSON.stringify({kind,language:lang,diet:aiGymDiet(),refresh:!!redo})});aiDietCache[kind]=d;}
+ try{aiDietCache[kind]=await api("/fit/ai/diet",{method:"POST",body:JSON.stringify({kind,language:lang,diet:aiGymDiet()})});}
  catch(e){aiDietCache[kind]={err:true};}
  aiDietRefresh(kind);
 }
 function aiDietRefresh(kind){const box=$("aiDiet_"+kind);if(!box)return;box.outerHTML=aiDietHTML(kind);aiDietBind();}
 function aiDietBind(){
- document.querySelectorAll("[data-aimk]").forEach(b=>b.onclick=()=>aiMakeDiet(b.dataset.aimk,!!b.dataset.redo));
+ document.querySelectorAll("[data-aimk]").forEach(b=>b.onclick=()=>aiMakeDiet(b.dataset.aimk));
  document.querySelectorAll("[id^=aiDiet_] [data-aid]").forEach(b=>b.onclick=()=>{const kind=b.closest("[id^=aiDiet_]").id.slice(7);aiDietCache[kind].pick=+b.dataset.aid;aiDietRefresh(kind);});
- document.querySelectorAll("[data-aidiet] button").forEach(b=>b.onclick=()=>{try{localStorage.setItem("nh_gymdiet",b.dataset.v);}catch(_){}aiDietCache.gym=null;aiDietRefresh("gym");});
+ document.querySelectorAll("[data-aidiet] button").forEach(b=>b.onclick=()=>{try{localStorage.setItem("nh_gymdiet",b.dataset.v);}catch(_){}aiDietRefresh("gym");});
  aiBindUpsell();
 }
 /* Weight loss ke khaane wale card ke neeche */
@@ -93,19 +109,22 @@ if(typeof renderGym==="function"){const _rg=renderGym;renderGym=function(){_rg()
  const prot=cards.find(c=>(c.querySelector("h3")||{}).textContent?.startsWith("🥚"));
  if(prot){prot.insertAdjacentHTML("beforeend",aiDietHTML("gym"));}
  const work=cards.find(c=>(c.querySelector("h3")||{}).textContent?.startsWith("💪"));
- if(work&&gymData.total>0)work.insertAdjacentHTML("afterend",`<div class="fit-card" id="aiCoachCard"></div>`),aiCoachRender();
+ if(work&&gymData.total>0){work.insertAdjacentHTML("afterend",`<div class="fit-card" id="aiCoachCard"></div>`);aiCoachRender();}
  aiDietBind();
 };}
 function aiCoachRender(){
+ aiLangCheck();
  const box=$("aiCoachCard");if(!box)return;const s=aiCoachState;
  if(!aiPrem()){box.innerHTML=`<h3>🤖 ${esc(ft("aiCoachH"))}</h3>${aiUpsell()}`;aiBindUpsell(box);return;}
+ if(!s.peeked){s.peeked=true;s.loading=true;aiPeek("/fit/ai/coach",{}).then(r=>{s.loading=false;if(r.tips)s.data=r;aiCoachRender();});}
+ const d=s.data;
  box.innerHTML=`<h3>🤖 ${esc(ft("aiCoachH"))} <span class="ai-tag" style="margin-left:auto">${esc(ft("aiTag"))}</span></h3>
-  ${s.tips?`<ul class="ai-list">${s.tips.map(t=>`<li>${esc(t)}</li>`).join("")}</ul>`:""}
-  ${s.loading?aiSpin():s.tips?"":`<div class="ai-row"><button type="button" class="btn btn-primary" style="background:#6B4A92" id="aiCoachGo">✨ ${esc(ft("aiCoachBtn"))}</button></div>`}
+  ${d?`<ul class="ai-list">${d.tips.map(t=>`<li>${esc(t)}</li>`).join("")}</ul>${aiNextLine(d)}`:""}
+  ${s.loading?aiSpin():d?"":`<div class="ai-row"><button type="button" class="btn btn-primary" style="background:#6B4A92" id="aiCoachGo">✨ ${esc(ft("aiCoachBtn"))}</button></div>${aiOnceLine()}`}
   ${s.err?`<p style="color:var(--danger);font-weight:700;margin:8px 0 0">${esc(ft("aiErr"))}</p>`:""}`;
- const b=$("aiCoachGo");if(b)b.onclick=async()=>{aiCoachState.loading=true;aiCoachState.err=false;aiCoachRender();
-  try{const r=await api("/fit/ai/coach",{method:"POST",body:JSON.stringify({language:lang})});aiCoachState.tips=r.tips;}catch(e){aiCoachState.err=true;}
-  aiCoachState.loading=false;aiCoachRender();};
+ const b=$("aiCoachGo");if(b)b.onclick=async()=>{s.loading=true;s.err=false;aiCoachRender();
+  try{s.data=await api("/fit/ai/coach",{method:"POST",body:JSON.stringify({language:lang})});}catch(e){s.err=true;}
+  s.loading=false;aiCoachRender();};
 }
 /* Yoga: hero ke neeche "Mera AI session" */
 const aiYogaState={min:20};
@@ -114,23 +133,26 @@ if(typeof renderYoga==="function"){const _ry=renderYoga;renderYoga=function(){_r
  hero.insertAdjacentHTML("afterend",`<div class="fit-card" id="aiYogaCard"></div>`);aiYogaRender();
 };}
 function aiYogaRender(){
+ aiLangCheck();
  const box=$("aiYogaCard");if(!box)return;const s=aiYogaState;
  if(!aiPrem()){box.innerHTML=`<h3>✨ ${esc(ft("aiYogaH"))}</h3>${aiUpsell()}`;aiBindUpsell(box);return;}
+ if(!s.peeked){s.peeked=true;s.loading=true;aiPeek("/fit/ai/yoga",{minutes:s.min}).then(r=>{s.loading=false;if(r.poses)s.data=r;aiYogaRender();});}
  const d=s.data;
  box.innerHTML=`<h3>✨ ${esc(ft("aiYogaH"))} <span class="ai-tag" style="margin-left:auto">${esc(ft("aiTag"))}</span></h3>
   <p class="sub" style="margin:0">${esc(ft("aiYogaSub"))}</p>
-  <div class="fit-seg" style="margin-top:10px">${[10,20,30].map(m=>`<button type="button" data-aym="${m}" class="${s.min===m?"on":""}">${m} ${esc(ft("min"))}</button>`).join("")}</div>
   ${d?`<div class="ai-box"><b>${esc(d.title||ft("aiYogaH"))}</b><p class="sub" style="margin:4px 0 6px">${esc(d.why||"")}</p>
    <p style="margin:0;font-size:13.5px">${d.poses.map(p=>esc(ft("p_"+p[0]+"_n"))).join(" → ")}</p>
-   <div class="ai-row"><button type="button" class="btn btn-primary" style="background:#6B4A92" id="aiYStart">▶ ${esc(ft("yStart"))} · ${Math.round(d.poses.reduce((a,p)=>a+p[1],0)/60)} ${esc(ft("min"))}</button>
-   <button type="button" class="btn btn-ghost" id="aiYRedo">🔄 ${esc(ft("aiRedo"))}</button></div></div>`:""}
-  ${s.loading?aiSpin():d?"":`<div class="ai-row"><button type="button" class="btn btn-primary" style="background:#6B4A92" id="aiYGo">✨ ${esc(ft("aiYogaBtn"))}</button></div>`}
+   <div class="ai-row"><button type="button" class="btn btn-primary" style="background:#6B4A92" id="aiYStart">▶ ${esc(ft("yStart"))} · ${Math.round(d.poses.reduce((a,p)=>a+p[1],0)/60)} ${esc(ft("min"))}</button></div>${aiNextLine(d)}</div>`
+  :s.loading?"":`<div class="fit-seg" style="margin-top:10px">${[10,20,30].map(m=>`<button type="button" data-aym="${m}" class="${s.min===m?"on":""}">${m} ${esc(ft("min"))}</button>`).join("")}</div>
+   <div class="ai-row"><button type="button" class="btn btn-primary" style="background:#6B4A92" id="aiYGo">✨ ${esc(ft("aiYogaBtn"))}</button></div>${aiOnceLine()}`}
+  ${s.loading?aiSpin():""}
   ${s.err?`<p style="color:var(--danger);font-weight:700;margin:8px 0 0">${esc(ft("aiErr"))}</p>`:""}`;
- box.querySelectorAll("[data-aym]").forEach(b=>b.onclick=()=>{s.min=+b.dataset.aym;s.data=null;aiYogaRender();});
- const go=async(redo)=>{s.loading=true;s.err=false;aiYogaRender();
-  try{s.data=await api("/fit/ai/yoga",{method:"POST",body:JSON.stringify({minutes:s.min,language:lang,refresh:!!redo})});}catch(e){s.err=true;}
+ box.querySelectorAll("[data-aym]").forEach(b=>b.onclick=()=>{s.min=+b.dataset.aym;aiYogaRender();});
+ if($("aiYGo"))$("aiYGo").onclick=async()=>{s.loading=true;s.err=false;aiYogaRender();
+  try{s.data=await api("/fit/ai/yoga",{method:"POST",body:JSON.stringify({minutes:s.min,language:lang})});}catch(e){s.err=true;}
   s.loading=false;aiYogaRender();};
- if($("aiYGo"))$("aiYGo").onclick=()=>go(false);
- if($("aiYRedo"))$("aiYRedo").onclick=()=>go(true);
  if($("aiYStart"))$("aiYStart").onclick=()=>{Y_SESS.ai={e:"✨",p:d.poses};FT.s_ai_n=FT_ORDER.map(()=>d.title||ft("aiYogaH"));yStart("ai");};
 }
+/* bhasha badle to us bhasha ka dobara dekho */
+let aiLangSeen=null;
+function aiLangCheck(){if(aiLangSeen===lang)return;aiLangSeen=lang;for(const k in aiDietCache)delete aiDietCache[k];aiCoachState.peeked=false;aiCoachState.data=null;aiYogaState.peeked=false;aiYogaState.data=null;}

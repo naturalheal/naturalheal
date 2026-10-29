@@ -453,6 +453,7 @@ ul.items li b{color:var(--accent-ink)}
       <div class="err" id="genErr"></div>
       <div class="row">
         <button class="btn btn-gold" id="genBtn"></button>
+        <p id="quotaLine" class="sub hidden" style="margin:8px 0 0;font-weight:700"></p>
         <button class="btn btn-ghost" id="saveProfBtn"></button>
       </div>
     </div>
@@ -989,6 +990,9 @@ let _tc=null,_tcLang=null;
 function t(){ if(_tc&&_tcLang===lang)return _tc; const cur=T[lang]||T.hi; _tc=Object.assign({},T.en,cur); _tcLang=lang; return _tc; }
 /* Chhote/dynamic text jo T me nahi the — har bhasha me (har key: {en,hi,hin,bn,mr,gu,ta,te,kn,pa,ml}) */
 const TX={
+ qLeft:{en:"AI plans this month: {l} of {t} left",hi:"Is mahine AI plan: {t} me se {l} baaki",hin:"इस महीने AI प्लान: {t} में से {l} बाकी",bn:"এই মাসে AI প্ল্যান: {t}-এর মধ্যে {l} বাকি",mr:"या महिन्यात AI प्लॅन: {t} पैकी {l} शिल्लक",gu:"આ મહિને AI પ્લાન: {t} માંથી {l} બાકી",ta:"இந்த மாதம் AI திட்டங்கள்: {t}-இல் {l} மீதம்",te:"ఈ నెల AI ప్లాన్‌లు: {t}లో {l} మిగిలాయి",kn:"ಈ ತಿಂಗಳ AI ಯೋಜನೆಗಳು: {t} ರಲ್ಲಿ {l} ಬಾಕಿ",pa:"ਇਸ ਮਹੀਨੇ AI ਪਲਾਨ: {t} ਵਿੱਚੋਂ {l} ਬਾਕੀ",ml:"ഈ മാസം AI പ്ലാനുകൾ: {t}-ൽ {l} ബാക്കി"},
+ qRenew:{en:"Renews with your next recharge ({d})",hi:"Agle recharge par phir se poore ({d})",hin:"अगले रिचार्ज पर फिर से पूरे ({d})",bn:"পরের রিচার্জে আবার পুরো ({d})",mr:"पुढच्या रिचार्जला पुन्हा पूर्ण ({d})",gu:"આગલા રિચાર્જ પર ફરી પૂરા ({d})",ta:"அடுத்த ரீசார்ஜில் மீண்டும் முழுமையாக ({d})",te:"తదుపరి రీఛార్జ్‌తో మళ్లీ పూర్తిగా ({d})",kn:"ಮುಂದಿನ ರೀಚಾರ್ಜ್‌ನಲ್ಲಿ ಮತ್ತೆ ಪೂರ್ಣ ({d})",pa:"ਅਗਲੇ ਰੀਚਾਰਜ 'ਤੇ ਫਿਰ ਤੋਂ ਪੂਰੇ ({d})",ml:"അടുത്ത റീചാർജിൽ വീണ്ടും മുഴുവൻ ({d})"},
+ qNone:{en:"This month's AI plans are used up — they renew with your next recharge ({d}).",hi:"Is mahine ke AI plan khatam — agle recharge par phir milenge ({d}).",hin:"इस महीने के AI प्लान खत्म — अगले रिचार्ज पर फिर मिलेंगे ({d})।",bn:"এই মাসের AI প্ল্যান শেষ — পরের রিচার্জে আবার পাবেন ({d})।",mr:"या महिन्याचे AI प्लॅन संपले — पुढच्या रिचार्जला पुन्हा मिळतील ({d}).",gu:"આ મહિનાના AI પ્લાન પૂરા — આગલા રિચાર્જ પર ફરી મળશે ({d}).",ta:"இந்த மாத AI திட்டங்கள் தீர்ந்தன — அடுத்த ரீசார்ஜில் மீண்டும் கிடைக்கும் ({d}).",te:"ఈ నెల AI ప్లాన్‌లు అయిపోయాయి — తదుపరి రీఛార్జ్‌తో మళ్లీ వస్తాయి ({d}).",kn:"ಈ ತಿಂಗಳ AI ಯೋಜನೆಗಳು ಮುಗಿದಿವೆ — ಮುಂದಿನ ರೀಚಾರ್ಜ್‌ನಲ್ಲಿ ಮತ್ತೆ ಸಿಗುತ್ತವೆ ({d}).",pa:"ਇਸ ਮਹੀਨੇ ਦੇ AI ਪਲਾਨ ਖਤਮ — ਅਗਲੇ ਰੀਚਾਰਜ 'ਤੇ ਫਿਰ ਮਿਲਣਗੇ ({d})।",ml:"ഈ മാസത്തെ AI പ്ലാനുകൾ തീർന്നു — അടുത്ത റീചാർജിൽ വീണ്ടും ലഭിക്കും ({d})."},
  pWL:{en:"Weight-loss program (30/60/90 days)",hi:"Weight loss program (30/60/90 din)",hin:"वज़न घटाओ प्रोग्राम (30/60/90 दिन)",bn:"ওজন কমানোর প্রোগ্রাম (30/60/90 দিন)",mr:"वजन कमी कार्यक्रम (30/60/90 दिवस)",gu:"વજન ઘટાડો પ્રોગ્રામ (30/60/90 દિવસ)",ta:"எடை குறைப்புத் திட்டம் (30/60/90 நாட்கள்)",te:"బరువు తగ్గింపు ప్రోగ్రామ్ (30/60/90 రోజులు)",kn:"ತೂಕ ಇಳಿಕೆ ಕಾರ್ಯಕ್ರಮ (30/60/90 ದಿನ)",pa:"ਭਾਰ ਘਟਾਓ ਪ੍ਰੋਗਰਾਮ (30/60/90 ਦਿਨ)",ml:"ഭാരം കുറയ്ക്കൽ പ്രോഗ്രാം (30/60/90 ദിവസം)"},
  pYoga:{en:"Guided yoga classes with voice",hi:"Awaaz ke saath guided yoga class",hin:"आवाज़ के साथ गाइडेड योग कक्षा",bn:"কণ্ঠস্বরসহ গাইডেড যোগ ক্লাস",mr:"आवाजासह मार्गदर्शित योग वर्ग",gu:"અવાજ સાથે ગાઇડેડ યોગ ક્લાસ",ta:"குரலுடன் வழிகாட்டும் யோகா வகுப்புகள்",te:"వాయిస్‌తో గైడెడ్ యోగా తరగతులు",kn:"ಧ್ವನಿಯೊಂದಿಗೆ ಮಾರ್ಗದರ್ಶಿ ಯೋಗ ತರಗತಿ",pa:"ਆਵਾਜ਼ ਨਾਲ ਗਾਈਡਡ ਯੋਗ ਕਲਾਸ",ml:"ശബ്ദത്തോടെ ഗൈഡഡ് യോഗ ക്ലാസുകൾ"},
  pGym:{en:"Gym coach — plan, sets & progress",hi:"Gym coach — plan, sets aur progress",hin:"जिम कोच — प्लान, सेट और प्रोग्रेस",bn:"জিম কোচ — প্ল্যান, সেট ও অগ্রগতি",mr:"जिम कोच — प्लॅन, सेट आणि प्रगती",gu:"જિમ કોચ — પ્લાન, સેટ અને પ્રોગ્રેસ",ta:"ஜிம் கோச் — திட்டம், செட், முன்னேற்றம்",te:"జిమ్ కోచ్ — ప్లాన్, సెట్లు, పురోగతి",kn:"ಜಿಮ್ ಕೋಚ್ — ಯೋಜನೆ, ಸೆಟ್, ಪ್ರಗತಿ",pa:"ਜਿਮ ਕੋਚ — ਪਲਾਨ, ਸੈੱਟ ਅਤੇ ਤਰੱਕੀ",ml:"ജിം കോച്ച് — പ്ലാൻ, സെറ്റുകൾ, പുരോഗതി"},
@@ -1190,6 +1194,7 @@ function renderStatic(){
  if($("newConcern"))$("newConcern").placeholder=t().addConcernPh||"Apni samasya likhein…";
  if($("forgotLink"))$("forgotLink").textContent=t().forgotLink||"Password bhool gaye?";
  if($("forgotWrap"))$("forgotWrap").style.display=authMode==="login"?"block":"none";
+ try{renderQuota();}catch(_){}
  if($("brandTag"))$("brandTag").textContent=tx("brandTag");
  {const bb=$("bigBtn");if(bb){bb.title=tx("bigTxt");bb.setAttribute("aria-label",tx("bigTxt"));}}
  if($("langSel"))$("langSel").setAttribute("aria-label",tx("langLbl"));
@@ -1225,6 +1230,15 @@ function renderPlanStrip(){
  sel.onchange=()=>applyLang(sel.value);
 })();
 function saveUserLang(code){if(!token)return;try{api("/me/language",{method:"PUT",body:JSON.stringify({language:code})}).then(()=>{if(me)me.language=code;}).catch(()=>{});}catch(_){}}
+/* AI plan: is recharge-mahine me kitne baaki */
+let planQuota=null;
+function renderQuota(){
+ const el=$("quotaLine");if(!el)return;const q=planQuota;
+ if(!q||!q.limit){el.classList.add("hidden");return;}
+ let dt="";try{dt=new Date(q.renews).toLocaleDateString(langLocale(),{day:"numeric",month:"short"});}catch(_){}
+ el.textContent=q.left>0?"✨ "+tx("qLeft",{l:q.left,t:q.limit})+" · "+tx("qRenew",{d:dt}):"⚠️ "+tx("qNone",{d:dt});
+ el.style.color=q.left>0?"var(--accent-ink)":"var(--danger)";el.classList.remove("hidden");
+}
 function applyLang(code){
  trPopHide();
  if(me&&me.language!==code)saveUserLang(code);
@@ -1272,7 +1286,7 @@ $("logoutBtn").onclick=()=>{token=null;me=null;localStorage.removeItem("nh_token
 /* ---- load account ---- */
 async function loadMe(){
  try{
-  const d=await api("/me");me=d.user;feats=d.features;
+  const d=await api("/me");me=d.user;feats=d.features;planQuota=d.quota||null;
   // Account me save bhasha hi chalegi (har device par); purane account me ab wali save kar do
   if(me.language&&me.language!==lang&&LANGS.find(l=>l[0]===me.language)){lang=me.language;try{localStorage.setItem("nh_lang",lang);}catch(_){}_tc=null;if($("langSel"))$("langSel").value=lang;}
   else if(!me.language)saveUserLang(lang);
@@ -1380,6 +1394,7 @@ $("genBtn").onclick=async()=>{
   await api("/profile",{method:"PUT",body:JSON.stringify({...p,report_file:undefined})}); // auto-save (file ke bina)
   const d=await api("/plan/generate",{method:"POST",body:JSON.stringify(p)});
   showPlanRec(d);
+  if(d.quota){planQuota=d.quota;renderQuota();}
   if(!me.premium)toast(x.aiLocked);
   pointToast(d);
   await loadHistory();
