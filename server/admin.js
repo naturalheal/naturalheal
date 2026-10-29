@@ -25,7 +25,7 @@ function stats() {
 
 // ---- Settings (edit/customize) ----
 const maskSecret = (v) => (v ? "••••" + String(v).slice(-4) : "");
-function readSettings() { const s = { ...getSettings() }; s.resend_api_key = maskSecret(s.resend_api_key); s.smtp_pass = maskSecret(s.smtp_pass); return { settings: s }; }
+function readSettings() { const s = { ...getSettings() }; s.resend_api_key = maskSecret(s.resend_api_key); return { settings: s }; }
 function writeSettings(ctx) { saveSettings(ctx.body || {}); return readSettings(); }
 // Email test — chhota sandesh, bina attachment
 async function mailTest() {

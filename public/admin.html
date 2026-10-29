@@ -391,19 +391,8 @@ async function secSettings(){
   <p class="sub" style="margin:0 0 10px">Har raat ~3 baje (IST) poore data ka backup apne-aap banta hai aur 3 jagah jaata hai: Upstash (30 din), aapka Telegram (file), aur server disk. Kuch gadbad ho to neeche se kisi bhi din ka backup wapas laga sakte hain.</p>
   <details style="margin:0 0 12px;border:1px solid #e5e5e5;border-radius:10px;padding:8px 10px" ${s.backup_email?"":"open"}><summary style="cursor:pointer;font-weight:700">📧 Email par bhi roz backup ${s.backup_email?"— "+esc(s.backup_email):"(set karein)"}</summary>
    <div class="field" style="margin-top:8px"><label>Backup kis email par aaye</label><input id="mlTo" type="email" value="${esc(s.backup_email||"")}" placeholder="aapka@gmail.com"></div>
-   <div class="field"><label>Email kaise bhejein</label><select id="mlProv"><option value="resend" ${s.mail_provider!=="smtp"?"selected":""}>Resend (sujhav — free, sabse pakka)</option><option value="smtp" ${s.mail_provider==="smtp"?"selected":""}>Gmail / SMTP (App password)</option></select></div>
-   <div id="mlResend">
-    <div class="field"><label>Resend API key</label><input id="mlKey" value="${esc(s.resend_api_key||"")}" placeholder="re_xxxxxxxx"></div>
-    <p class="sub" style="margin:0 0 8px;font-size:12px">resend.com par free account banayein → API Keys → key copy karein. Jis email se Resend account banaya, <b>wahi email</b> upar daalein (domain ki zaroorat nahi). Doosre email par bhejna ho to Resend me apna domain verify karke "From" bharein.</p>
-    <div class="field"><label>From (optional)</label><input id="mlFrom" value="${esc(s.mail_from||"")}" placeholder="NaturalHeal &lt;backup@aapka-domain.com&gt;"></div>
-   </div>
-   <div id="mlSmtp">
-    <div class="field"><label>SMTP host</label><input id="mlHost" value="${esc(s.smtp_host||"smtp.gmail.com")}"></div>
-    <div class="field"><label>Port</label><input id="mlPort" type="number" value="${s.smtp_port||465}"></div>
-    <div class="field"><label>Email / username</label><input id="mlUser" value="${esc(s.smtp_user||"")}" placeholder="aapka@gmail.com"></div>
-    <div class="field"><label>Password (Gmail: App password)</label><input id="mlPass" value="${esc(s.smtp_pass||"")}" placeholder="16 akshar ka app password"></div>
-    <p class="sub" style="margin:0 0 8px;font-size:12px">Gmail: Google Account → Security → 2-Step Verification on → "App passwords" → naya banayein. Dhyaan: kuch free hosting (Render free bhi) SMTP port band rakhti hai — na chale to Resend use karein.</p>
-   </div>
+   <div class="field"><label>Resend API key</label><input id="mlKey" value="${esc(s.resend_api_key||"")}" placeholder="re_xxxxxxxx"></div>
+   <p class="sub" style="margin:0 0 8px;font-size:12px">Ek baar ka setup: <b>resend.com</b> par free account banayein (jis email par backup chahiye, usi se) → <b>API Keys</b> → "Create API Key" → copy karke yahan daalein. Bas.</p>
    <button class="btn" id="mlSave" style="width:auto">💾 Save + test email bhejo</button>
    <div id="mlMsg" class="sub" style="margin-top:6px"></div>
   </details>
@@ -438,10 +427,8 @@ async function secSettings(){
   document.querySelectorAll("[data-bkd]").forEach(b=>b.onclick=()=>bkDownload(b.dataset.bkd));
   document.querySelectorAll("[data-bkr]").forEach(b=>b.onclick=()=>bkRestore({name:b.dataset.bkr}));
  }catch(err){$("bkStatus").textContent=err.message;}}
- const mlToggle=()=>{const smtp=$("mlProv").value==="smtp";$("mlSmtp").style.display=smtp?"":"none";$("mlResend").style.display=smtp?"none":"";};
- $("mlProv").onchange=mlToggle;mlToggle();
  $("mlSave").onclick=async()=>{const b=$("mlSave"),m=$("mlMsg");b.disabled=true;m.style.color="";m.textContent="Save ho raha hai…";
-  try{await api("/admin/settings",{method:"PUT",body:JSON.stringify({backup_email:$("mlTo").value.trim(),mail_provider:$("mlProv").value,resend_api_key:$("mlKey").value.trim(),mail_from:$("mlFrom").value.trim(),smtp_host:$("mlHost").value.trim(),smtp_port:$("mlPort").value,smtp_user:$("mlUser").value.trim(),smtp_pass:$("mlPass").value})});
+  try{await api("/admin/settings",{method:"PUT",body:JSON.stringify({backup_email:$("mlTo").value.trim(),resend_api_key:$("mlKey").value.trim()})});
    m.textContent="Test email bhej rahe hain…";await api("/admin/mail-test",{method:"POST",body:"{}"});m.style.color="#1C5A3E";m.textContent="✅ Test email chala gaya — inbox (aur spam) dekh lein. Ab roz ka backup isi par aayega.";bkLoad();}
   catch(err){m.style.color="#c0392b";m.textContent="❌ "+err.message;}b.disabled=false;};
  bkLoad();
